@@ -19,7 +19,8 @@ interface RegisterResponse {
 interface Exercise {
   id: string;
   title: string;
-  problemText: string;
+  problemText?: string;
+  problemImage?: string;
   createdAt: string;
   createdBy?: User;
   solutions: Solution[];
@@ -27,6 +28,7 @@ interface Exercise {
     id: string;
     correctAnswer: string; // Decrypted for admins
     solutionSteps?: string;
+    solutionImage?: string;
   };
 }
 
@@ -36,6 +38,7 @@ interface Solution {
   exerciseId: string;
   givenData?: string;
   solutionSteps?: string;
+  solutionImage?: string;
   finalAnswer?: string;
   isCorrect: boolean;
   status: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_WORK";
@@ -63,12 +66,14 @@ interface LoginData {
 
 interface CreateExerciseData {
   title: string;
-  problemText: string;
+  problemText?: string;
+  problemImage?: string;
 }
 
 interface UpdateExerciseData {
-  title: string;
-  problemText: string;
+  title?: string;
+  problemText?: string;
+  problemImage?: string;
 }
 
 interface UpdateSolutionStatusData {
@@ -81,6 +86,7 @@ interface SubmitSolutionData {
   exerciseId: string;
   givenData: string;
   solutionSteps: string;
+  solutionImage?: string;
   finalAnswer: string;
 }
 
@@ -138,6 +144,32 @@ export const useUpdateExercise = () => {
       mutationFn: async ({ id, data }) => {
         const response = await fetch(`/api/exercises/${id}`, {
           method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const result = await response.json();
+        if (!response.ok)
+          throw new Error(result.error || "Վարժության թարմացման սխալ");
+        return result;
+      },
+      onSuccess: (updatedExercise) => {
+        queryClient.invalidateQueries({ queryKey: ["exercises"] });
+        queryClient.invalidateQueries({
+          queryKey: ["exercises", updatedExercise.id],
+        });
+      },
+    }
+  );
+};
+
+// PATCH hook for Exercise
+export const usePatchExercise = () => {
+  const queryClient = useQueryClient();
+  return useMutation<Exercise, Error, { id: string; data: UpdateExerciseData }>(
+    {
+      mutationFn: async ({ id, data }) => {
+        const response = await fetch(`/api/exercises/${id}`, {
+          method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
         });
@@ -244,6 +276,52 @@ export const useSubmitSolution = () => {
       queryClient.invalidateQueries({
         queryKey: ["exercises", newSolution.exerciseId],
       });
+    },
+  });
+};
+
+// PATCH hook for ExerciseAnswer
+interface PatchExerciseAnswerData {
+  exerciseId: string;
+  correctAnswer?: string;
+  givenData?: string;
+  solutionSteps?: string;
+  solutionImage?: string;
+}
+
+interface PatchExerciseAnswerResponse {
+  message: string;
+  exerciseAnswer: {
+    id: string;
+    exerciseId: string;
+    correctAnswer: string;
+    givenData?: string;
+    solutionSteps?: string;
+    solutionImage?: string;
+    createdAt: string;
+  };
+}
+
+export const usePatchExerciseAnswer = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    PatchExerciseAnswerResponse,
+    Error,
+    PatchExerciseAnswerData
+  >({
+    mutationFn: async (data) => {
+      const response = await fetch(`/api/exercises/${data.exerciseId}/answer`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.error || "Պատասխանի թարմացման սխալ");
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["exercises"] });
     },
   });
 };

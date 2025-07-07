@@ -65,11 +65,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { title, problemText } = await request.json();
+    const { title, problemText, problemImage } = await request.json();
 
-    if (!title || !problemText) {
+    if (!title || (!problemText && !problemImage)) {
       return NextResponse.json(
-        { error: "Վերնագիրը և խնդիրը պարտադիր են" },
+        { error: "Վերնագիրը և գոնե խնդիր կամ նկար պարտադիր են" },
         { status: 400 }
       );
     }
@@ -77,7 +77,8 @@ export async function POST(request: NextRequest) {
     const exercise = await db.exercise.create({
       data: {
         title,
-        problemText,
+        problemText: problemText || null,
+        problemImage: problemImage || null,
         createdById: session.user.id,
       },
       include: {

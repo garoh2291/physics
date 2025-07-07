@@ -50,51 +50,56 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Ադմին վահանակ</h1>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Avatar>
-                <AvatarFallback className="bg-blue-100">
-                  {session?.user?.name?.charAt(0) || "Ա"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">
-                  {session?.user?.name}
-                </span>
-                <Badge variant="secondary" className="text-xs">
-                  {session?.user?.role === "SUPERADMIN"
-                    ? "Սուպեր ադմին"
-                    : "Ադմին"}
-                </Badge>
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+              Ադմին վահանակ
+            </h1>
+            <div className="flex items-center space-x-2 md:space-x-4 w-full sm:w-auto">
+              <div className="flex items-center space-x-2">
+                <Avatar>
+                  <AvatarFallback className="bg-blue-100">
+                    {session?.user?.name?.charAt(0) || "Ա"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">
+                    {session?.user?.name}
+                  </span>
+                  <Badge variant="secondary" className="text-xs">
+                    {session?.user?.role === "SUPERADMIN"
+                      ? "Սուպեր ադմին"
+                      : "Ադմին"}
+                  </Badge>
+                </div>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="ml-auto sm:ml-0"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Ելք</span>
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => signOut({ callbackUrl: "/" })}
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Ելք
-            </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-2">
+      <main className="container mx-auto px-4 py-6 md:py-8">
+        <div className="mb-6 md:mb-8">
+          <h2 className="text-lg md:text-xl font-semibold mb-2">
             Բարի գալուստ, {session?.user?.name}!
           </h2>
-          <p className="text-gray-600">
+          <p className="text-gray-600 text-sm md:text-base">
             Կառավարեք վարժությունները և ուսանողների աշխատանքները:
           </p>
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div className="grid gap-4 md:gap-6 grid-cols-2 md:grid-cols-2 lg:grid-cols-4 mb-6 md:mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -151,7 +156,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions - Removed PDF Upload */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-6 md:mb-8">
           <Card className="hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -238,22 +243,29 @@ export default function AdminDashboard() {
                 {exercises.slice(0, 5).map((exercise) => (
                   <div
                     key={exercise.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg space-y-2 sm:space-y-0"
                   >
-                    <div>
-                      <h4 className="font-medium">{exercise.title}</h4>
-                      <p className="text-sm text-gray-500">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-sm md:text-base truncate">
+                        {exercise.title}
+                      </h4>
+                      <p className="text-xs md:text-sm text-gray-500">
                         Ստեղծված՝{" "}
                         {new Date(exercise.createdAt).toLocaleDateString(
                           "hy-AM"
                         )}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <Badge variant="outline" className="text-xs">
                         {exercise.solutions.length} լուծում
                       </Badge>
-                      <Button size="sm" variant="outline" asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        asChild
+                        className="ml-auto sm:ml-0"
+                      >
                         <Link href={`/admin/exercises/${exercise.id}`}>
                           Դիտել
                         </Link>

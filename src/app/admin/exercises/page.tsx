@@ -109,23 +109,23 @@ export default function AdminExercisesPage() {
       <header className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 md:space-x-4">
               <Button variant="outline" size="sm" asChild>
                 <Link href="/admin">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Վահանակ
+                  <span className="hidden sm:inline">Վահանակ</span>
                 </Link>
               </Button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900">
                   Վարժությունների կառավարում
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-sm md:text-base text-gray-600">
                   Ընդամենը {exercises.length} վարժություն
                 </p>
               </div>
             </div>
-            <Button asChild>
+            <Button asChild className="w-full sm:w-auto">
               <Link href="/admin/exercises/create">
                 <Plus className="h-4 w-4 mr-2" />
                 Նոր վարժություն
@@ -135,17 +135,17 @@ export default function AdminExercisesPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6 md:py-8">
         {/* Search */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
+        <Card className="mb-4 md:mb-6">
+          <CardContent className="pt-4 md:pt-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="Փնտրել վարժություններ..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 text-sm md:text-base"
               />
             </div>
           </CardContent>
@@ -155,7 +155,7 @@ export default function AdminExercisesPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>Վարժություններ</span>
+              <span className="text-lg md:text-xl">Վարժություններ</span>
               <Badge variant="outline">
                 {filteredExercises.length} արդյունք
               </Badge>
@@ -163,14 +163,14 @@ export default function AdminExercisesPage() {
           </CardHeader>
           <CardContent>
             {filteredExercises.length === 0 ? (
-              <div className="text-center py-12">
+              <div className="text-center py-8 md:py-12">
                 <div className="h-12 w-12 text-gray-400 mx-auto mb-4">📚</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-base md:text-lg font-medium text-gray-900 mb-2">
                   {searchQuery
                     ? "Արդյունքներ չգտնվեցին"
                     : "Վարժություններ չկան"}
                 </h3>
-                <p className="text-gray-500 mb-4">
+                <p className="text-sm md:text-base text-gray-500 mb-4">
                   {searchQuery
                     ? "Փորձեք փոխել որոնման բառերը"
                     : "Ստեղծեք ձեր առաջին վարժությունը"}
@@ -185,92 +185,23 @@ export default function AdminExercisesPage() {
                 )}
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Վարժություն</TableHead>
-                      <TableHead>Ստեղծման ամսաթիվ</TableHead>
-                      <TableHead>Լուծումներ</TableHead>
-                      <TableHead>Կարգավիճակ</TableHead>
-                      <TableHead className="w-12"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredExercises.map((exercise) => {
-                      const stats = getStatusCounts(exercise.solutions);
-                      return (
-                        <TableRow key={exercise.id}>
-                          <TableCell>
-                            <div className="space-y-1">
-                              <div className="font-medium">
+              <>
+                {/* Mobile Cards View */}
+                <div className="md:hidden space-y-4">
+                  {filteredExercises.map((exercise) => {
+                    const stats = getStatusCounts(exercise.solutions);
+                    return (
+                      <Card key={exercise.id} className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-sm truncate">
                                 {exercise.title}
-                              </div>
-                              <div className="text-sm text-gray-500">
+                              </h3>
+                              <p className="text-xs text-gray-500">
                                 ID: {exercise.id.substring(0, 8)}...
-                              </div>
+                              </p>
                             </div>
-                          </TableCell>
-
-                          <TableCell>
-                            <div className="text-sm">
-                              {new Date(exercise.createdAt).toLocaleDateString(
-                                "hy-AM"
-                              )}
-                            </div>
-                          </TableCell>
-
-                          <TableCell>
-                            <div className="space-y-2">
-                              <div className="text-sm font-medium">
-                                Ընդամենը՝ {stats.total}
-                              </div>
-                              <div className="flex flex-wrap gap-1 text-xs">
-                                {stats.pending > 0 && (
-                                  <Badge
-                                    variant="outline"
-                                    className="text-orange-600"
-                                  >
-                                    <Clock className="h-3 w-3 mr-1" />
-                                    {stats.pending}
-                                  </Badge>
-                                )}
-                                {stats.approved > 0 && (
-                                  <Badge
-                                    variant="outline"
-                                    className="text-green-600"
-                                  >
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                    {stats.approved}
-                                  </Badge>
-                                )}
-                                {stats.rejected > 0 && (
-                                  <Badge
-                                    variant="outline"
-                                    className="text-red-600"
-                                  >
-                                    <XCircle className="h-3 w-3 mr-1" />
-                                    {stats.rejected}
-                                  </Badge>
-                                )}
-                                {stats.needsWork > 0 && (
-                                  <Badge
-                                    variant="outline"
-                                    className="text-yellow-600"
-                                  >
-                                    <AlertTriangle className="h-3 w-3 mr-1" />
-                                    {stats.needsWork}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          </TableCell>
-
-                          <TableCell>
-                            <Badge variant="default">Ակտիվ</Badge>
-                          </TableCell>
-
-                          <TableCell>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="sm">
@@ -305,13 +236,223 @@ export default function AdminExercisesPage() {
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
+                          </div>
+
+                          <div className="text-xs text-gray-600">
+                            Ստեղծված՝{" "}
+                            {new Date(exercise.createdAt).toLocaleDateString(
+                              "hy-AM"
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="text-xs font-medium">
+                              Ընդամենը՝ {stats.total} լուծում
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {stats.pending > 0 && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-orange-600 text-xs"
+                                >
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  {stats.pending}
+                                </Badge>
+                              )}
+                              {stats.approved > 0 && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-green-600 text-xs"
+                                >
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  {stats.approved}
+                                </Badge>
+                              )}
+                              {stats.rejected > 0 && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-red-600 text-xs"
+                                >
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                  {stats.rejected}
+                                </Badge>
+                              )}
+                              {stats.needsWork > 0 && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-yellow-600 text-xs"
+                                >
+                                  <AlertTriangle className="h-3 w-3 mr-1" />
+                                  {stats.needsWork}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              asChild
+                              className="flex-1"
+                            >
+                              <Link href={`/admin/exercises/${exercise.id}`}>
+                                <Eye className="h-3 w-3 mr-1" />
+                                Դիտել
+                              </Link>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              asChild
+                              className="flex-1"
+                            >
+                              <Link
+                                href={`/admin/exercises/${exercise.id}/edit`}
+                              >
+                                <Edit className="h-3 w-3 mr-1" />
+                                Խմբագրել
+                              </Link>
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Վարժություն</TableHead>
+                        <TableHead>Ստեղծման ամսաթիվ</TableHead>
+                        <TableHead>Լուծումներ</TableHead>
+                        <TableHead>Կարգավիճակ</TableHead>
+                        <TableHead className="w-12"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredExercises.map((exercise) => {
+                        const stats = getStatusCounts(exercise.solutions);
+                        return (
+                          <TableRow key={exercise.id}>
+                            <TableCell>
+                              <div className="space-y-1">
+                                <div className="font-medium">
+                                  {exercise.title}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  ID: {exercise.id.substring(0, 8)}...
+                                </div>
+                              </div>
+                            </TableCell>
+
+                            <TableCell>
+                              <div className="text-sm">
+                                {new Date(
+                                  exercise.createdAt
+                                ).toLocaleDateString("hy-AM")}
+                              </div>
+                            </TableCell>
+
+                            <TableCell>
+                              <div className="space-y-2">
+                                <div className="text-sm font-medium">
+                                  Ընդամենը՝ {stats.total}
+                                </div>
+                                <div className="flex flex-wrap gap-1 text-xs">
+                                  {stats.pending > 0 && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-orange-600"
+                                    >
+                                      <Clock className="h-3 w-3 mr-1" />
+                                      {stats.pending}
+                                    </Badge>
+                                  )}
+                                  {stats.approved > 0 && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-green-600"
+                                    >
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      {stats.approved}
+                                    </Badge>
+                                  )}
+                                  {stats.rejected > 0 && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-red-600"
+                                    >
+                                      <XCircle className="h-3 w-3 mr-1" />
+                                      {stats.rejected}
+                                    </Badge>
+                                  )}
+                                  {stats.needsWork > 0 && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-yellow-600"
+                                    >
+                                      <AlertTriangle className="h-3 w-3 mr-1" />
+                                      {stats.needsWork}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </TableCell>
+
+                            <TableCell>
+                              <Badge variant="default">Ակտիվ</Badge>
+                            </TableCell>
+
+                            <TableCell>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem asChild>
+                                    <Link
+                                      href={`/admin/exercises/${exercise.id}`}
+                                    >
+                                      <Eye className="h-4 w-4 mr-2" />
+                                      Դիտել
+                                    </Link>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem asChild>
+                                    <Link
+                                      href={`/admin/exercises/${exercise.id}/edit`}
+                                    >
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Խմբագրել
+                                    </Link>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-red-600"
+                                    onClick={() =>
+                                      setDeleteDialog({
+                                        isOpen: true,
+                                        exercise,
+                                      })
+                                    }
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Ջնջել
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

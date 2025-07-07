@@ -42,7 +42,9 @@ import {
   User,
   Calendar,
   Hash,
+  Eye,
 } from "lucide-react";
+import { FileViewer } from "@/components/ui/file-viewer";
 import { useExercise, useUpdateSolutionStatus } from "@/hooks/use-api";
 
 interface ReviewDialogData {
@@ -488,7 +490,21 @@ export default function AdminExerciseDetailPage() {
 
             <div>
               <h3 className="font-medium mb-2">Խնդիրի նկարագրություն</h3>
-              <MathContent content={exercise.problemText} />
+              {exercise.problemImage ? (
+                <FileViewer
+                  url={exercise.problemImage}
+                  title="Խնդիրի նկար/PDF"
+                  className="mb-4"
+                />
+              ) : (
+                <MathContent content={exercise.problemText || ""} />
+              )}
+              {exercise.problemText && exercise.problemImage && (
+                <div className="mt-4">
+                  <h4 className="font-medium mb-2">Խնդիրի տեքստ</h4>
+                  <MathContent content={exercise.problemText} />
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -631,6 +647,18 @@ export default function AdminExerciseDetailPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
+                                onClick={() =>
+                                  setReviewDialog({
+                                    isOpen: true,
+                                    solution,
+                                    action: null,
+                                  })
+                                }
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                Դիտել լուծումը
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
                                 className="text-green-600"
                                 onClick={() =>
                                   handleReviewAction(solution, "APPROVED")
@@ -678,10 +706,12 @@ export default function AdminExerciseDetailPage() {
           setReviewDialog({ isOpen: false, solution: null, action: null })
         }
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {getActionButtonText(reviewDialog.action || "")} լուծումը
+              {reviewDialog.action
+                ? `${getActionButtonText(reviewDialog.action)} լուծումը`
+                : "Լուծման մանրամասներ"}
             </DialogTitle>
             <DialogDescription>
               Ուսանող՝ <strong>{reviewDialog.solution?.user?.name}</strong>
@@ -690,24 +720,107 @@ export default function AdminExerciseDetailPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="feedback">
-                Ադմինի գրադարան{" "}
-                {reviewDialog.action === "REJECTED" ||
-                reviewDialog.action === "NEEDS_WORK"
-                  ? "*"
-                  : "(ոչ պարտադիր)"}
-              </Label>
-              <Textarea
-                id="feedback"
-                placeholder="Գրադարան ուսանողի համար..."
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                className="mt-1"
-              />
+          {!reviewDialog.action ? (
+            /* Solution Details View */
+            <div className="space-y-6">
+              {/* Given Data */}
+              <div>
+                <h3 className="font-medium mb-2">Տրված է</h3>
+                <MathContent content={reviewDialog.solution?.givenData || ""} />
+              </div>
+
+              {/* Solution Steps */}
+              <div>
+                <h3 className="font-medium mb-2">Լուծում</h3>
+                <MathContent
+                  content={reviewDialog.solution?.solutionSteps || ""}
+                />
+              </div>
+
+              {/* Solution Image */}
+              {reviewDialog.solution?.solutionImage && (
+                <div>
+                  <h3 className="font-medium mb-2">Լուծման նկար/PDF</h3>
+                  <FileViewer
+                    url={reviewDialog.solution.solutionImage}
+                    title="Լուծման նկար/PDF"
+                  />
+                </div>
+              )}
+
+              {/* Final Answer */}
+              <div>
+                <h3 className="font-medium mb-2">Պատասխան</h3>
+                <div className="bg-gray-100 p-3 rounded">
+                  <span className="font-mono text-lg">
+                    {reviewDialog.solution?.finalAnswer || "Պատասխան չտրված"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-4 border-t">
+                <Button
+                  className="text-green-600"
+                  onClick={() =>
+                    setReviewDialog({
+                      ...reviewDialog,
+                      action: "APPROVED",
+                    })
+                  }
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Հաստատել
+                </Button>
+                <Button
+                  variant="outline"
+                  className="text-yellow-600"
+                  onClick={() =>
+                    setReviewDialog({
+                      ...reviewDialog,
+                      action: "NEEDS_WORK",
+                    })
+                  }
+                >
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Կարիք է շտկման
+                </Button>
+                <Button
+                  variant="outline"
+                  className="text-red-600"
+                  onClick={() =>
+                    setReviewDialog({
+                      ...reviewDialog,
+                      action: "REJECTED",
+                    })
+                  }
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Մերժել
+                </Button>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* Review Action View */
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="feedback">
+                  Ադմինի գրադարան{" "}
+                  {reviewDialog.action === "REJECTED" ||
+                  reviewDialog.action === "NEEDS_WORK"
+                    ? "*"
+                    : "(ոչ պարտադիր)"}
+                </Label>
+                <Textarea
+                  id="feedback"
+                  placeholder="Գրադարան ուսանողի համար..."
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          )}
 
           <DialogFooter>
             <Button
@@ -718,20 +831,22 @@ export default function AdminExerciseDetailPage() {
             >
               Չեղարկել
             </Button>
-            <Button
-              className={getActionButtonColor(reviewDialog.action || "")}
-              onClick={handleReviewConfirm}
-              disabled={
-                updateStatusMutation.isPending ||
-                ((reviewDialog.action === "REJECTED" ||
-                  reviewDialog.action === "NEEDS_WORK") &&
-                  !feedback.trim())
-              }
-            >
-              {updateStatusMutation.isPending && "Պահպանվում..."}
-              {!updateStatusMutation.isPending &&
-                getActionButtonText(reviewDialog.action || "")}
-            </Button>
+            {reviewDialog.action && (
+              <Button
+                className={getActionButtonColor(reviewDialog.action)}
+                onClick={handleReviewConfirm}
+                disabled={
+                  updateStatusMutation.isPending ||
+                  ((reviewDialog.action === "REJECTED" ||
+                    reviewDialog.action === "NEEDS_WORK") &&
+                    !feedback.trim())
+                }
+              >
+                {updateStatusMutation.isPending && "Պահպանվում..."}
+                {!updateStatusMutation.isPending &&
+                  getActionButtonText(reviewDialog.action)}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

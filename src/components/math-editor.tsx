@@ -57,8 +57,9 @@ export const MathEditor: FC<MathEditorProps> = ({
         borderRadius: 8,
         background: "#fff",
         minHeight: height,
-        padding: 16,
+        padding: "12px",
       }}
+      className="w-full"
     >
       <textarea
         value={value}
@@ -74,6 +75,7 @@ export const MathEditor: FC<MathEditorProps> = ({
           fontSize: "14px",
           lineHeight: "1.5",
         }}
+        className="w-full text-sm md:text-base"
       />
       <div
         style={{
@@ -93,6 +95,7 @@ export const MathEditor: FC<MathEditorProps> = ({
             whiteSpace: "pre-wrap",
             wordWrap: "break-word",
           }}
+          className="text-sm md:text-base overflow-x-auto"
         />
       </div>
     </div>

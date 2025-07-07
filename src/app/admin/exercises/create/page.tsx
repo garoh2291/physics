@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Save, Eye } from "lucide-react";
 import { MathEditor } from "@/components/math-editor";
+import { FileUpload } from "@/components/ui/file-upload";
+import { FileViewer } from "@/components/ui/file-viewer";
 import { useCreateExercise } from "@/hooks/use-api";
 
 // Simple Markdown to HTML converter for preview
@@ -68,6 +70,7 @@ function markdownToPreviewHtml(markdown: string): string {
 export default function CreateExercisePage() {
   const [title, setTitle] = useState("");
   const [problemText, setProblemText] = useState("");
+  const [problemImage, setProblemImage] = useState("");
   const [correctAnswer, setCorrectAnswer] = useState("");
   const [solutionSteps, setSolutionSteps] = useState("");
   const [isPreview, setIsPreview] = useState(false);
@@ -102,13 +105,13 @@ export default function CreateExercisePage() {
     e.preventDefault();
     setError("");
 
-    if (!title.trim() || !problemText.trim()) {
-      setError("Վերնագիրը և խնդիրը պարտադիր են");
+    if (!title.trim() || (!problemText.trim() && !problemImage)) {
+      setError("Վերնագիրը և խնդիրը (տեքստ կամ նկար) պարտադիր են");
       return;
     }
 
     createExerciseMutation.mutate(
-      { title, problemText }, // problemText is now stored as markdown
+      { title, problemText, problemImage }, // problemText is now stored as markdown
       {
         onSuccess: (exercise) => {
           // If we have answer data, save it separately
@@ -133,38 +136,48 @@ export default function CreateExercisePage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/admin/exercises">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Վերադառնալ
-              </Link>
-            </Button>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Նոր վարժություն
-            </h1>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" onClick={togglePreview} type="button">
-              <Eye className="h-4 w-4 mr-2" />
-              {isPreview ? "Խմբագրել" : "Նախադիտել"}
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={createExerciseMutation.isPending}
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {createExerciseMutation.isPending ? "Պահպանվում..." : "Պահպանել"}
-            </Button>
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center space-x-2 md:space-x-4">
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/admin/exercises">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Վերադառնալ</span>
+                </Link>
+              </Button>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                Նոր վարժություն
+              </h1>
+            </div>
+            <div className="flex items-center space-x-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={togglePreview}
+                type="button"
+                className="flex-1 sm:flex-none text-sm"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                {isPreview ? "Խմբագրել" : "Նախադիտել"}
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={createExerciseMutation.isPending}
+                className="flex-1 sm:flex-none text-sm"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {createExerciseMutation.isPending
+                  ? "Պահպանվում..."
+                  : "Պահպանել"}
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6 md:py-8">
         {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertDescription>{error}</AlertDescription>
+          <Alert variant="destructive" className="mb-4 md:mb-6">
+            <AlertDescription className="text-sm">{error}</AlertDescription>
           </Alert>
         )}
 
@@ -172,24 +185,40 @@ export default function CreateExercisePage() {
           /* Preview Mode */
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
                 <span>📖</span>
                 Նախադիտում (Markdown)
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 md:space-y-6">
               <div>
                 <h2 className="text-xl font-semibold mb-4 text-gray-900">
                   {title || "Վարժության վերնագիր"}
                 </h2>
-                <div
-                  className="prose prose-lg max-w-none bg-white p-6 rounded-lg border"
-                  dangerouslySetInnerHTML={{
-                    __html:
-                      markdownToPreviewHtml(problemText) ||
-                      '<p class="text-gray-500 italic">Խնդիրի նկարագրություն...</p>',
-                  }}
-                />
+                {problemImage ? (
+                  <FileViewer
+                    url={problemImage}
+                    title="Խնդիրի նկար/PDF"
+                    className="mb-4"
+                  />
+                ) : (
+                  <div
+                    className="prose prose-lg max-w-none bg-white p-6 rounded-lg border"
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        markdownToPreviewHtml(problemText) ||
+                        '<p class="text-gray-500 italic">Խնդիրի նկարագրություն...</p>',
+                    }}
+                  />
+                )}
+                {problemText && problemImage && (
+                  <div
+                    className="prose prose-lg max-w-none bg-white p-6 rounded-lg border mt-4"
+                    dangerouslySetInnerHTML={{
+                      __html: markdownToPreviewHtml(problemText),
+                    }}
+                  />
+                )}
               </div>
 
               {solutionSteps && (
@@ -232,7 +261,7 @@ export default function CreateExercisePage() {
           </Card>
         ) : (
           /* Edit Mode */
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
             {/* Title */}
             <Card>
               <CardHeader>
@@ -261,22 +290,45 @@ export default function CreateExercisePage() {
                 </CardTitle>
                 <p className="text-sm text-gray-600">
                   Կարող եք տեղադրել մաթեմատիկական տեքստ PDF-ից կամ օգտագործել
-                  մաթ գործիքները
+                  մաթ գործիքները, կամ վերբեռնել նկար/PDF ֆայլ
                 </p>
               </CardHeader>
-              <CardContent>
-                <MathEditor
-                  value={problemText}
-                  onChange={setProblemText}
-                  height={350}
-                  placeholder="Մուտքագրեք խնդիրի նկարագրությունը... 
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="problemText">
+                    Խնդիրի տեքստ (ոչ պարտադիր)
+                  </Label>
+                  <MathEditor
+                    value={problemText}
+                    onChange={setProblemText}
+                    height={350}
+                    placeholder="Մուտքագրեք խնդիրի նկարագրությունը... 
 
 Օրինակ՝
 Կարմիր Գլխարկը պատրաստել էր **N₀ = 20** հատ կարկանդակ...
 Արագությունը `v = 5` _մ/վ_ էր...
 
 Կարող եք տեղադրել տեքստ PDF-ից Ctrl+V-ով։"
-                />
+                  />
+                </div>
+
+                <div>
+                  <Label>Խնդիրի նկար/PDF (ոչ պարտադիր)</Label>
+                  <FileUpload
+                    value={problemImage}
+                    onChange={setProblemImage}
+                    accept="image/*,.pdf"
+                    label="Վերբեռնել նկար կամ PDF ֆայլ"
+                  />
+                </div>
+
+                {problemImage && (
+                  <FileViewer
+                    url={problemImage}
+                    title="Խնդիրի նկար/PDF"
+                    className="mt-4"
+                  />
+                )}
               </CardContent>
             </Card>
 

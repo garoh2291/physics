@@ -50,45 +50,55 @@ export default function RegisterAdminPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-red-600">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-center text-red-600 text-xl md:text-2xl">
             Ադմին գրանցում
           </CardTitle>
-          <p className="text-sm text-center text-gray-500">Գաղտնի էջ</p>
+          <p className="text-xs md:text-sm text-center text-gray-500">
+            Գաղտնի էջ
+          </p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 md:px-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Անուն</Label>
+              <Label htmlFor="name" className="text-sm md:text-base">
+                Անուն
+              </Label>
               <Input
                 id="name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                className="text-sm md:text-base"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Էլ. փոստ</Label>
+              <Label htmlFor="email" className="text-sm md:text-base">
+                Էլ. փոստ
+              </Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="text-sm md:text-base"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="role">Դեր</Label>
+              <Label htmlFor="role" className="text-sm md:text-base">
+                Դեր
+              </Label>
               <Select
                 value={role}
                 onValueChange={(value: "ADMIN" | "SUPERADMIN") =>
                   setRole(value)
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="text-sm md:text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -98,33 +108,39 @@ export default function RegisterAdminPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Գաղտնաբառ</Label>
+              <Label htmlFor="password" className="text-sm md:text-base">
+                Գաղտնաբառ
+              </Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="text-sm md:text-base"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Կրկնել գաղտնաբառը</Label>
+              <Label htmlFor="confirmPassword" className="text-sm md:text-base">
+                Կրկնել գաղտնաբառը
+              </Label>
               <Input
                 id="confirmPassword"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                className="text-sm md:text-base"
               />
             </div>
             {error && (
               <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription className="text-sm">{error}</AlertDescription>
               </Alert>
             )}
             <Button
               type="submit"
-              className="w-full"
+              className="w-full text-sm md:text-base"
               disabled={registerAdminMutation.isPending}
             >
               {registerAdminMutation.isPending

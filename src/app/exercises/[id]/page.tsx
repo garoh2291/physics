@@ -17,6 +17,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { MathEditor } from "@/components/math-editor";
+import { FileViewer } from "@/components/ui/file-viewer";
+import { FileUpload } from "@/components/ui/file-upload";
 import { useExercise, useSubmitSolution } from "@/hooks/use-api";
 
 // Math Content Display Component (same as admin)
@@ -42,6 +44,7 @@ export default function StudentExercisePage() {
 
   const [givenData, setGivenData] = useState("");
   const [solutionSteps, setSolutionSteps] = useState("");
+  const [solutionImage, setSolutionImage] = useState("");
   const [finalAnswer, setFinalAnswer] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -60,6 +63,7 @@ export default function StudentExercisePage() {
       const latestSolution = exercise.solutions[exercise.solutions.length - 1];
       setGivenData(latestSolution.givenData || "");
       setSolutionSteps(latestSolution.solutionSteps || "");
+      setSolutionImage(latestSolution.solutionImage || "");
       setFinalAnswer(latestSolution.finalAnswer || "");
     }
   }, [exercise]);
@@ -81,6 +85,7 @@ export default function StudentExercisePage() {
         exerciseId,
         givenData,
         solutionSteps,
+        solutionImage,
         finalAnswer,
       });
 
@@ -167,28 +172,28 @@ export default function StudentExercisePage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center space-x-2 md:space-x-4">
               <Button variant="outline" size="sm" asChild>
                 <Link href="/dashboard">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Վերադառնալ
+                  <span className="hidden sm:inline">Վերադառնալ</span>
                 </Link>
               </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900 truncate">
                   {exercise.title}
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-sm md:text-base text-gray-600">
                   Փորձեր՝ {exercise.solutions?.length || 0}
                 </p>
               </div>
             </div>
             {latestSolution && (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 flex-wrap">
                 {getStatusBadge(latestSolution.status)}
                 {latestSolution.isCorrect && (
-                  <Badge variant="outline" className="text-green-600">
+                  <Badge variant="outline" className="text-green-600 text-xs">
                     <CheckCircle className="h-3 w-3 mr-1" />
                     Ճիշտ պատասխան
                   </Badge>
@@ -199,7 +204,7 @@ export default function StudentExercisePage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 space-y-6">
+      <main className="container mx-auto px-4 py-6 md:py-8 space-y-4 md:space-y-6">
         {/* Problem Display */}
         <Card>
           <CardHeader>
@@ -208,13 +213,23 @@ export default function StudentExercisePage() {
               Խնդիր
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <MathContent content={exercise.problemText} />
+          <CardContent className="space-y-4">
+            {exercise.problemImage ? (
+              <FileViewer url={exercise.problemImage} title="Խնդիրի նկար/PDF" />
+            ) : (
+              <MathContent content={exercise.problemText || ""} />
+            )}
+            {exercise.problemText && exercise.problemImage && (
+              <div className="mt-4">
+                <h3 className="font-medium mb-2">Խնդիրի նկարագրություն</h3>
+                <MathContent content={exercise.problemText} />
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Solution Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* Given Data */}
           <Card>
             <CardHeader>
@@ -248,12 +263,14 @@ t₀ = 60 վ"
                 Լուծում
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <MathEditor
-                value={solutionSteps}
-                onChange={setSolutionSteps}
-                height={300}
-                placeholder="Մուտքագրեք լուծման քայլերը...
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="solutionSteps">Լուծման քայլեր</Label>
+                <MathEditor
+                  value={solutionSteps}
+                  onChange={setSolutionSteps}
+                  height={300}
+                  placeholder="Մուտքագրեք լուծման քայլերը...
 
 Օրինակ՝
 Տատիկի տուն հասնելու ժամանակը՝
@@ -264,7 +281,26 @@ N' = t/t' = 10
 
 Հետևաբար տատիկի տուն հասած կարկանդակների քանակը՝
 N = N₀ - N' = 10"
-              />
+                />
+              </div>
+
+              <div>
+                <Label>Լուծման նկար/PDF (ոչ պարտադիր)</Label>
+                <FileUpload
+                  value={solutionImage}
+                  onChange={setSolutionImage}
+                  accept="image/*,.pdf"
+                  label="Վերբեռնել լուծման նկար կամ PDF ֆայլ"
+                />
+              </div>
+
+              {solutionImage && (
+                <FileViewer
+                  url={solutionImage}
+                  title="Լուծման նկար/PDF"
+                  className="mt-4"
+                />
+              )}
             </CardContent>
           </Card>
 
@@ -311,6 +347,7 @@ N = N₀ - N' = 10"
                   latestSolution?.status === "APPROVED")
               }
               size="lg"
+              className="w-full sm:w-auto text-sm md:text-base"
             >
               {isSubmitting ? "Ուղարկվում է..." : "Ուղարկել լուծումը"}
             </Button>

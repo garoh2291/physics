@@ -43,41 +43,49 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center">Ֆիզիկայի վարժություններ</CardTitle>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-center text-xl md:text-2xl">
+            Ֆիզիկայի վարժություններ
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 md:px-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Էլ. փոստ</Label>
+              <Label htmlFor="email" className="text-sm md:text-base">
+                Էլ. փոստ
+              </Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="text-sm md:text-base"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Գաղտնաբառ</Label>
+              <Label htmlFor="password" className="text-sm md:text-base">
+                Գաղտնաբառ
+              </Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="text-sm md:text-base"
               />
             </div>
             {error && (
               <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription className="text-sm">{error}</AlertDescription>
               </Alert>
             )}
             <Button
               type="submit"
-              className="w-full"
+              className="w-full text-sm md:text-base"
               disabled={loginMutation.isPending}
             >
               {loginMutation.isPending ? "Մուտք գործում..." : "Մուտք"}

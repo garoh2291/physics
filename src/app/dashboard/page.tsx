@@ -83,44 +83,49 @@ export default function StudentDashboard() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Ուսանողական վահանակ
-          </h1>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Avatar>
-                <AvatarFallback>
-                  {session?.user?.name?.charAt(0) || "Ու"}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-sm font-medium">{session?.user?.name}</span>
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+              Ուսանողական վահանակ
+            </h1>
+            <div className="flex items-center space-x-2 md:space-x-4 w-full sm:w-auto">
+              <div className="flex items-center space-x-2">
+                <Avatar>
+                  <AvatarFallback>
+                    {session?.user?.name?.charAt(0) || "Ու"}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium">
+                  {session?.user?.name}
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="ml-auto sm:ml-0"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Ելք</span>
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => signOut({ callbackUrl: "/" })}
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Ելք
-            </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-2">
+      <main className="container mx-auto px-4 py-6 md:py-8">
+        <div className="mb-6 md:mb-8">
+          <h2 className="text-lg md:text-xl font-semibold mb-2">
             Բարի գալուստ, {session?.user?.name}!
           </h2>
-          <p className="text-gray-600">
+          <p className="text-gray-600 text-sm md:text-base">
             Ստորև տեսնում եք ձեր վարժությունների ցանկը:
           </p>
         </div>
 
         {/* Exercises Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {exercises.map((exercise) => {
             const status = getExerciseStatus(exercise);
             return (
@@ -131,8 +136,8 @@ export default function StudentDashboard() {
               >
                 <Card className="hover:shadow-md transition-shadow cursor-pointer h-full flex flex-col justify-between">
                   <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg line-clamp-2">
+                    <div className="flex flex-col sm:flex-row justify-between items-start space-y-2 sm:space-y-0">
+                      <CardTitle className="text-base md:text-lg line-clamp-2 flex-1">
                         {exercise.title}
                       </CardTitle>
                       <Badge
@@ -142,15 +147,16 @@ export default function StudentDashboard() {
                             | "destructive"
                             | "secondary"
                         }
-                        className="ml-2 flex items-center gap-1"
+                        className="flex items-center gap-1 text-xs"
                       >
                         {getStatusIcon(status.status)}
-                        {status.text}
+                        <span className="hidden sm:inline">{status.text}</span>
+                        <span className="sm:hidden">{status.text}</span>
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2 text-sm text-gray-600">
+                    <div className="space-y-2 text-xs md:text-sm text-gray-600">
                       <p>
                         Ստեղծված՝{" "}
                         {new Date(exercise.createdAt).toLocaleDateString(
@@ -159,7 +165,7 @@ export default function StudentDashboard() {
                       </p>
                       <p>Փորձեր՝ {exercise.solutions.length}</p>
                     </div>
-                    <Button className="w-full mt-4" variant="outline">
+                    <Button className="w-full mt-4 text-sm" variant="outline">
                       {exercise.solutions.length === 0 ? "Սկսել" : "Շարունակել"}
                     </Button>
                   </CardContent>

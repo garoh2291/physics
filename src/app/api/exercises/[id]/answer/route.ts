@@ -72,7 +72,8 @@ export async function POST(
       );
     }
 
-    const { correctAnswer, givenData, solutionSteps } = await request.json();
+    const { correctAnswer, givenData, solutionSteps, solutionImage } =
+      await request.json();
     const { id: exerciseId } = await params;
 
     // Check if exercise exists
@@ -97,12 +98,14 @@ export async function POST(
         correctAnswer: encryptedAnswer || "",
         givenData: givenData || null,
         solutionSteps: solutionSteps || null,
+        solutionImage: solutionImage || null,
       },
       create: {
         exerciseId,
         correctAnswer: encryptedAnswer || "",
         givenData: givenData || null,
         solutionSteps: solutionSteps || null,
+        solutionImage: solutionImage || null,
       },
     });
 
@@ -174,6 +177,71 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching exercise answer:", error);
+    return NextResponse.json({ error: "Սերվերի սխալ" }, { status: 500 });
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Անհրաժեշտ է նույնականացում" },
+        { status: 401 }
+      );
+    }
+
+    // Only admins and superadmins can update exercise answers
+    if (!["ADMIN", "SUPERADMIN"].includes(session.user.role)) {
+      return NextResponse.json(
+        { error: "Թույլտվություն չկա" },
+        { status: 403 }
+      );
+    }
+
+    const { correctAnswer, givenData, solutionSteps, solutionImage } =
+      await request.json();
+    const { id: exerciseId } = await params;
+
+    // Check if exercise answer exists
+    const existingAnswer = await db.exerciseAnswer.findUnique({
+      where: { exerciseId },
+    });
+    if (!existingAnswer) {
+      return NextResponse.json(
+        { error: "Պատասխանը գտնվել չի" },
+        { status: 404 }
+      );
+    }
+
+    // Encrypt the correct answer if provided
+    const updateData: Partial<{
+      correctAnswer: string;
+      givenData: string;
+      solutionSteps: string;
+      solutionImage: string;
+    }> = {};
+    if (correctAnswer !== undefined && correctAnswer !== null) {
+      updateData.correctAnswer = encrypt(correctAnswer);
+    }
+    if (givenData !== undefined) updateData.givenData = givenData;
+    if (solutionSteps !== undefined) updateData.solutionSteps = solutionSteps;
+    if (solutionImage !== undefined) updateData.solutionImage = solutionImage;
+
+    const updatedAnswer = await db.exerciseAnswer.update({
+      where: { exerciseId },
+      data: updateData,
+    });
+
+    return NextResponse.json({
+      message: "Պատասխանը հաջողությամբ թարմացվել է",
+      exerciseAnswer: updatedAnswer,
+    });
+  } catch (error) {
+    console.error("Error patching exercise answer:", error);
     return NextResponse.json({ error: "Սերվերի սխալ" }, { status: 500 });
   }
 }

@@ -34,12 +34,13 @@ model User {
 }
 
 model Exercise {
-  id          String   @id @default(cuid())
-  title       String
-  problemText String
-  createdById String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  title         String
+  problemText   String?  // Made optional since we can have image instead
+  problemImage  String?  // Cloudinary URL for problem image/PDF
+  createdById   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   createdBy      User             @relation("CreatedBy", fields: [createdById], references: [id])
   exerciseAnswer ExerciseAnswer?
@@ -52,6 +53,7 @@ model ExerciseAnswer {
   correctAnswer String
   givenData     String?
   solutionSteps String?
+  solutionImage String?  // Cloudinary URL for solution image/PDF
   createdAt     DateTime @default(now())
 
   exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)

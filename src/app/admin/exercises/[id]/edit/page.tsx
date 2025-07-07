@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Save, Eye } from "lucide-react";
 import { MathEditor } from "@/components/math-editor";
+import { FileUpload } from "@/components/ui/file-upload";
+import { FileViewer } from "@/components/ui/file-viewer";
 import { useExercise, useUpdateExercise } from "@/hooks/use-api";
 
 // Simple Markdown to HTML converter for preview
@@ -71,6 +73,7 @@ export default function EditExercisePage() {
 
   const [title, setTitle] = useState("");
   const [problemText, setProblemText] = useState("");
+  const [problemImage, setProblemImage] = useState("");
   const [correctAnswer, setCorrectAnswer] = useState("");
   const [solutionSteps, setSolutionSteps] = useState("");
   const [isPreview, setIsPreview] = useState(false);
@@ -89,7 +92,8 @@ export default function EditExercisePage() {
   useEffect(() => {
     if (exercise) {
       setTitle(exercise.title);
-      setProblemText(exercise.problemText);
+      setProblemText(exercise.problemText || "");
+      setProblemImage(exercise.problemImage || "");
       // Load answer data if it exists
       if (exercise.exerciseAnswer) {
         setCorrectAnswer(exercise.exerciseAnswer.correctAnswer || "");
@@ -124,15 +128,15 @@ export default function EditExercisePage() {
     e.preventDefault();
     setError("");
 
-    if (!title.trim() || !problemText.trim()) {
-      setError("Վերնագիրը և խնդիրը պարտադիր են");
+    if (!title.trim() || (!problemText.trim() && !problemImage)) {
+      setError("Վերնագիրը և խնդիրը (տեքստ կամ նկար) պարտադիր են");
       return;
     }
 
     updateExerciseMutation.mutate(
       {
         id: exerciseId,
-        data: { title, problemText },
+        data: { title, problemText, problemImage },
       },
       {
         onSuccess: (exercise) => {
@@ -231,14 +235,30 @@ export default function EditExercisePage() {
                 <h2 className="text-xl font-semibold mb-4 text-gray-900">
                   {title || "Վարժության վերնագիր"}
                 </h2>
-                <div
-                  className="prose prose-lg max-w-none bg-white p-6 rounded-lg border"
-                  dangerouslySetInnerHTML={{
-                    __html:
-                      markdownToPreviewHtml(problemText) ||
-                      '<p class="text-gray-500 italic">Խնդիրի նկարագրություն...</p>',
-                  }}
-                />
+                {problemImage ? (
+                  <FileViewer
+                    url={problemImage}
+                    title="Խնդիրի նկար/PDF"
+                    className="mb-4"
+                  />
+                ) : (
+                  <div
+                    className="prose prose-lg max-w-none bg-white p-6 rounded-lg border"
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        markdownToPreviewHtml(problemText) ||
+                        '<p class="text-gray-500 italic">Խնդիրի նկարագրություն...</p>',
+                    }}
+                  />
+                )}
+                {problemText && problemImage && (
+                  <div
+                    className="prose prose-lg max-w-none bg-white p-6 rounded-lg border mt-4"
+                    dangerouslySetInnerHTML={{
+                      __html: markdownToPreviewHtml(problemText),
+                    }}
+                  />
+                )}
               </div>
 
               {solutionSteps && (
@@ -310,22 +330,45 @@ export default function EditExercisePage() {
                 </CardTitle>
                 <p className="text-sm text-gray-600">
                   Կարող եք տեղադրել մաթեմատիկական տեքստ PDF-ից կամ օգտագործել
-                  մաթ գործիքները
+                  մաթ գործիքները, կամ վերբեռնել նկար/PDF ֆայլ
                 </p>
               </CardHeader>
-              <CardContent>
-                <MathEditor
-                  value={problemText}
-                  onChange={setProblemText}
-                  height={350}
-                  placeholder="Մուտքագրեք խնդիրի նկարագրությունը... 
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="problemText">
+                    Խնդիրի տեքստ (ոչ պարտադիր)
+                  </Label>
+                  <MathEditor
+                    value={problemText}
+                    onChange={setProblemText}
+                    height={350}
+                    placeholder="Մուտքագրեք խնդիրի նկարագրությունը... 
 
 Օրինակ՝
 Կարմիր Գլխարկը պատրաստել էր **N₀ = 20** հատ կարկանդակ...
 Արագությունը `v = 5` _մ/վ_ էր...
 
 Կարող եք տեղադրել տեքստ PDF-ից Ctrl+V-ով։"
-                />
+                  />
+                </div>
+
+                <div>
+                  <Label>Խնդիրի նկար/PDF (ոչ պարտադիր)</Label>
+                  <FileUpload
+                    value={problemImage}
+                    onChange={setProblemImage}
+                    accept="image/*,.pdf"
+                    label="Վերբեռնել նկար կամ PDF ֆայլ"
+                  />
+                </div>
+
+                {problemImage && (
+                  <FileViewer
+                    url={problemImage}
+                    title="Խնդիրի նկար/PDF"
+                    className="mt-4"
+                  />
+                )}
               </CardContent>
             </Card>
 

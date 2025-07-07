@@ -208,19 +208,19 @@ export default function AdminSolutionsPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
+        <div className="container mx-auto px-4 py-4 md:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-xl md:text-3xl font-bold text-gray-900">
                 Լուծումների վերանայում
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-sm md:text-base text-gray-600 mt-1">
                 Ընդհանուր՝ {solutions?.length || 0} լուծում
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48 text-sm">
                   <SelectValue placeholder="Ընտրել կարգավիճակ" />
                 </SelectTrigger>
                 <SelectContent>
@@ -236,13 +236,13 @@ export default function AdminSolutionsPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6 md:py-8">
         {filteredSolutions.length === 0 ? (
           <Card>
-            <CardContent className="py-12">
+            <CardContent className="py-8 md:py-12">
               <div className="text-center text-gray-500">
                 <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg">Լուծումներ չկան</p>
+                <p className="text-base md:text-lg">Լուծումներ չկան</p>
                 <p className="text-sm">
                   Ընտրված կարգավիճակով լուծումներ չեն գտնվել
                 </p>
@@ -250,17 +250,17 @@ export default function AdminSolutionsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {filteredSolutions.map((solution) => (
               <Card
                 key={solution.id}
                 className="hover:shadow-md transition-shadow"
               >
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div>
-                        <h3 className="text-lg font-semibold">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-start space-x-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base md:text-lg font-semibold truncate">
                           {solution.exercise.title}
                         </h3>
                         <p className="text-sm text-gray-600">
@@ -274,10 +274,13 @@ export default function AdminSolutionsPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 flex-wrap">
                       {getStatusBadge(solution.status)}
                       {solution.isCorrect && (
-                        <Badge variant="outline" className="text-green-600">
+                        <Badge
+                          variant="outline"
+                          className="text-green-600 text-xs"
+                        >
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Ճիշտ պատասխան
                         </Badge>
@@ -288,14 +291,15 @@ export default function AdminSolutionsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => openReviewDialog(solution)}
+                            className="text-sm"
                           >
                             <Eye className="h-4 w-4 mr-2" />
                             Դիտել
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4 md:p-6">
                           <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
+                            <DialogTitle className="flex items-center gap-2 text-lg md:text-xl">
                               <span>🔍</span>
                               Լուծման վերանայում
                             </DialogTitle>
@@ -352,13 +356,14 @@ export default function AdminSolutionsPage() {
                               </div>
 
                               {/* Action Buttons */}
-                              <div className="flex justify-end space-x-2">
+                              <div className="flex flex-col sm:flex-row justify-end gap-2">
                                 <Button
                                   variant="outline"
                                   onClick={() => {
                                     setSelectedSolution(null);
                                     setFeedback("");
                                   }}
+                                  className="text-sm"
                                 >
                                   Չեղարկել
                                 </Button>
@@ -371,6 +376,7 @@ export default function AdminSolutionsPage() {
                                     )
                                   }
                                   disabled={isUpdating}
+                                  className="text-sm"
                                 >
                                   Մերժել
                                 </Button>
@@ -383,6 +389,7 @@ export default function AdminSolutionsPage() {
                                     )
                                   }
                                   disabled={isUpdating}
+                                  className="text-sm"
                                 >
                                   Կարիք է շտկման
                                 </Button>
@@ -394,6 +401,7 @@ export default function AdminSolutionsPage() {
                                     )
                                   }
                                   disabled={isUpdating}
+                                  className="text-sm"
                                 >
                                   Հաստատել
                                 </Button>
@@ -408,7 +416,7 @@ export default function AdminSolutionsPage() {
 
                 {/* Preview of solution content */}
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs md:text-sm">
                     <div>
                       <span className="font-medium">Տրված է:</span>
                       <div className="mt-1 text-gray-600 line-clamp-2">
