@@ -3,6 +3,7 @@
 import { FC, useState, useEffect } from "react";
 import "katex/dist/katex.min.css";
 import katex from "katex";
+import { MathTypeIntegration } from "./mathtype-integration";
 
 interface MathEditorProps {
   value: string;
@@ -50,6 +51,12 @@ export const MathEditor: FC<MathEditorProps> = ({
     }
   }, [value]);
 
+  const insertMathTypeLatex = (latex: string) => {
+    // Insert LaTeX at the end of current content
+    const newValue = value + (value ? "\n\n" : "") + `$${latex}$`;
+    onChange(newValue);
+  };
+
   return (
     <div
       style={{
@@ -61,6 +68,11 @@ export const MathEditor: FC<MathEditorProps> = ({
       }}
       className="w-full"
     >
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-medium">Բովանդակություն</span>
+        <MathTypeIntegration onInsertLatex={insertMathTypeLatex} />
+      </div>
+
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
