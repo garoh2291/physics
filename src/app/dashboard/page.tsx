@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LogOut, BookOpen, CheckCircle, Clock, XCircle } from "lucide-react";
 import { useExercises } from "@/hooks/use-api";
+import Link from "next/link";
 
 interface Exercise {
   id: string;
@@ -123,39 +124,47 @@ export default function StudentDashboard() {
           {exercises.map((exercise) => {
             const status = getExerciseStatus(exercise);
             return (
-              <Card
+              <Link
                 key={exercise.id}
-                className="hover:shadow-md transition-shadow cursor-pointer"
+                href={`/exercises/${exercise.id}`}
+                className="block"
               >
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg line-clamp-2">
-                      {exercise.title}
-                    </CardTitle>
-                    <Badge
-                      variant={
-                        status.color as "default" | "destructive" | "secondary"
-                      }
-                      className="ml-2 flex items-center gap-1"
-                    >
-                      {getStatusIcon(status.status)}
-                      {status.text}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <p>
-                      Ստեղծված՝{" "}
-                      {new Date(exercise.createdAt).toLocaleDateString("hy-AM")}
-                    </p>
-                    <p>Փորձեր՝ {exercise.solutions.length}</p>
-                  </div>
-                  <Button className="w-full mt-4" variant="outline">
-                    {exercise.solutions.length === 0 ? "Սկսել" : "Շարունակել"}
-                  </Button>
-                </CardContent>
-              </Card>
+                <Card className="hover:shadow-md transition-shadow cursor-pointer h-full flex flex-col justify-between">
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-lg line-clamp-2">
+                        {exercise.title}
+                      </CardTitle>
+                      <Badge
+                        variant={
+                          status.color as
+                            | "default"
+                            | "destructive"
+                            | "secondary"
+                        }
+                        className="ml-2 flex items-center gap-1"
+                      >
+                        {getStatusIcon(status.status)}
+                        {status.text}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <p>
+                        Ստեղծված՝{" "}
+                        {new Date(exercise.createdAt).toLocaleDateString(
+                          "hy-AM"
+                        )}
+                      </p>
+                      <p>Փորձեր՝ {exercise.solutions.length}</p>
+                    </div>
+                    <Button className="w-full mt-4" variant="outline">
+                      {exercise.solutions.length === 0 ? "Սկսել" : "Շարունակել"}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Link>
             );
           })}
         </div>

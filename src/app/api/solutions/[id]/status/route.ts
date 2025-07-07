@@ -7,79 +7,68 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "Անհրաժեշտ է նույնականացում" },
-        { status: 401 }
-      );
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Only admins and superadmins can update solution status
-    if (!["ADMIN", "SUPERADMIN"].includes(session.user.role)) {
-      return NextResponse.json(
-        { error: "Թույլտվություն չկա" },
-        { status: 403 }
-      );
+    // Only admins can update solution status
+    if (session.user.role !== "ADMIN" && session.user.role !== "SUPERADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { id } = await params;
     const { status, adminFeedback } = await request.json();
 
-    // Validate status
-    const validStatuses = ["PENDING", "APPROVED", "REJECTED", "NEEDS_WORK"];
-    if (!validStatuses.includes(status)) {
-      return NextResponse.json(
-        { error: "Անվավեր կարգավիճակ" },
-        { status: 400 }
-      );
+    if (!status || !["APPROVED", "REJECTED", "NEEDS_WORK"].includes(status)) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
     // Check if solution exists
     const existingSolution = await db.solution.findUnique({
       where: { id },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true },
-        },
-        exercise: {
-          select: { id: true, title: true },
-        },
-      },
     });
 
     if (!existingSolution) {
-      return NextResponse.json({ error: "Լուծումը չգտնվեց" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Solution not found" },
+        { status: 404 }
+      );
     }
 
-    // Update solution status
+    // Update the solution
     const updatedSolution = await db.solution.update({
       where: { id },
       data: {
         status,
         adminFeedback: adminFeedback || null,
-        isCorrect: status === "APPROVED", // Automatically set isCorrect based on status
         updatedAt: new Date(),
       },
       include: {
         user: {
-          select: { id: true, name: true, email: true },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
         },
         exercise: {
-          select: { id: true, title: true },
+          select: {
+            id: true,
+            title: true,
+          },
         },
       },
     });
 
-    return NextResponse.json({
-      message: "Կարգավիճակը հաջողությամբ թարմացվել է",
-      solution: updatedSolution,
-    });
+    return NextResponse.json(updatedSolution);
   } catch (error) {
     console.error("Error updating solution status:", error);
-    return NextResponse.json({ error: "Սերվերի սխալ" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 

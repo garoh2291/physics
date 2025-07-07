@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
@@ -270,11 +271,10 @@ function MathContent({ content }: { content: string }) {
   );
 }
 
-export default function AdminExerciseDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function AdminExerciseDetailPage() {
+  const params = useParams();
+  const exerciseId = params.id as string;
+
   const [reviewDialog, setReviewDialog] = useState<ReviewDialogData>({
     isOpen: false,
     solution: null,
@@ -282,7 +282,16 @@ export default function AdminExerciseDetailPage({
   });
   const [feedback, setFeedback] = useState("");
 
-  const { data: exercise, isLoading, error } = useExercise(params.id);
+  // Await params
+  useEffect(() => {
+    const getParams = async () => {
+      // const resolvedParams = await params; // This line is removed as params is now directly used
+      // setExerciseId(resolvedParams.id); // This line is removed as exerciseId is now directly used
+    };
+    getParams();
+  }, [params]);
+
+  const { data: exercise, isLoading, error } = useExercise(exerciseId);
   const updateStatusMutation = useUpdateSolutionStatus();
 
   const handleReviewAction = (

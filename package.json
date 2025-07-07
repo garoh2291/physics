@@ -15,6 +15,10 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
+    "@milkdown/core": "^7.15.1",
+    "@milkdown/plugin-math": "^7.5.9",
+    "@milkdown/react": "^7.15.1",
+    "@milkdown/theme-nord": "^7.15.1",
     "@prisma/client": "^6.11.1",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.14",
@@ -45,6 +49,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.60.0",
+    "react-katex": "^3.1.0",
     "react-markdown": "^10.1.0",
     "tailwind-merge": "^3.3.1",
     "zod": "^3.25.75"
@@ -55,6 +60,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-katex": "^3.0.4",
     "eslint": "^9",
     "eslint-config-next": "15.3.5",
     "prisma": "^6.11.1",

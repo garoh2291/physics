@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
           session.user.role === "STUDENT"
             ? {
                 where: { userId: session.user.id },
-                orderBy: { attemptNumber: "desc" },
+                orderBy: { attemptNumber: "asc" },
               }
             : {
                 include: {
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
                     select: { id: true, name: true, email: true },
                   },
                 },
-                orderBy: { createdAt: "desc" },
+                orderBy: { attemptNumber: "asc" },
               },
         createdBy: {
           select: { id: true, name: true, email: true },

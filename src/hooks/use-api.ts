@@ -1,8 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { signIn } from "next-auth/react";
+import { signIn, type SignInResponse } from "next-auth/react";
 
 // Types
 interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface RegisterResponse {
   id: string;
   name: string;
   email: string;
@@ -16,6 +23,11 @@ interface Exercise {
   createdAt: string;
   createdBy?: User;
   solutions: Solution[];
+  exerciseAnswer?: {
+    id: string;
+    correctAnswer: string; // Decrypted for admins
+    solutionSteps?: string;
+  };
 }
 
 interface Solution {
@@ -54,142 +66,108 @@ interface CreateExerciseData {
   problemText: string;
 }
 
+interface UpdateExerciseData {
+  title: string;
+  problemText: string;
+}
+
 interface UpdateSolutionStatusData {
   solutionId: string;
   status: "APPROVED" | "REJECTED" | "NEEDS_WORK";
   adminFeedback?: string;
 }
 
-// API Functions
-const api = {
-  // Exercises
-  getExercises: async (): Promise<Exercise[]> => {
-    const response = await fetch("/api/exercises");
-    if (!response.ok) throw new Error("Վարժությունները բեռնելու սխալ");
-    return response.json();
-  },
-
-  getExercise: async (id: string): Promise<Exercise> => {
-    const response = await fetch(`/api/exercises/${id}`);
-    if (!response.ok) {
-      if (response.status === 404) throw new Error("Վարժությունը չգտնվեց");
-      throw new Error("Վարժությունը բեռնելու սխալ");
-    }
-    return response.json();
-  },
-
-  createExercise: async (data: CreateExerciseData): Promise<Exercise> => {
-    const response = await fetch("/api/exercises", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    const result = await response.json();
-    if (!response.ok)
-      throw new Error(result.error || "Վարժության ստեղծման սխալ");
-    return result;
-  },
-
-  deleteExercise: async (id: string): Promise<void> => {
-    const response = await fetch(`/api/exercises/${id}`, {
-      method: "DELETE",
-    });
-    if (!response.ok) {
-      const result = await response.json();
-      throw new Error(result.error || "Վարժության ջնջման սխալ");
-    }
-  },
-
-  // Solutions
-  getSolutions: async (): Promise<Solution[]> => {
-    const response = await fetch("/api/solutions");
-    if (!response.ok) throw new Error("Լուծումները բեռնելու սխալ");
-    return response.json();
-  },
-
-  updateSolutionStatus: async (
-    data: UpdateSolutionStatusData
-  ): Promise<Solution> => {
-    const { solutionId, ...updateData } = data;
-    const response = await fetch(`/api/solutions/${solutionId}/status`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updateData),
-    });
-    const result = await response.json();
-    if (!response.ok)
-      throw new Error(result.error || "Կարգավիճակի թարմացման սխալ");
-    return result;
-  },
-
-  // Registration
-  register: async (data: RegisterData) => {
-    const response = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "Գրանցման սխալ");
-    return result;
-  },
-
-  // Admin Registration
-  registerAdmin: async (
-    data: RegisterData & { role: "ADMIN" | "SUPERADMIN" }
-  ) => {
-    const response = await fetch("/api/auth/register-admin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "Գրանցման սխալ");
-    return result;
-  },
-
-  // Login
-  login: async (data: LoginData) => {
-    const result = await signIn("credentials", {
-      email: data.email,
-      password: data.password,
-      redirect: false,
-    });
-    if (result?.error) throw new Error("Սխալ էլ. փոստ կամ գաղտնաբառ");
-    return result;
-  },
-};
+interface SubmitSolutionData {
+  exerciseId: string;
+  givenData: string;
+  solutionSteps: string;
+  finalAnswer: string;
+}
 
 // Exercise Hooks
 export const useExercises = () => {
-  return useQuery({
+  return useQuery<Exercise[]>({
     queryKey: ["exercises"],
-    queryFn: api.getExercises,
+    queryFn: async () => {
+      const response = await fetch("/api/exercises");
+      if (!response.ok) throw new Error("Վարժությունները բեռնելու սխալ");
+      return response.json();
+    },
   });
 };
 
 export const useExercise = (id: string) => {
-  return useQuery({
+  return useQuery<Exercise>({
     queryKey: ["exercises", id],
-    queryFn: () => api.getExercise(id),
+    queryFn: async () => {
+      const response = await fetch(`/api/exercises/${id}`);
+      if (!response.ok) {
+        if (response.status === 404) throw new Error("Վարժությունը չգտնվեց");
+        throw new Error("Վարժությունը բեռնելու սխալ");
+      }
+      return response.json();
+    },
     enabled: !!id,
   });
 };
 
 export const useCreateExercise = () => {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: api.createExercise,
+  return useMutation<Exercise, Error, CreateExerciseData>({
+    mutationFn: async (data) => {
+      const response = await fetch("/api/exercises", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.error || "Վարժության ստեղծման սխալ");
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["exercises"] });
     },
   });
 };
 
+export const useUpdateExercise = () => {
+  const queryClient = useQueryClient();
+  return useMutation<Exercise, Error, { id: string; data: UpdateExerciseData }>(
+    {
+      mutationFn: async ({ id, data }) => {
+        const response = await fetch(`/api/exercises/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const result = await response.json();
+        if (!response.ok)
+          throw new Error(result.error || "Վարժության թարմացման սխալ");
+        return result;
+      },
+      onSuccess: (updatedExercise) => {
+        queryClient.invalidateQueries({ queryKey: ["exercises"] });
+        queryClient.invalidateQueries({
+          queryKey: ["exercises", updatedExercise.id],
+        });
+      },
+    }
+  );
+};
+
 export const useDeleteExercise = () => {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: api.deleteExercise,
+  return useMutation<void, Error, string>({
+    mutationFn: async (id) => {
+      const response = await fetch(`/api/exercises/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || "Վարժության ջնջման սխալ");
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["exercises"] });
       queryClient.invalidateQueries({ queryKey: ["solutions"] });
@@ -199,16 +177,33 @@ export const useDeleteExercise = () => {
 
 // Solution Hooks
 export const useSolutions = () => {
-  return useQuery({
+  return useQuery<Solution[]>({
     queryKey: ["solutions"],
-    queryFn: api.getSolutions,
+    queryFn: async () => {
+      const response = await fetch("/api/solutions");
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.error || "Լուծումները բեռնելու սխալ");
+      return result;
+    },
   });
 };
 
 export const useUpdateSolutionStatus = () => {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: api.updateSolutionStatus,
+  return useMutation<Solution, Error, UpdateSolutionStatusData>({
+    mutationFn: async (data) => {
+      const { solutionId, ...updateData } = data;
+      const response = await fetch(`/api/solutions/${solutionId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateData),
+      });
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.error || "Կարգավիճակի թարմացման սխալ");
+      return result;
+    },
     onSuccess: (updatedSolution) => {
       // Invalidate solutions list
       queryClient.invalidateQueries({ queryKey: ["solutions"] });
@@ -224,21 +219,80 @@ export const useUpdateSolutionStatus = () => {
   });
 };
 
+export const useSubmitSolution = () => {
+  const queryClient = useQueryClient();
+  return useMutation<Solution, Error, SubmitSolutionData>({
+    mutationFn: async (data) => {
+      const response = await fetch("/api/solutions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.error || "Լուծման ուղարկման սխալ");
+      return result;
+    },
+    onSuccess: (newSolution) => {
+      // Invalidate solutions list
+      queryClient.invalidateQueries({ queryKey: ["solutions"] });
+
+      // Invalidate exercises list to update solution counts
+      queryClient.invalidateQueries({ queryKey: ["exercises"] });
+
+      // Invalidate specific exercise to update its solutions
+      queryClient.invalidateQueries({
+        queryKey: ["exercises", newSolution.exerciseId],
+      });
+    },
+  });
+};
+
 // Auth Hooks
 export const useRegister = () => {
-  return useMutation({
-    mutationFn: api.register,
+  return useMutation<RegisterResponse, Error, RegisterData>({
+    mutationFn: async (data) => {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Գրանցման սխալ");
+      return result;
+    },
   });
 };
 
 export const useRegisterAdmin = () => {
-  return useMutation({
-    mutationFn: api.registerAdmin,
+  return useMutation<
+    RegisterResponse,
+    Error,
+    RegisterData & { role: "ADMIN" | "SUPERADMIN" }
+  >({
+    mutationFn: async (data) => {
+      const response = await fetch("/api/auth/register-admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Գրանցման սխալ");
+      return result;
+    },
   });
 };
 
 export const useLogin = () => {
-  return useMutation({
-    mutationFn: api.login,
+  return useMutation<SignInResponse | undefined, Error, LoginData>({
+    mutationFn: async (data) => {
+      const result = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
+      if (result?.error) throw new Error("Սխալ էլ. փոստ կամ գաղտնաբառ");
+      return result;
+    },
   });
 };

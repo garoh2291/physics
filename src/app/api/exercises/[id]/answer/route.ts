@@ -21,6 +21,35 @@ function encrypt(text: string): string {
   return iv.toString("hex") + ":" + encrypted;
 }
 
+// Decrypt function for admins
+function decrypt(encryptedText: string): string {
+  try {
+    const key = process.env.ENCRYPTION_KEY || "default-key-for-development";
+    const algorithm = "aes-256-cbc";
+
+    // Split IV and encrypted text
+    const parts = encryptedText.split(":");
+    if (parts.length !== 2) {
+      throw new Error("Invalid encrypted text format");
+    }
+
+    const iv = Buffer.from(parts[0], "hex");
+    const encrypted = parts[1];
+
+    // Create a 32-byte key from the provided key
+    const keyBuffer = crypto.createHash("sha256").update(key).digest();
+
+    const decipher = crypto.createDecipheriv(algorithm, keyBuffer, iv);
+    let decrypted = decipher.update(encrypted, "hex", "utf8");
+    decrypted += decipher.final("utf8");
+
+    return decrypted;
+  } catch (error) {
+    console.error("Decryption error:", error);
+    return "Decryption failed";
+  }
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -129,10 +158,15 @@ export async function GET(
       );
     }
 
-    // Don't return the encrypted answer in the response for security
+    // Decrypt the answer for admins
+    const decryptedAnswer = exerciseAnswer.correctAnswer
+      ? decrypt(exerciseAnswer.correctAnswer)
+      : null;
+
     return NextResponse.json({
       id: exerciseAnswer.id,
       exerciseId: exerciseAnswer.exerciseId,
+      correctAnswer: decryptedAnswer,
       givenData: exerciseAnswer.givenData,
       solutionSteps: exerciseAnswer.solutionSteps,
       hasCorrectAnswer: !!exerciseAnswer.correctAnswer,
