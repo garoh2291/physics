@@ -43,7 +43,6 @@ interface Solution {
   isCorrect: boolean;
   status: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_WORK";
   adminFeedback?: string;
-  attemptNumber: number;
   createdAt: string;
   updatedAt: string;
   user: User;

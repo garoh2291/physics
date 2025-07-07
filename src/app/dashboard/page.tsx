@@ -13,11 +13,14 @@ interface Exercise {
   id: string;
   title: string;
   createdAt: string;
+  exerciseAnswer?: {
+    id: string;
+    correctAnswer: string;
+  };
   solutions: {
     id: string;
     status: string;
     isCorrect: boolean;
-    attemptNumber: number;
   }[];
 }
 
@@ -32,8 +35,17 @@ export default function StudentDashboard() {
 
     const latestSolution = exercise.solutions[exercise.solutions.length - 1];
 
-    if (latestSolution.status === "APPROVED" && latestSolution.isCorrect) {
-      return { status: "completed", text: "Ավարտված", color: "success" };
+    // Check if exercise has a correct answer
+    const hasCorrectAnswer = !!exercise.exerciseAnswer?.correctAnswer;
+
+    if (latestSolution.status === "APPROVED") {
+      // For exercises with correct answers, also check if the answer is correct
+      if (hasCorrectAnswer && latestSolution.isCorrect) {
+        return { status: "completed", text: "Ավարտված", color: "success" };
+      } else if (!hasCorrectAnswer) {
+        // For exercises without correct answers, just being approved is enough
+        return { status: "completed", text: "Հաստատված", color: "success" };
+      }
     } else if (latestSolution.status === "PENDING") {
       return { status: "pending", text: "Ստուգվում է", color: "warning" };
     } else if (

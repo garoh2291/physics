@@ -37,11 +37,11 @@ type Solution = {
   exerciseId: string;
   givenData?: string;
   solutionSteps?: string;
+  solutionImage?: string;
   finalAnswer?: string;
   isCorrect: boolean;
   status: string;
   adminFeedback?: string;
-  attemptNumber: number;
   createdAt: string;
   updatedAt: string;
   user: {
@@ -53,6 +53,7 @@ type Solution = {
     id: string;
     title: string;
     problemText?: string;
+    problemImage?: string;
   };
 };
 
@@ -83,6 +84,7 @@ export default function AdminSolutionsPage() {
   );
   const [feedback, setFeedback] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: solutions, isLoading, error } = useSolutions();
   const queryClient = useQueryClient();
@@ -113,9 +115,10 @@ export default function AdminSolutionsPage() {
         queryKey: ["exercises", updatedSolution.exerciseId],
       });
 
-      // Clear modal state
+      // Clear modal state and close modal
       setFeedback("");
       setSelectedSolution(null);
+      setIsModalOpen(false);
     },
   });
 
@@ -184,6 +187,7 @@ export default function AdminSolutionsPage() {
   const openReviewDialog = (solution: Solution) => {
     setSelectedSolution(solution);
     setFeedback(solution.adminFeedback || "");
+    setIsModalOpen(true);
   };
 
   if (isLoading) {
@@ -267,7 +271,6 @@ export default function AdminSolutionsPage() {
                           {solution.user.name} • {solution.user.email}
                         </p>
                         <p className="text-xs text-gray-500">
-                          Փորձ #{solution.attemptNumber} •{" "}
                           {new Date(solution.createdAt).toLocaleDateString(
                             "hy-AM"
                           )}
@@ -285,7 +288,7 @@ export default function AdminSolutionsPage() {
                           Ճիշտ պատասխան
                         </Badge>
                       )}
-                      <Dialog>
+                      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                         <DialogTrigger asChild>
                           <Button
                             variant="outline"
@@ -310,6 +313,17 @@ export default function AdminSolutionsPage() {
                               {/* Exercise Info */}
                               <div className="bg-gray-50 p-4 rounded-lg">
                                 <h4 className="font-semibold mb-2">Խնդիր</h4>
+                                {selectedSolution.exercise.problemImage && (
+                                  <div className="mb-4">
+                                    <img
+                                      src={
+                                        selectedSolution.exercise.problemImage
+                                      }
+                                      alt="Խնդիրի նկար"
+                                      className="max-w-full h-auto rounded-lg border"
+                                    />
+                                  </div>
+                                )}
                                 <MathContent
                                   content={
                                     selectedSolution.exercise.problemText
@@ -331,6 +345,18 @@ export default function AdminSolutionsPage() {
                                 <MathContent
                                   content={selectedSolution.solutionSteps}
                                 />
+                                {selectedSolution.solutionImage && (
+                                  <div className="mt-4">
+                                    <h5 className="font-medium mb-2">
+                                      Լուծման նկար
+                                    </h5>
+                                    <img
+                                      src={selectedSolution.solutionImage}
+                                      alt="Լուծման նկար"
+                                      className="max-w-full h-auto rounded-lg border"
+                                    />
+                                  </div>
+                                )}
                               </div>
 
                               {/* Student's Final Answer */}
@@ -357,54 +383,64 @@ export default function AdminSolutionsPage() {
 
                               {/* Action Buttons */}
                               <div className="flex flex-col sm:flex-row justify-end gap-2">
+                                {selectedSolution.status === "APPROVED" && (
+                                  <div className="text-sm text-green-600 font-medium flex items-center">
+                                    ✅ Այս լուծումն արդեն հաստատված է
+                                  </div>
+                                )}
                                 <Button
                                   variant="outline"
                                   onClick={() => {
                                     setSelectedSolution(null);
                                     setFeedback("");
+                                    setIsModalOpen(false);
                                   }}
                                   className="text-sm"
                                 >
-                                  Չեղարկել
+                                  Փակել
                                 </Button>
-                                <Button
-                                  variant="destructive"
-                                  onClick={() =>
-                                    handleStatusUpdate(
-                                      selectedSolution.id,
-                                      "REJECTED"
-                                    )
-                                  }
-                                  disabled={isUpdating}
-                                  className="text-sm"
-                                >
-                                  Մերժել
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  onClick={() =>
-                                    handleStatusUpdate(
-                                      selectedSolution.id,
-                                      "NEEDS_WORK"
-                                    )
-                                  }
-                                  disabled={isUpdating}
-                                  className="text-sm"
-                                >
-                                  Կարիք է շտկման
-                                </Button>
-                                <Button
-                                  onClick={() =>
-                                    handleStatusUpdate(
-                                      selectedSolution.id,
-                                      "APPROVED"
-                                    )
-                                  }
-                                  disabled={isUpdating}
-                                  className="text-sm"
-                                >
-                                  Հաստատել
-                                </Button>
+                                {selectedSolution.status !== "APPROVED" && (
+                                  <>
+                                    <Button
+                                      variant="destructive"
+                                      onClick={() =>
+                                        handleStatusUpdate(
+                                          selectedSolution.id,
+                                          "REJECTED"
+                                        )
+                                      }
+                                      disabled={isUpdating}
+                                      className="text-sm"
+                                    >
+                                      Մերժել
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      onClick={() =>
+                                        handleStatusUpdate(
+                                          selectedSolution.id,
+                                          "NEEDS_WORK"
+                                        )
+                                      }
+                                      disabled={isUpdating}
+                                      className="text-sm"
+                                    >
+                                      Կարիք է շտկման
+                                    </Button>
+                                    <Button
+                                      onClick={() =>
+                                        handleStatusUpdate(
+                                          selectedSolution.id,
+                                          "APPROVED"
+                                        )
+                                      }
+                                      disabled={isUpdating}
+                                      className="text-sm"
+                                    >
+                                      Հաստատել
+                                    </Button>
+                                  </>
+                                )}
                               </div>
                             </div>
                           )}

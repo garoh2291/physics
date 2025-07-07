@@ -445,7 +445,7 @@ export default function AdminExerciseDetailPage() {
                   {exercise.title}
                 </h1>
                 <p className="text-gray-600">
-                  {solutions.length} լուծում ստացվել է
+                  {solutions.length} ուսանող է լուծել
                 </p>
               </div>
             </div>
@@ -490,13 +490,14 @@ export default function AdminExerciseDetailPage() {
 
             <div>
               <h3 className="font-medium mb-2">Խնդիրի նկարագրություն</h3>
-              {exercise.problemImage ? (
+              {exercise.problemImage && (
                 <FileViewer
                   url={exercise.problemImage}
-                  title="Խնդիրի նկար/PDF"
+                  title="Խնդիրի նկար"
                   className="mb-4"
                 />
-              ) : (
+              )}
+              {!exercise.problemImage && (
                 <MathContent content={exercise.problemText || ""} />
               )}
               {exercise.problemText && exercise.problemImage && (
@@ -578,7 +579,6 @@ export default function AdminExerciseDetailPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Ուսանող</TableHead>
-                      <TableHead>Փորձ</TableHead>
                       <TableHead>Ամսաթիվ</TableHead>
                       <TableHead>Պատասխան</TableHead>
                       <TableHead>Ճշտությունը</TableHead>
@@ -596,12 +596,6 @@ export default function AdminExerciseDetailPage() {
                           <div className="text-sm text-gray-500">
                             {solution.user?.email || ""}
                           </div>
-                        </TableCell>
-
-                        <TableCell>
-                          <Badge variant="outline">
-                            {solution.attemptNumber}
-                          </Badge>
                         </TableCell>
 
                         <TableCell>
@@ -658,33 +652,46 @@ export default function AdminExerciseDetailPage() {
                                 <Eye className="h-4 w-4 mr-2" />
                                 Դիտել լուծումը
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-green-600"
-                                onClick={() =>
-                                  handleReviewAction(solution, "APPROVED")
-                                }
-                              >
-                                <CheckCircle className="h-4 w-4 mr-2" />
-                                Հաստատել
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-yellow-600"
-                                onClick={() =>
-                                  handleReviewAction(solution, "NEEDS_WORK")
-                                }
-                              >
-                                <AlertTriangle className="h-4 w-4 mr-2" />
-                                Կարիք է շտկման
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-red-600"
-                                onClick={() =>
-                                  handleReviewAction(solution, "REJECTED")
-                                }
-                              >
-                                <XCircle className="h-4 w-4 mr-2" />
-                                Մերժել
-                              </DropdownMenuItem>
+                              {solution.status !== "APPROVED" && (
+                                <>
+                                  <DropdownMenuItem
+                                    className="text-green-600"
+                                    onClick={() =>
+                                      handleReviewAction(solution, "APPROVED")
+                                    }
+                                  >
+                                    <CheckCircle className="h-4 w-4 mr-2" />
+                                    Հաստատել
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-yellow-600"
+                                    onClick={() =>
+                                      handleReviewAction(solution, "NEEDS_WORK")
+                                    }
+                                  >
+                                    <AlertTriangle className="h-4 w-4 mr-2" />
+                                    Կարիք է շտկման
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-red-600"
+                                    onClick={() =>
+                                      handleReviewAction(solution, "REJECTED")
+                                    }
+                                  >
+                                    <XCircle className="h-4 w-4 mr-2" />
+                                    Մերժել
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                              {solution.status === "APPROVED" && (
+                                <DropdownMenuItem
+                                  disabled
+                                  className="text-green-600"
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-2" />✅ Այս
+                                  լուծումն արդեն հաստատված է
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -715,8 +722,6 @@ export default function AdminExerciseDetailPage() {
             </DialogTitle>
             <DialogDescription>
               Ուսանող՝ <strong>{reviewDialog.solution?.user?.name}</strong>
-              <br />
-              Փորձ նիշ՝ <strong>{reviewDialog.solution?.attemptNumber}</strong>
             </DialogDescription>
           </DialogHeader>
 
@@ -740,10 +745,10 @@ export default function AdminExerciseDetailPage() {
               {/* Solution Image */}
               {reviewDialog.solution?.solutionImage && (
                 <div>
-                  <h3 className="font-medium mb-2">Լուծման նկար/PDF</h3>
+                  <h3 className="font-medium mb-2">Լուծման նկար</h3>
                   <FileViewer
                     url={reviewDialog.solution.solutionImage}
-                    title="Լուծման նկար/PDF"
+                    title="Լուծման նկար"
                   />
                 </div>
               )}
@@ -760,44 +765,52 @@ export default function AdminExerciseDetailPage() {
 
               {/* Action Buttons */}
               <div className="flex gap-2 pt-4 border-t">
-                <Button
-                  className="text-green-600"
-                  onClick={() =>
-                    setReviewDialog({
-                      ...reviewDialog,
-                      action: "APPROVED",
-                    })
-                  }
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Հաստատել
-                </Button>
-                <Button
-                  variant="outline"
-                  className="text-yellow-600"
-                  onClick={() =>
-                    setReviewDialog({
-                      ...reviewDialog,
-                      action: "NEEDS_WORK",
-                    })
-                  }
-                >
-                  <AlertTriangle className="h-4 w-4 mr-2" />
-                  Կարիք է շտկման
-                </Button>
-                <Button
-                  variant="outline"
-                  className="text-red-600"
-                  onClick={() =>
-                    setReviewDialog({
-                      ...reviewDialog,
-                      action: "REJECTED",
-                    })
-                  }
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Մերժել
-                </Button>
+                {reviewDialog.solution?.status !== "APPROVED" ? (
+                  <>
+                    <Button
+                      className="text-green-600"
+                      onClick={() =>
+                        setReviewDialog({
+                          ...reviewDialog,
+                          action: "APPROVED",
+                        })
+                      }
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Հաստատել
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="text-yellow-600"
+                      onClick={() =>
+                        setReviewDialog({
+                          ...reviewDialog,
+                          action: "NEEDS_WORK",
+                        })
+                      }
+                    >
+                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      Կարիք է շտկման
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="text-red-600"
+                      onClick={() =>
+                        setReviewDialog({
+                          ...reviewDialog,
+                          action: "REJECTED",
+                        })
+                      }
+                    >
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Մերժել
+                    </Button>
+                  </>
+                ) : (
+                  <div className="text-sm text-green-600 font-medium flex items-center">
+                    ✅ Այս լուծումն արդեն հաստատված է
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -829,7 +842,7 @@ export default function AdminExerciseDetailPage() {
                 setReviewDialog({ isOpen: false, solution: null, action: null })
               }
             >
-              Չեղարկել
+              Փակել
             </Button>
             {reviewDialog.action && (
               <Button

@@ -238,7 +238,7 @@ export default function EditExercisePage() {
                 {problemImage ? (
                   <FileViewer
                     url={problemImage}
-                    title="Խնդիրի նկար/PDF"
+                    title="Խնդիրի նկար"
                     className="mb-4"
                   />
                 ) : (
@@ -329,8 +329,7 @@ export default function EditExercisePage() {
                   Խնդիրի նկարագրություն *
                 </CardTitle>
                 <p className="text-sm text-gray-600">
-                  Կարող եք տեղադրել մաթեմատիկական տեքստ PDF-ից կամ օգտագործել
-                  մաթ գործիքները, կամ վերբեռնել նկար/PDF ֆայլ
+                  Կարող եք տեղադրել մաթեմատիկական տեքստ կամ վերբեռնել նկար
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -348,24 +347,23 @@ export default function EditExercisePage() {
 Կարմիր Գլխարկը պատրաստել էր **N₀ = 20** հատ կարկանդակ...
 Արագությունը `v = 5` _մ/վ_ էր...
 
-Կարող եք տեղադրել տեքստ PDF-ից Ctrl+V-ով։"
+Կարող եք օգտագործել մաթեմատիկական նշաններ և բանաձևեր։"
                   />
                 </div>
 
                 <div>
-                  <Label>Խնդիրի նկար/PDF (ոչ պարտադիր)</Label>
+                  <Label>Խնդիրի նկար (ոչ պարտադիր)</Label>
                   <FileUpload
                     value={problemImage}
                     onChange={setProblemImage}
-                    accept="image/*,.pdf"
-                    label="Վերբեռնել նկար կամ PDF ֆայլ"
+                    label="Վերբեռնել նկար (առավելագույնը 5MB)"
                   />
                 </div>
 
                 {problemImage && (
                   <FileViewer
                     url={problemImage}
-                    title="Խնդիրի նկար/PDF"
+                    title="Խնդիրի նկար"
                     className="mt-4"
                   />
                 )}

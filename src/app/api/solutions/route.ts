@@ -45,12 +45,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { exerciseId, givenData, solutionSteps, finalAnswer } =
+    const { exerciseId, givenData, solutionSteps, solutionImage, finalAnswer } =
       await request.json();
 
-    if (!exerciseId || !givenData || !solutionSteps || !finalAnswer) {
+    if (!exerciseId) {
       return NextResponse.json(
-        { error: "All fields are required" },
+        { error: "Exercise ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // At least one solution method should be provided
+    if (!solutionSteps?.trim() && !solutionImage) {
+      return NextResponse.json(
+        { error: "Please provide solution (text or image)" },
         { status: 400 }
       );
     }
@@ -68,22 +76,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the next attempt number
-    const existingSolutions = await db.solution.findMany({
-      where: {
-        exerciseId,
-        userId: session.user.id,
-      },
-      orderBy: { attemptNumber: "desc" },
-      take: 1,
-    });
-
-    const attemptNumber =
-      existingSolutions.length > 0 ? existingSolutions[0].attemptNumber + 1 : 1;
-
-    // Check if answer is correct (if exercise has an answer)
+    // Check if answer is correct (if exercise has an answer and student provided an answer)
     let isCorrect = false;
-    if (exercise.exerciseAnswer?.correctAnswer) {
+    if (exercise.exerciseAnswer?.correctAnswer && finalAnswer?.trim()) {
       try {
         const correctAnswer = decrypt(exercise.exerciseAnswer.correctAnswer);
         // Normalize answers for comparison (remove spaces, convert to lowercase)
@@ -96,34 +91,76 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create the solution
-    const solution = await db.solution.create({
-      data: {
-        exerciseId,
-        userId: session.user.id,
-        givenData,
-        solutionSteps,
-        finalAnswer,
-        isCorrect,
-        status: isCorrect ? "PENDING" : "PENDING", // Always PENDING initially
-        attemptNumber,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        exercise: {
-          select: {
-            id: true,
-            title: true,
-          },
+    // Check if solution already exists
+    const existingSolution = await db.solution.findUnique({
+      where: {
+        userId_exerciseId: {
+          userId: session.user.id,
+          exerciseId,
         },
       },
     });
+
+    let solution;
+    if (existingSolution) {
+      // Update existing solution
+      solution = await db.solution.update({
+        where: { id: existingSolution.id },
+        data: {
+          givenData: givenData || null,
+          solutionSteps: solutionSteps || null,
+          solutionImage: solutionImage || null,
+          finalAnswer: finalAnswer || null,
+          isCorrect,
+          status: isCorrect ? "PENDING" : "PENDING", // Always PENDING initially
+          updatedAt: new Date(),
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          exercise: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+      });
+    } else {
+      // Create new solution
+      solution = await db.solution.create({
+        data: {
+          exerciseId,
+          userId: session.user.id,
+          givenData: givenData || null,
+          solutionSteps: solutionSteps || null,
+          solutionImage: solutionImage || null,
+          finalAnswer: finalAnswer || null,
+          isCorrect,
+          status: isCorrect ? "PENDING" : "PENDING", // Always PENDING initially
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          exercise: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+      });
+    }
 
     return NextResponse.json(solution);
   } catch (error) {

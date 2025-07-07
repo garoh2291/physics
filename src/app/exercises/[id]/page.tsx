@@ -60,11 +60,11 @@ export default function StudentExercisePage() {
   // Load existing solution if any
   useEffect(() => {
     if (exercise?.solutions && exercise.solutions.length > 0) {
-      const latestSolution = exercise.solutions[exercise.solutions.length - 1];
-      setGivenData(latestSolution.givenData || "");
-      setSolutionSteps(latestSolution.solutionSteps || "");
-      setSolutionImage(latestSolution.solutionImage || "");
-      setFinalAnswer(latestSolution.finalAnswer || "");
+      const solution = exercise.solutions[0]; // Only one solution per user per exercise
+      setGivenData(solution.givenData || "");
+      setSolutionSteps(solution.solutionSteps || "");
+      setSolutionImage(solution.solutionImage || "");
+      setFinalAnswer(solution.finalAnswer || "");
     }
   }, [exercise]);
 
@@ -74,8 +74,9 @@ export default function StudentExercisePage() {
     setSuccess("");
     setIsSubmitting(true);
 
-    if (!givenData.trim() || !solutionSteps.trim() || !finalAnswer.trim()) {
-      setError("Բոլոր դաշտերը պարտադիր են");
+    // All fields are optional, but at least one solution method should be provided
+    if (!solutionSteps.trim() && !solutionImage) {
+      setError("Խնդրում ենք տրամադրել լուծումը (տեքստ կամ նկար)");
       setIsSubmitting(false);
       return;
     }
@@ -89,13 +90,21 @@ export default function StudentExercisePage() {
         finalAnswer,
       });
 
-      if (result.isCorrect) {
-        setSuccess(
-          "Շնորհավորում ենք! Ձեր պատասխանը ճիշտ է։ Այժմ սպասեք ադմինիստրատորի ստուգմանը։"
-        );
+      if (exercise?.exerciseAnswer?.correctAnswer) {
+        // Exercise has a correct answer, show correctness feedback
+        if (result.isCorrect) {
+          setSuccess(
+            "Շնորհավորում ենք! Ձեր պատասխանը ճիշտ է։ Այժմ սպասեք ադմինիստրատորի ստուգմանը։"
+          );
+        } else {
+          setError(
+            "Ձեր պատասխանը սխալ է։ Կարող եք փորձել կրկին կամ շարունակել աշխատել։"
+          );
+        }
       } else {
-        setError(
-          "Ձեր պատասխանը սխալ է։ Կարող եք փորձել կրկին կամ շարունակել աշխատել։"
+        // Exercise has no correct answer, just show submission success
+        setSuccess(
+          "Ձեր լուծումը հաջողությամբ ուղարկվել է։ Այժմ սպասեք ադմինիստրատորի ստուգմանը։"
         );
       }
     } catch (error: unknown) {
@@ -165,7 +174,7 @@ export default function StudentExercisePage() {
     );
   }
 
-  const latestSolution = exercise.solutions?.[exercise.solutions.length - 1];
+  const solution = exercise.solutions?.[0]; // Only one solution per user per exercise
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -189,10 +198,10 @@ export default function StudentExercisePage() {
                 </p>
               </div>
             </div>
-            {latestSolution && (
+            {solution && (
               <div className="flex items-center space-x-2 flex-wrap">
-                {getStatusBadge(latestSolution.status)}
-                {latestSolution.isCorrect && (
+                {getStatusBadge(solution.status)}
+                {solution.isCorrect && (
                   <Badge variant="outline" className="text-green-600 text-xs">
                     <CheckCircle className="h-3 w-3 mr-1" />
                     Ճիշտ պատասխան
@@ -214,9 +223,10 @@ export default function StudentExercisePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {exercise.problemImage ? (
-              <FileViewer url={exercise.problemImage} title="Խնդիրի նկար/PDF" />
-            ) : (
+            {exercise.problemImage && (
+              <FileViewer url={exercise.problemImage} title="Խնդիրի նկար" />
+            )}
+            {!exercise.problemImage && (
               <MathContent content={exercise.problemText || ""} />
             )}
             {exercise.problemText && exercise.problemImage && (
@@ -235,7 +245,7 @@ export default function StudentExercisePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <span>📊</span>
-                Տրված է
+                Տրված է (ոչ պարտադիր)
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -265,7 +275,9 @@ t₀ = 60 վ"
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="solutionSteps">Լուծման քայլեր</Label>
+                <Label htmlFor="solutionSteps">
+                  Լուծման քայլեր (ոչ պարտադիր)
+                </Label>
                 <MathEditor
                   value={solutionSteps}
                   onChange={setSolutionSteps}
@@ -285,57 +297,75 @@ N = N₀ - N' = 10"
               </div>
 
               <div>
-                <Label>Լուծման նկար/PDF (ոչ պարտադիր)</Label>
+                <Label>Լուծման նկար (ոչ պարտադիր)</Label>
                 <FileUpload
                   value={solutionImage}
                   onChange={setSolutionImage}
-                  accept="image/*,.pdf"
-                  label="Վերբեռնել լուծման նկար կամ PDF ֆայլ"
+                  label="Վերբեռնել լուծման նկար (առավելագույնը 5MB)"
                 />
               </div>
 
               {solutionImage && (
                 <FileViewer
                   url={solutionImage}
-                  title="Լուծման նկար/PDF"
+                  title="Լուծման նկար"
                   className="mt-4"
                 />
               )}
             </CardContent>
           </Card>
 
-          {/* Final Answer */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span>✅</span>
-                Պատասխան
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Label htmlFor="answer">Վերջնական պատասխան</Label>
-                <Input
-                  id="answer"
-                  value={finalAnswer}
-                  onChange={(e) => setFinalAnswer(e.target.value)}
-                  placeholder="Օրինակ՝ 10"
-                  disabled={latestSolution?.isCorrect}
-                />
-                {latestSolution?.isCorrect && (
-                  <p className="text-sm text-green-600">
-                    ✅ Ձեր պատասխանը ճիշտ է։ Այժմ սպասեք ադմինիստրատորի
-                    ստուգմանը։
+          {/* Final Answer - Only show if exercise has a correct answer */}
+          {!!exercise.exerciseAnswer?.correctAnswer ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span>✅</span>
+                  Պատասխան (ոչ պարտադիր)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Label htmlFor="answer">Վերջնական պատասխան</Label>
+                  <Input
+                    id="answer"
+                    value={finalAnswer}
+                    onChange={(e) => setFinalAnswer(e.target.value)}
+                    placeholder="Օրինակ՝ 10"
+                    disabled={solution?.isCorrect}
+                  />
+                  {solution?.isCorrect && (
+                    <p className="text-sm text-green-600">
+                      ✅ Ձեր պատասխանը ճիշտ է։ Այժմ սպասեք ադմինիստրատորի
+                      ստուգմանը։
+                    </p>
+                  )}
+                  {solution?.status === "APPROVED" && (
+                    <p className="text-sm text-green-600">
+                      ✅ Ձեր լուծումը հաստատված է ադմինիստրատորի կողմից։
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span>📝</span>
+                  Լուծման տեսակ
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <p className="text-blue-800 text-sm">
+                    Այս վարժությունը չունի ճիշտ պատասխան։ Ձեր լուծումը կստուգվի
+                    ադմինիստրատորի կողմից։
                   </p>
-                )}
-                {latestSolution?.status === "APPROVED" && (
-                  <p className="text-sm text-green-600">
-                    ✅ Ձեր լուծումը հաստատված է ադմինիստրատորի կողմից։
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Submit Button */}
           <div className="flex justify-end">
@@ -343,8 +373,11 @@ N = N₀ - N' = 10"
               type="submit"
               disabled={
                 isSubmitting ||
-                (latestSolution?.isCorrect &&
-                  latestSolution?.status === "APPROVED")
+                (!!exercise.exerciseAnswer?.correctAnswer &&
+                  solution?.isCorrect &&
+                  solution?.status === "APPROVED") ||
+                (!exercise.exerciseAnswer?.correctAnswer &&
+                  solution?.status === "APPROVED")
               }
               size="lg"
               className="w-full sm:w-auto text-sm md:text-base"
@@ -368,7 +401,7 @@ N = N₀ - N' = 10"
         )}
 
         {/* Admin Feedback */}
-        {latestSolution?.adminFeedback && (
+        {solution?.adminFeedback && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -378,7 +411,7 @@ N = N₀ - N' = 10"
             </CardHeader>
             <CardContent>
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <p className="text-blue-800">{latestSolution.adminFeedback}</p>
+                <p className="text-blue-800">{solution.adminFeedback}</p>
               </div>
             </CardContent>
           </Card>

@@ -12,7 +12,7 @@ export function FileUpload({
   value,
   onChange,
   label,
-  accept = "image/*,application/pdf",
+  accept = "image/*",
   disabled,
 }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -22,16 +22,32 @@ export function FileUpload({
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Check file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      setError("File size must be less than 5MB");
+      return;
+    }
+
     setError("");
     setUploading(true);
     try {
       // Sanitize filename for Cloudinary public_id
       const sanitizeFileName = (fileName: string) => {
-        return fileName
+        // Get the base name without extension
+        const baseName = fileName.replace(/\.[^/.]+$/, "");
+        const extension = fileName.split(".").pop()?.toLowerCase() || "";
+
+        // Sanitize the base name
+        const sanitizedBase = baseName
           .replace(/[^a-zA-Z0-9.-]/g, "_") // Replace invalid chars with underscore
           .replace(/_{2,}/g, "_") // Replace multiple underscores with single
           .replace(/^_+|_+$/g, "") // Remove leading/trailing underscores
           .toLowerCase();
+
+        // Return sanitized name with original extension
+        return sanitizedBase + (extension ? `.${extension}` : "");
       };
 
       const timestamp = Date.now();
@@ -47,7 +63,7 @@ export function FileUpload({
       );
 
       const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/auto/upload`,
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
         {
           method: "POST",
           body: formData,
@@ -73,8 +89,6 @@ export function FileUpload({
     }
   };
 
-  const isPdf = value?.endsWith(".pdf");
-
   return (
     <div className="space-y-2">
       {label && <label className="block font-medium mb-1">{label}</label>}
@@ -96,22 +110,8 @@ export function FileUpload({
       </button>
       {error && <div className="text-red-600 text-sm">{error}</div>}
       {value && (
-        <div className="mt-2">
-          {isPdf ? (
-            <embed
-              src={value}
-              type="application/pdf"
-              width="100%"
-              height="400px"
-              className="rounded border"
-            />
-          ) : (
-            <img
-              src={value}
-              alt="Ներբեռնված ֆայլ"
-              className="max-h-64 rounded border"
-            />
-          )}
+        <div className="mt-2 text-sm text-green-600">
+          ✅ Ֆայլը հաջողությամբ վերբեռնվել է
         </div>
       )}
     </div>

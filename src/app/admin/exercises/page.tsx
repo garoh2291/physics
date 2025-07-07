@@ -480,7 +480,7 @@ export default function AdminExercisesPage() {
               variant="outline"
               onClick={() => setDeleteDialog({ isOpen: false, exercise: null })}
             >
-              Չեղարկել
+              Փակել
             </Button>
             <Button
               variant="destructive"
