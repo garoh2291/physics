@@ -18,6 +18,7 @@ import {
   Coins,
 } from "lucide-react";
 import { FileViewer } from "@/components/ui/file-viewer";
+import { MathPreview } from "@/components/math-preview";
 import {
   useExercise,
   useSubmitSolution,
@@ -261,9 +262,10 @@ export default function StudentExercisePage() {
               />
             )}
             {exercise.problemText && (
-              <div className="prose prose-lg max-w-none bg-white p-6 rounded-lg border">
-                {exercise.problemText}
-              </div>
+              <MathPreview
+                value={exercise.problemText}
+                className="prose prose-lg max-w-none bg-white p-6 rounded-lg border"
+              />
             )}
           </CardContent>
         </Card>
@@ -353,9 +355,10 @@ export default function StudentExercisePage() {
                           />
                         )}
                         {exercise.hintText1 && (
-                          <div className="prose prose-sm max-w-none">
-                            {exercise.hintText1}
-                          </div>
+                          <MathPreview
+                            value={exercise.hintText1}
+                            className="prose prose-sm max-w-none"
+                          />
                         )}
                       </>
                     )}
@@ -398,9 +401,10 @@ export default function StudentExercisePage() {
                           />
                         )}
                         {exercise.hintText2 && (
-                          <div className="prose prose-sm max-w-none">
-                            {exercise.hintText2}
-                          </div>
+                          <MathPreview
+                            value={exercise.hintText2}
+                            className="prose prose-sm max-w-none"
+                          />
                         )}
                       </>
                     )}
@@ -443,9 +447,10 @@ export default function StudentExercisePage() {
                           />
                         )}
                         {exercise.hintText3 && (
-                          <div className="prose prose-sm max-w-none">
-                            {exercise.hintText3}
-                          </div>
+                          <MathPreview
+                            value={exercise.hintText3}
+                            className="prose prose-sm max-w-none"
+                          />
                         )}
                       </>
                     )}
@@ -526,12 +531,10 @@ export default function StudentExercisePage() {
                     />
                   )}
                   {exercise.givenText && (
-                    <div className="prose prose-lg max-w-none bg-white p-6 rounded-lg border">
-                      <h4 className="font-semibold mb-2">
-                        Լրացուցիչ տրված տվյալներ:
-                      </h4>
-                      {exercise.givenText}
-                    </div>
+                    <MathPreview
+                      value={exercise.givenText}
+                      className="prose prose-lg max-w-none bg-white p-6 rounded-lg border"
+                    />
                   )}
                   {exercise.solutionImage && (
                     <FileViewer
@@ -541,10 +544,10 @@ export default function StudentExercisePage() {
                     />
                   )}
                   {exercise.solutionSteps && (
-                    <div className="prose prose-lg max-w-none bg-white p-6 rounded-lg border">
-                      <h4 className="font-semibold mb-2">Լուծման քայլեր:</h4>
-                      {exercise.solutionSteps}
-                    </div>
+                    <MathPreview
+                      value={exercise.solutionSteps}
+                      className="prose prose-lg max-w-none bg-white p-6 rounded-lg border"
+                    />
                   )}
                 </CardContent>
               </Card>

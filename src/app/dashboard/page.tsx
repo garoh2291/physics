@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LogOut, BookOpen, CheckCircle, Coins } from "lucide-react";
+import { LogOut, BookOpen, CheckCircle, Coins, XCircle } from "lucide-react";
 import { useExercises, useUserProfile, useCourses } from "@/hooks/use-api";
 import Link from "next/link";
 
@@ -47,8 +47,14 @@ export default function StudentDashboard() {
     const solved = solvedIds.has(exercise.id);
     if (solved)
       return { status: "completed", text: "Ավարտված", color: "success" };
-    if (exercise.solutions.length > 0)
+    if (exercise.solutions.length > 0) {
+      // Check if any solution is correct
+      const hasCorrectSolution = exercise.solutions.some((s) => s.isCorrect);
+      if (!hasCorrectSolution) {
+        return { status: "wrong", text: "Սխալ պատասխան", color: "destructive" };
+      }
       return { status: "in_progress", text: "Ընթացքում", color: "secondary" };
+    }
     return { status: "new", text: "Նոր", color: "default" };
   };
 
@@ -56,6 +62,8 @@ export default function StudentDashboard() {
     switch (status) {
       case "completed":
         return <CheckCircle className="h-4 w-4" />;
+      case "wrong":
+        return <XCircle className="h-4 w-4" />;
       default:
         return <BookOpen className="h-4 w-4" />;
     }

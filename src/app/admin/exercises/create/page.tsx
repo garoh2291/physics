@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Save, Eye } from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 import { MathEditor } from "@/components/math-editor";
 import { FileUpload } from "@/components/ui/file-upload";
 import { FileViewer } from "@/components/ui/file-viewer";
@@ -37,7 +37,6 @@ export default function CreateExercisePage() {
   const [hintImage2, setHintImage2] = useState("");
   const [hintText3, setHintText3] = useState("");
   const [hintImage3, setHintImage3] = useState("");
-  const [isPreview, setIsPreview] = useState(false);
   const [error, setError] = useState("");
 
   const router = useRouter();
@@ -94,10 +93,6 @@ export default function CreateExercisePage() {
     );
   };
 
-  const togglePreview = () => {
-    setIsPreview(!isPreview);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -115,20 +110,11 @@ export default function CreateExercisePage() {
                 Նոր վարժություն
               </h1>
             </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                onClick={togglePreview}
-                type="button"
-                className="flex-1 sm:flex-none text-sm"
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                {isPreview ? "Խմբագրել" : "Նախադիտել"}
-              </Button>
+            <div className="flex justify-end">
               <Button
                 onClick={handleSubmit}
                 disabled={createExerciseMutation.isPending}
-                className="flex-1 sm:flex-none text-sm"
+                className="text-sm"
               >
                 <Save className="h-4 w-4 mr-2" />
                 {createExerciseMutation.isPending

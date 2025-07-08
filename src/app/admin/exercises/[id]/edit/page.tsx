@@ -160,11 +160,11 @@ export default function EditExercisePage() {
                 Խմբագրել վարժությունը
               </h1>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex justify-end">
               <Button
                 onClick={handleSubmit}
                 disabled={updateExerciseMutation.isPending}
-                className="flex-1 sm:flex-none text-sm"
+                className="text-sm"
               >
                 <Save className="h-4 w-4 mr-2" />
                 {updateExerciseMutation.isPending
