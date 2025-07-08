@@ -2,36 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import crypto from "crypto";
-
-// Decrypt function for answer checking
-function decrypt(encryptedText: string): string {
-  try {
-    const key = process.env.ENCRYPTION_KEY || "default-key-for-development";
-    const algorithm = "aes-256-cbc";
-
-    // Split IV and encrypted text
-    const parts = encryptedText.split(":");
-    if (parts.length !== 2) {
-      throw new Error("Invalid encrypted text format");
-    }
-
-    const iv = Buffer.from(parts[0], "hex");
-    const encrypted = parts[1];
-
-    // Create a 32-byte key from the provided key
-    const keyBuffer = crypto.createHash("sha256").update(key).digest();
-
-    const decipher = crypto.createDecipheriv(algorithm, keyBuffer, iv);
-    let decrypted = decipher.update(encrypted, "hex", "utf8");
-    decrypted += decipher.final("utf8");
-
-    return decrypted;
-  } catch (error) {
-    console.error("Decryption error:", error);
-    return "Decryption failed";
-  }
-}
+import { safeDecrypt } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,8 +16,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { exerciseId, givenData, solutionSteps, solutionImage, finalAnswer } =
-      await request.json();
+    const { exerciseId, finalAnswer } = await request.json();
 
     if (!exerciseId) {
       return NextResponse.json(
@@ -54,11 +24,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // At least one solution method should be provided
-    if (!solutionSteps?.trim() && !solutionImage) {
+    if (!finalAnswer || !finalAnswer.trim()) {
       return NextResponse.json(
-        { error: "Please provide solution (text or image)" },
+        { error: "Պատասխանը պարտադիր է" },
         { status: 400 }
       );
     }
@@ -66,7 +34,6 @@ export async function POST(request: NextRequest) {
     // Check if exercise exists
     const exercise = await db.exercise.findUnique({
       where: { id: exerciseId },
-      include: { exerciseAnswer: true },
     });
 
     if (!exercise) {
@@ -78,9 +45,9 @@ export async function POST(request: NextRequest) {
 
     // Check if answer is correct (if exercise has an answer and student provided an answer)
     let isCorrect = false;
-    if (exercise.exerciseAnswer?.correctAnswer && finalAnswer?.trim()) {
+    if (exercise.correctAnswer && finalAnswer?.trim()) {
       try {
-        const correctAnswer = decrypt(exercise.exerciseAnswer.correctAnswer);
+        const correctAnswer = safeDecrypt(exercise.correctAnswer);
         // Normalize answers for comparison (remove spaces, convert to lowercase)
         const normalizedStudentAnswer = finalAnswer.trim().toLowerCase();
         const normalizedCorrectAnswer = correctAnswer.trim().toLowerCase();
@@ -107,12 +74,8 @@ export async function POST(request: NextRequest) {
       solution = await db.solution.update({
         where: { id: existingSolution.id },
         data: {
-          givenData: givenData || null,
-          solutionSteps: solutionSteps || null,
-          solutionImage: solutionImage || null,
-          finalAnswer: finalAnswer || null,
+          finalAnswer: finalAnswer.trim(),
           isCorrect,
-          status: isCorrect ? "PENDING" : "PENDING", // Always PENDING initially
           updatedAt: new Date(),
         },
         include: {
@@ -137,12 +100,8 @@ export async function POST(request: NextRequest) {
         data: {
           exerciseId,
           userId: session.user.id,
-          givenData: givenData || null,
-          solutionSteps: solutionSteps || null,
-          solutionImage: solutionImage || null,
-          finalAnswer: finalAnswer || null,
+          finalAnswer: finalAnswer.trim(),
           isCorrect,
-          status: isCorrect ? "PENDING" : "PENDING", // Always PENDING initially
         },
         include: {
           user: {

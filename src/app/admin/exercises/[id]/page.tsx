@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
@@ -16,43 +16,26 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import {
   ArrowLeft,
   Edit,
-  MoreHorizontal,
   CheckCircle,
   XCircle,
-  Clock,
-  AlertTriangle,
   User,
   Calendar,
   Hash,
   Eye,
+  MessageSquare,
 } from "lucide-react";
 import { FileViewer } from "@/components/ui/file-viewer";
-import { useExercise, useUpdateSolutionStatus } from "@/hooks/use-api";
-
-interface ReviewDialogData {
-  isOpen: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  solution: any;
-  action: "APPROVED" | "REJECTED" | "NEEDS_WORK" | null;
-}
+import { useExercise } from "@/hooks/use-api";
 
 // Math Content Display Component with Markdown support
 function MathContent({ content }: { content: string }) {
@@ -198,7 +181,7 @@ function MathContent({ content }: { content: string }) {
         }
 
         .math-content-display :global(code) {
-          background-color: #f3f4f6;
+          background: #f3f4f6;
           color: #1f2937;
           padding: 0.125rem 0.25rem;
           border-radius: 0.25rem;
@@ -206,68 +189,68 @@ function MathContent({ content }: { content: string }) {
           font-size: 0.875em;
         }
 
-        .math-content-display :global(ul),
-        .math-content-display :global(ol) {
-          padding-left: 1.5rem;
+        .math-content-display :global(pre) {
+          background: #1f2937;
+          color: #f9fafb;
+          padding: 1rem;
+          border-radius: 0.5rem;
+          overflow-x: auto;
+          margin: 1rem 0;
+        }
+
+        .math-content-display :global(pre code) {
+          background: none;
+          color: inherit;
+          padding: 0;
+        }
+
+        .math-content-display :global(ul) {
           margin: 0.75rem 0;
+          padding-left: 1.5rem;
+        }
+
+        .math-content-display :global(ol) {
+          margin: 0.75rem 0;
+          padding-left: 1.5rem;
         }
 
         .math-content-display :global(li) {
-          margin: 0.5rem 0;
-          line-height: 1.6;
+          margin: 0.25rem 0;
         }
 
         .math-content-display :global(blockquote) {
-          border-left: 4px solid #3b82f6;
-          background-color: #f8fafc;
-          padding: 1rem 1.5rem;
+          border-left: 4px solid #e5e7eb;
+          padding-left: 1rem;
           margin: 1rem 0;
-          border-radius: 0 0.5rem 0.5rem 0;
+          color: #6b7280;
+          font-style: italic;
+        }
+
+        .math-content-display :global(table) {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 1rem 0;
+        }
+
+        .math-content-display :global(th) {
+          background: #f9fafb;
+          border: 1px solid #e5e7eb;
+          padding: 0.5rem;
+          text-align: left;
+          font-weight: 600;
+        }
+
+        .math-content-display :global(td) {
+          border: 1px solid #e5e7eb;
+          padding: 0.5rem;
+        }
+
+        .math-content-display :global(tr:nth-child(even)) {
+          background: #f9fafb;
         }
       `}</style>
-
       <div className="math-content-display">
-        <ReactMarkdown
-          components={{
-            // Custom component to handle HTML spans within markdown
-            p: ({ children }) => {
-              // Convert any remaining HTML spans to proper elements
-              if (typeof children === "string") {
-                const processedChildren = children
-                  .replace(
-                    /<span class="math-formula">(.*?)<\/span>/g,
-                    '<span class="math-formula">$1</span>'
-                  )
-                  .replace(
-                    /<span class="math-var">(.*?)<\/span>/g,
-                    '<span class="math-var">$1</span>'
-                  )
-                  .replace(
-                    /<span class="math-unit">(.*?)<\/span>/g,
-                    '<span class="math-unit">$1</span>'
-                  );
-
-                return (
-                  <p dangerouslySetInnerHTML={{ __html: processedChildren }} />
-                );
-              }
-              return <p>{children}</p>;
-            },
-            // Handle other markdown elements normally
-            h1: ({ children }) => <h1>{children}</h1>,
-            h2: ({ children }) => <h2>{children}</h2>,
-            h3: ({ children }) => <h3>{children}</h3>,
-            strong: ({ children }) => <strong>{children}</strong>,
-            em: ({ children }) => <em>{children}</em>,
-            code: ({ children }) => <code>{children}</code>,
-            ul: ({ children }) => <ul>{children}</ul>,
-            ol: ({ children }) => <ol>{children}</ol>,
-            li: ({ children }) => <li>{children}</li>,
-            blockquote: ({ children }) => <blockquote>{children}</blockquote>,
-          }}
-        >
-          {decodedContent}
-        </ReactMarkdown>
+        <ReactMarkdown>{decodedContent}</ReactMarkdown>
       </div>
     </>
   );
@@ -276,121 +259,44 @@ function MathContent({ content }: { content: string }) {
 export default function AdminExerciseDetailPage() {
   const params = useParams();
   const exerciseId = params.id as string;
-
-  const [reviewDialog, setReviewDialog] = useState<ReviewDialogData>({
-    isOpen: false,
-    solution: null,
-    action: null,
-  });
-  const [feedback, setFeedback] = useState("");
-
-  // Await params
-  useEffect(() => {
-    const getParams = async () => {
-      // const resolvedParams = await params; // This line is removed as params is now directly used
-      // setExerciseId(resolvedParams.id); // This line is removed as exerciseId is now directly used
-    };
-    getParams();
-  }, [params]);
+  const [selectedSolution, setSelectedSolution] = useState<{
+    id: string;
+    user: { name: string; email: string };
+    finalAnswer?: string;
+    isCorrect: boolean;
+    createdAt: string;
+  } | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: exercise, isLoading, error } = useExercise(exerciseId);
-  const updateStatusMutation = useUpdateSolutionStatus();
 
-  const handleReviewAction = (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    solution: any,
-    action: "APPROVED" | "REJECTED" | "NEEDS_WORK"
-  ) => {
-    setReviewDialog({
-      isOpen: true,
-      solution,
-      action,
-    });
-    setFeedback(solution.adminFeedback || "");
-  };
-
-  const handleReviewConfirm = () => {
-    if (!reviewDialog.solution || !reviewDialog.action) return;
-
-    updateStatusMutation.mutate(
-      {
-        solutionId: reviewDialog.solution.id,
-        status: reviewDialog.action,
-        adminFeedback: feedback.trim() || undefined,
-      },
-      {
-        onSuccess: () => {
-          setReviewDialog({ isOpen: false, solution: null, action: null });
-          setFeedback("");
-        },
-      }
-    );
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      PENDING: {
-        variant: "outline" as const,
-        icon: Clock,
-        text: "Սպասում է",
-        className: "text-orange-600",
-      },
-      APPROVED: {
-        variant: "outline" as const,
-        icon: CheckCircle,
-        text: "Հաստատված",
-        className: "text-green-600",
-      },
-      REJECTED: {
-        variant: "outline" as const,
-        icon: XCircle,
-        text: "Մերժված",
-        className: "text-red-600",
-      },
-      NEEDS_WORK: {
-        variant: "outline" as const,
-        icon: AlertTriangle,
-        text: "Կարիք է շտկման",
-        className: "text-yellow-600",
-      },
-    };
-
-    const config = statusConfig[status as keyof typeof statusConfig];
-    if (!config) return null;
-
-    const Icon = config.icon;
-    return (
-      <Badge variant={config.variant} className={config.className}>
-        <Icon className="h-3 w-3 mr-1" />
-        {config.text}
-      </Badge>
-    );
-  };
-
-  const getActionButtonText = (action: string) => {
-    switch (action) {
-      case "APPROVED":
-        return "Հաստատել";
-      case "REJECTED":
-        return "Մերժել";
-      case "NEEDS_WORK":
-        return "Կարիք է շտկման";
-      default:
-        return "";
+  const getCorrectnessBadge = (isCorrect: boolean) => {
+    if (isCorrect) {
+      return (
+        <Badge variant="outline" className="text-green-600">
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Ճիշտ պատասխան
+        </Badge>
+      );
+    } else {
+      return (
+        <Badge variant="outline" className="text-red-600">
+          <XCircle className="h-3 w-3 mr-1" />
+          Սխալ պատասխան
+        </Badge>
+      );
     }
   };
 
-  const getActionButtonColor = (action: string) => {
-    switch (action) {
-      case "APPROVED":
-        return "text-green-600";
-      case "REJECTED":
-        return "text-red-600";
-      case "NEEDS_WORK":
-        return "text-yellow-600";
-      default:
-        return "";
-    }
+  const openSolutionDialog = (solution: {
+    id: string;
+    user: { name: string; email: string };
+    finalAnswer?: string;
+    isCorrect: boolean;
+    createdAt: string;
+  }) => {
+    setSelectedSolution(solution);
+    setIsModalOpen(true);
   };
 
   if (isLoading) {
@@ -420,12 +326,8 @@ export default function AdminExerciseDetailPage() {
   }
 
   const solutions = exercise.solutions || [];
-  const statusCounts = {
-    pending: solutions.filter((s) => s.status === "PENDING").length,
-    approved: solutions.filter((s) => s.status === "APPROVED").length,
-    rejected: solutions.filter((s) => s.status === "REJECTED").length,
-    needsWork: solutions.filter((s) => s.status === "NEEDS_WORK").length,
-  };
+  const correctCount = solutions.filter((s) => s.isCorrect).length;
+  const incorrectCount = solutions.filter((s) => !s.isCorrect).length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -497,65 +399,38 @@ export default function AdminExerciseDetailPage() {
                   className="mb-4"
                 />
               )}
-              {!exercise.problemImage && (
-                <MathContent content={exercise.problemText || ""} />
+              {exercise.problemText && (
+                <MathContent content={exercise.problemText} />
               )}
-              {exercise.problemText && exercise.problemImage && (
-                <div className="mt-4">
-                  <h4 className="font-medium mb-2">Խնդիրի տեքստ</h4>
-                  <MathContent content={exercise.problemText} />
+            </div>
+
+            {/* Solution Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span className="font-medium text-green-800">
+                    Ճիշտ պատասխաններ
+                  </span>
                 </div>
-              )}
+                <p className="text-2xl font-bold text-green-600 mt-1">
+                  {correctCount}
+                </p>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <div className="flex items-center space-x-2">
+                  <XCircle className="h-5 w-5 text-red-600" />
+                  <span className="font-medium text-red-800">
+                    Սխալ պատասխաններ
+                  </span>
+                </div>
+                <p className="text-2xl font-bold text-red-600 mt-1">
+                  {incorrectCount}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
-
-        {/* Statistics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">
-                  {statusCounts.pending}
-                </div>
-                <p className="text-sm text-gray-600">Սպասում է</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {statusCounts.approved}
-                </div>
-                <p className="text-sm text-gray-600">Հաստատված</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-600">
-                  {statusCounts.needsWork}
-                </div>
-                <p className="text-sm text-gray-600">Կարիք է շտկման</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
-                  {statusCounts.rejected}
-                </div>
-                <p className="text-sm text-gray-600">Մերժված</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Solutions Table */}
         <Card>
@@ -565,12 +440,9 @@ export default function AdminExerciseDetailPage() {
           <CardContent>
             {solutions.length === 0 ? (
               <div className="text-center py-8">
-                <div className="h-12 w-12 text-gray-400 mx-auto mb-4">📝</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Լուծումներ չկան
-                </h3>
+                <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500">
-                  Ուսանողները դեռ լուծումներ չեն ուղարկել այս վարժության համար:
+                  Դեռ ոչ ոք չի լուծել այս վարժությունը
                 </p>
               </div>
             ) : (
@@ -579,121 +451,119 @@ export default function AdminExerciseDetailPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Ուսանող</TableHead>
-                      <TableHead>Ամսաթիվ</TableHead>
                       <TableHead>Պատասխան</TableHead>
-                      <TableHead>Ճշտությունը</TableHead>
                       <TableHead>Կարգավիճակ</TableHead>
-                      <TableHead className="w-12"></TableHead>
+                      <TableHead>Ամսաթիվ</TableHead>
+                      <TableHead>Գործողություններ</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {solutions.map((solution) => (
                       <TableRow key={solution.id}>
                         <TableCell>
-                          <div className="font-medium">
-                            {solution.user?.name || "Անհայտ"}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {solution.user?.email || ""}
-                          </div>
-                        </TableCell>
-
-                        <TableCell>
-                          <div className="text-sm">
-                            {new Date(solution.createdAt).toLocaleDateString(
-                              "hy-AM",
-                              {
-                                month: "short",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )}
+                          <div>
+                            <p className="font-medium">{solution.user.name}</p>
+                            <p className="text-sm text-gray-500">
+                              {solution.user.email}
+                            </p>
                           </div>
                         </TableCell>
-
                         <TableCell>
-                          <div className="max-w-xs">
-                            <div className="text-sm font-mono bg-gray-100 p-2 rounded line-clamp-2">
-                              {solution.finalAnswer || "Պատասխան չտրված"}
-                            </div>
-                          </div>
+                          <span className="font-mono">
+                            {solution.finalAnswer || "Պատասխան չկա"}
+                          </span>
                         </TableCell>
-
                         <TableCell>
-                          <Badge
-                            variant={
-                              solution.isCorrect ? "default" : "secondary"
-                            }
+                          {getCorrectnessBadge(solution.isCorrect)}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(solution.createdAt).toLocaleDateString(
+                            "hy-AM"
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Dialog
+                            open={isModalOpen}
+                            onOpenChange={setIsModalOpen}
                           >
-                            {solution.isCorrect ? "Ճիշտ" : "Սխալ"}
-                          </Badge>
-                        </TableCell>
-
-                        <TableCell>{getStatusBadge(solution.status)}</TableCell>
-
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  setReviewDialog({
-                                    isOpen: true,
-                                    solution,
-                                    action: null,
-                                  })
-                                }
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openSolutionDialog(solution)}
                               >
                                 <Eye className="h-4 w-4 mr-2" />
-                                Դիտել լուծումը
-                              </DropdownMenuItem>
-                              {solution.status !== "APPROVED" && (
-                                <>
-                                  <DropdownMenuItem
-                                    className="text-green-600"
-                                    onClick={() =>
-                                      handleReviewAction(solution, "APPROVED")
-                                    }
-                                  >
-                                    <CheckCircle className="h-4 w-4 mr-2" />
-                                    Հաստատել
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-yellow-600"
-                                    onClick={() =>
-                                      handleReviewAction(solution, "NEEDS_WORK")
-                                    }
-                                  >
-                                    <AlertTriangle className="h-4 w-4 mr-2" />
-                                    Կարիք է շտկման
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-red-600"
-                                    onClick={() =>
-                                      handleReviewAction(solution, "REJECTED")
-                                    }
-                                  >
-                                    <XCircle className="h-4 w-4 mr-2" />
-                                    Մերժել
-                                  </DropdownMenuItem>
-                                </>
+                                Դիտել
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle>Լուծման մանրամասներ</DialogTitle>
+                                <DialogDescription>
+                                  Ուսանող՝{" "}
+                                  <strong>
+                                    {selectedSolution?.user?.name}
+                                  </strong>
+                                </DialogDescription>
+                              </DialogHeader>
+
+                              {selectedSolution && (
+                                <div className="space-y-6">
+                                  {/* Final Answer */}
+                                  <div>
+                                    <h3 className="font-medium mb-2">
+                                      Ուսանողի պատասխան
+                                    </h3>
+                                    <div className="bg-gray-100 p-3 rounded">
+                                      <span className="font-mono text-lg">
+                                        {selectedSolution.finalAnswer ||
+                                          "Պատասխան չկա"}
+                                      </span>
+                                    </div>
+                                    <div className="mt-2">
+                                      {getCorrectnessBadge(
+                                        selectedSolution.isCorrect
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Student Info */}
+                                  <div className="bg-blue-50 p-4 rounded-lg">
+                                    <h4 className="font-semibold mb-2">
+                                      Ուսանողի տվյալներ
+                                    </h4>
+                                    <p>
+                                      <strong>Անուն:</strong>{" "}
+                                      {selectedSolution.user.name}
+                                    </p>
+                                    <p>
+                                      <strong>Էլ․ փոստ:</strong>{" "}
+                                      {selectedSolution.user.email}
+                                    </p>
+                                    <p>
+                                      <strong>Ամսաթիվ:</strong>{" "}
+                                      {new Date(
+                                        selectedSolution.createdAt
+                                      ).toLocaleDateString("hy-AM")}
+                                    </p>
+                                  </div>
+
+                                  {/* Close Button */}
+                                  <div className="flex justify-end">
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => {
+                                        setSelectedSolution(null);
+                                        setIsModalOpen(false);
+                                      }}
+                                    >
+                                      Փակել
+                                    </Button>
+                                  </div>
+                                </div>
                               )}
-                              {solution.status === "APPROVED" && (
-                                <DropdownMenuItem
-                                  disabled
-                                  className="text-green-600"
-                                >
-                                  <CheckCircle className="h-4 w-4 mr-2" />✅ Այս
-                                  լուծումն արդեն հաստատված է
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                            </DialogContent>
+                          </Dialog>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -704,165 +574,6 @@ export default function AdminExerciseDetailPage() {
           </CardContent>
         </Card>
       </main>
-
-      {/* Review Dialog */}
-      <Dialog
-        open={reviewDialog.isOpen}
-        onOpenChange={(open) =>
-          !open &&
-          setReviewDialog({ isOpen: false, solution: null, action: null })
-        }
-      >
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {reviewDialog.action
-                ? `${getActionButtonText(reviewDialog.action)} լուծումը`
-                : "Լուծման մանրամասներ"}
-            </DialogTitle>
-            <DialogDescription>
-              Ուսանող՝ <strong>{reviewDialog.solution?.user?.name}</strong>
-            </DialogDescription>
-          </DialogHeader>
-
-          {!reviewDialog.action ? (
-            /* Solution Details View */
-            <div className="space-y-6">
-              {/* Given Data */}
-              <div>
-                <h3 className="font-medium mb-2">Տրված է</h3>
-                <MathContent content={reviewDialog.solution?.givenData || ""} />
-              </div>
-
-              {/* Solution Steps */}
-              <div>
-                <h3 className="font-medium mb-2">Լուծում</h3>
-                <MathContent
-                  content={reviewDialog.solution?.solutionSteps || ""}
-                />
-              </div>
-
-              {/* Solution Image */}
-              {reviewDialog.solution?.solutionImage && (
-                <div>
-                  <h3 className="font-medium mb-2">Լուծման նկար</h3>
-                  <FileViewer
-                    url={reviewDialog.solution.solutionImage}
-                    title="Լուծման նկար"
-                  />
-                </div>
-              )}
-
-              {/* Final Answer */}
-              <div>
-                <h3 className="font-medium mb-2">Պատասխան</h3>
-                <div className="bg-gray-100 p-3 rounded">
-                  <span className="font-mono text-lg">
-                    {reviewDialog.solution?.finalAnswer || "Պատասխան չտրված"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2 pt-4 border-t">
-                {reviewDialog.solution?.status !== "APPROVED" ? (
-                  <>
-                    <Button
-                      className="text-green-600"
-                      onClick={() =>
-                        setReviewDialog({
-                          ...reviewDialog,
-                          action: "APPROVED",
-                        })
-                      }
-                    >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Հաստատել
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="text-yellow-600"
-                      onClick={() =>
-                        setReviewDialog({
-                          ...reviewDialog,
-                          action: "NEEDS_WORK",
-                        })
-                      }
-                    >
-                      <AlertTriangle className="h-4 w-4 mr-2" />
-                      Կարիք է շտկման
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="text-red-600"
-                      onClick={() =>
-                        setReviewDialog({
-                          ...reviewDialog,
-                          action: "REJECTED",
-                        })
-                      }
-                    >
-                      <XCircle className="h-4 w-4 mr-2" />
-                      Մերժել
-                    </Button>
-                  </>
-                ) : (
-                  <div className="text-sm text-green-600 font-medium flex items-center">
-                    ✅ Այս լուծումն արդեն հաստատված է
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            /* Review Action View */
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="feedback">
-                  Ադմինի գրադարան{" "}
-                  {reviewDialog.action === "REJECTED" ||
-                  reviewDialog.action === "NEEDS_WORK"
-                    ? "*"
-                    : "(ոչ պարտադիր)"}
-                </Label>
-                <Textarea
-                  id="feedback"
-                  placeholder="Գրադարան ուսանողի համար..."
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() =>
-                setReviewDialog({ isOpen: false, solution: null, action: null })
-              }
-            >
-              Փակել
-            </Button>
-            {reviewDialog.action && (
-              <Button
-                className={getActionButtonColor(reviewDialog.action)}
-                onClick={handleReviewConfirm}
-                disabled={
-                  updateStatusMutation.isPending ||
-                  ((reviewDialog.action === "REJECTED" ||
-                    reviewDialog.action === "NEEDS_WORK") &&
-                    !feedback.trim())
-                }
-              >
-                {updateStatusMutation.isPending && "Պահպանվում..."}
-                {!updateStatusMutation.isPending &&
-                  getActionButtonText(reviewDialog.action)}
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

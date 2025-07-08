@@ -14,13 +14,6 @@ enum Role {
   SUPERADMIN
 }
 
-enum SolutionStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  NEEDS_WORK
-}
-
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -30,52 +23,47 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  createdExercises Exercise[] @relation("CreatedBy")
-  solutions       Solution[]
+  solutions Solution[]
+  exercises Exercise[] @relation("CreatedBy")
 }
 
 model Exercise {
-  id            String   @id @default(cuid())
-  title         String
-  problemText   String?  // Made optional since we can have image instead
-  problemImage  String?  // Cloudinary URL for problem image/PDF
+  id           String   @id @default(cuid())
+  title        String
+  problemText    String?  // Text for given data (optional)
+  problemImage   String?  // Image for given data (optional, Cloudinary URL)
+  givenText    String?  // Text for given data (optional)
+  givenImage   String?  // Image for given data (optional, Cloudinary URL)
+  solutionSteps String?  // Solution steps text (optional)
+  solutionImage String? // Solution steps image (optional, Cloudinary URL)
+  correctAnswer String  // The answer to be checked automatically
   createdById   String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  createdBy      User             @relation("CreatedBy", fields: [createdById], references: [id])
-  exerciseAnswer ExerciseAnswer?
-  solutions      Solution[]
-}
-
-model ExerciseAnswer {
-  id            String   @id @default(cuid())
-  exerciseId    String   @unique
-  correctAnswer String
-  givenData     String?
-  solutionSteps String?
-  solutionImage String?  // Cloudinary URL for solution image/PDF
-  createdAt     DateTime @default(now())
-
-  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  createdBy   User      @relation("CreatedBy", fields: [createdById], references: [id])
+  solutions   Solution[]
+  tags        Tag[]     @relation("ExerciseTags")
 }
 
 model Solution {
-  id            String         @id @default(cuid())
+  id            String   @id @default(cuid())
   userId        String
   exerciseId    String
-  givenData     String?
-  solutionSteps String?
-  solutionImage String?  // Cloudinary URL for solution image
-  finalAnswer   String?
-  isCorrect     Boolean        @default(false)
-  status        SolutionStatus @default(PENDING)
-  adminFeedback String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  finalAnswer   String   // Student's final answer (required)
+  isCorrect     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   user     User     @relation(fields: [userId], references: [id])
-  exercise Exercise @relation(fields: [exerciseId], references: [id])
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, exerciseId])
+}
+
+model Tag {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  url       String?
+  exercises Exercise[] @relation("ExerciseTags")
 }

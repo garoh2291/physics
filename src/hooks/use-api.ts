@@ -21,28 +21,27 @@ interface Exercise {
   title: string;
   problemText?: string;
   problemImage?: string;
+  givenText?: string;
+  givenImage?: string;
+  solutionSteps?: string;
+  solutionImage?: string;
+  correctAnswer?: string; // Decrypted for admins
   createdAt: string;
   createdBy?: User;
-  solutions: Solution[];
-  exerciseAnswer?: {
+  tags: Array<{
     id: string;
-    correctAnswer: string; // Decrypted for admins
-    solutionSteps?: string;
-    solutionImage?: string;
-  };
+    name: string;
+    url?: string | null;
+  }>;
+  solutions: Solution[];
 }
 
 interface Solution {
   id: string;
   userId: string;
   exerciseId: string;
-  givenData?: string;
-  solutionSteps?: string;
-  solutionImage?: string;
   finalAnswer?: string;
   isCorrect: boolean;
-  status: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_WORK";
-  adminFeedback?: string;
   createdAt: string;
   updatedAt: string;
   user: User;
@@ -67,25 +66,28 @@ interface CreateExerciseData {
   title: string;
   problemText?: string;
   problemImage?: string;
+  givenText?: string;
+  givenImage?: string;
+  solutionSteps?: string;
+  solutionImage?: string;
+  correctAnswer: string;
+  tagIds?: string[];
 }
 
 interface UpdateExerciseData {
-  title?: string;
+  title: string;
   problemText?: string;
   problemImage?: string;
-}
-
-interface UpdateSolutionStatusData {
-  solutionId: string;
-  status: "APPROVED" | "REJECTED" | "NEEDS_WORK";
-  adminFeedback?: string;
+  givenText?: string;
+  givenImage?: string;
+  solutionSteps?: string;
+  solutionImage?: string;
+  correctAnswer: string;
+  tagIds?: string[];
 }
 
 interface SubmitSolutionData {
   exerciseId: string;
-  givenData: string;
-  solutionSteps: string;
-  solutionImage?: string;
   finalAnswer: string;
 }
 
@@ -216,36 +218,6 @@ export const useSolutions = () => {
       if (!response.ok)
         throw new Error(result.error || "Լուծումները բեռնելու սխալ");
       return result;
-    },
-  });
-};
-
-export const useUpdateSolutionStatus = () => {
-  const queryClient = useQueryClient();
-  return useMutation<Solution, Error, UpdateSolutionStatusData>({
-    mutationFn: async (data) => {
-      const { solutionId, ...updateData } = data;
-      const response = await fetch(`/api/solutions/${solutionId}/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updateData),
-      });
-      const result = await response.json();
-      if (!response.ok)
-        throw new Error(result.error || "Կարգավիճակի թարմացման սխալ");
-      return result;
-    },
-    onSuccess: (updatedSolution) => {
-      // Invalidate solutions list
-      queryClient.invalidateQueries({ queryKey: ["solutions"] });
-
-      // Invalidate exercises list to update solution counts
-      queryClient.invalidateQueries({ queryKey: ["exercises"] });
-
-      // Invalidate specific exercise to update its solutions
-      queryClient.invalidateQueries({
-        queryKey: ["exercises", updatedSolution.exerciseId],
-      });
     },
   });
 };

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LogOut, BookOpen, CheckCircle, Clock, XCircle } from "lucide-react";
+import { LogOut, BookOpen, CheckCircle } from "lucide-react";
 import { useExercises } from "@/hooks/use-api";
 import Link from "next/link";
 
@@ -35,41 +35,18 @@ export default function StudentDashboard() {
 
     const latestSolution = exercise.solutions[exercise.solutions.length - 1];
 
-    // Check if exercise has a correct answer
-    const hasCorrectAnswer = !!exercise.exerciseAnswer?.correctAnswer;
-
-    if (latestSolution.status === "APPROVED") {
-      // For exercises with correct answers, also check if the answer is correct
-      if (hasCorrectAnswer && latestSolution.isCorrect) {
-        return { status: "completed", text: "Ավարտված", color: "success" };
-      } else if (!hasCorrectAnswer) {
-        // For exercises without correct answers, just being approved is enough
-        return { status: "completed", text: "Հաստատված", color: "success" };
-      }
-    } else if (latestSolution.status === "PENDING") {
-      return { status: "pending", text: "Ստուգվում է", color: "warning" };
-    } else if (
-      latestSolution.status === "REJECTED" ||
-      latestSolution.status === "NEEDS_WORK"
-    ) {
-      return {
-        status: "needs_work",
-        text: "Վերամշակման կարիք",
-        color: "destructive",
-      };
+    // Check if the latest solution is correct
+    if (latestSolution.isCorrect) {
+      return { status: "completed", text: "Ավարտված", color: "success" };
+    } else {
+      return { status: "in_progress", text: "Ընթացքում", color: "secondary" };
     }
-
-    return { status: "in_progress", text: "Ընթացքում", color: "secondary" };
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
         return <CheckCircle className="h-4 w-4" />;
-      case "pending":
-        return <Clock className="h-4 w-4" />;
-      case "needs_work":
-        return <XCircle className="h-4 w-4" />;
       default:
         return <BookOpen className="h-4 w-4" />;
     }

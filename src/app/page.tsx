@@ -19,7 +19,7 @@ export default function HomePage() {
       } else if (session.user.role === "ADMIN") {
         router.push("/admin");
       } else if (session.user.role === "SUPERADMIN") {
-        router.push("/superadmin");
+        router.push("/admin");
       }
     }
   }, [session, router]);

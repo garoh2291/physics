@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -20,28 +19,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertTriangle,
-  Eye,
-  MessageSquare,
-} from "lucide-react";
+import { CheckCircle, XCircle, Eye, MessageSquare } from "lucide-react";
 import { useSolutions } from "@/hooks/use-api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 type Solution = {
   id: string;
   userId: string;
   exerciseId: string;
-  givenData?: string;
-  solutionSteps?: string;
-  solutionImage?: string;
   finalAnswer?: string;
   isCorrect: boolean;
-  status: string;
-  adminFeedback?: string;
   createdAt: string;
   updatedAt: string;
   user: {
@@ -78,115 +64,42 @@ function MathContent({ content }: { content?: string }) {
 }
 
 export default function AdminSolutionsPage() {
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [correctnessFilter, setCorrectnessFilter] = useState<string>("ALL");
   const [selectedSolution, setSelectedSolution] = useState<Solution | null>(
     null
   );
-  const [feedback, setFeedback] = useState("");
-  const [isUpdating, setIsUpdating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: solutions, isLoading, error } = useSolutions();
-  const queryClient = useQueryClient();
-
-  // Custom mutation with modal state management
-  const updateStatusMutation = useMutation({
-    mutationFn: async (data: {
-      solutionId: string;
-      status: "APPROVED" | "REJECTED" | "NEEDS_WORK";
-      adminFeedback?: string;
-    }) => {
-      const { solutionId, ...updateData } = data;
-      const response = await fetch(`/api/solutions/${solutionId}/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updateData),
-      });
-      const result = await response.json();
-      if (!response.ok)
-        throw new Error(result.error || "Կարգավիճակի թարմացման սխալ");
-      return result;
-    },
-    onSuccess: (updatedSolution: Solution) => {
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ["solutions"] });
-      queryClient.invalidateQueries({ queryKey: ["exercises"] });
-      queryClient.invalidateQueries({
-        queryKey: ["exercises", updatedSolution.exerciseId],
-      });
-
-      // Clear modal state and close modal
-      setFeedback("");
-      setSelectedSolution(null);
-      setIsModalOpen(false);
-    },
-  });
 
   const filteredSolutions =
     solutions?.filter((solution) => {
-      if (statusFilter === "ALL") return true;
-      return solution.status === statusFilter;
+      if (correctnessFilter === "ALL") return true;
+      if (correctnessFilter === "CORRECT") return solution.isCorrect;
+      if (correctnessFilter === "INCORRECT") return !solution.isCorrect;
+      return true;
     }) || [];
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      PENDING: {
-        variant: "outline" as const,
-        icon: Clock,
-        text: "Սպասում է",
-        className: "text-orange-600",
-      },
-      APPROVED: {
-        variant: "outline" as const,
-        icon: CheckCircle,
-        text: "Հաստատված",
-        className: "text-green-600",
-      },
-      REJECTED: {
-        variant: "outline" as const,
-        icon: XCircle,
-        text: "Մերժված",
-        className: "text-red-600",
-      },
-      NEEDS_WORK: {
-        variant: "outline" as const,
-        icon: AlertTriangle,
-        text: "Կարիք է շտկման",
-        className: "text-yellow-600",
-      },
-    };
-
-    const config = statusConfig[status as keyof typeof statusConfig];
-    if (!config) return null;
-
-    const Icon = config.icon;
-    return (
-      <Badge variant={config.variant} className={config.className}>
-        <Icon className="h-3 w-3 mr-1" />
-        {config.text}
-      </Badge>
-    );
-  };
-
-  const handleStatusUpdate = async (solutionId: string, newStatus: string) => {
-    setIsUpdating(true);
-    try {
-      await updateStatusMutation.mutateAsync({
-        solutionId,
-        status: newStatus as "APPROVED" | "REJECTED" | "NEEDS_WORK",
-        adminFeedback: feedback.trim() || undefined,
-      });
-      // Don't clear state here - let the mutation's onSuccess handle it
-    } catch (error) {
-      console.error("Error updating status:", error);
-    } finally {
-      setIsUpdating(false);
+  const getCorrectnessBadge = (isCorrect: boolean) => {
+    if (isCorrect) {
+      return (
+        <Badge variant="outline" className="text-green-600">
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Ճիշտ պատասխան
+        </Badge>
+      );
+    } else {
+      return (
+        <Badge variant="outline" className="text-red-600">
+          <XCircle className="h-3 w-3 mr-1" />
+          Սխալ պատասխան
+        </Badge>
+      );
     }
   };
 
-  const openReviewDialog = (solution: Solution) => {
+  const openSolutionDialog = (solution: Solution) => {
     setSelectedSolution(solution);
-    setFeedback(solution.adminFeedback || "");
     setIsModalOpen(true);
   };
 
@@ -216,23 +129,24 @@ export default function AdminSolutionsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-xl md:text-3xl font-bold text-gray-900">
-                Լուծումների վերանայում
+                Ուսանողների լուծումներ
               </h1>
               <p className="text-sm md:text-base text-gray-600 mt-1">
                 Ընդհանուր՝ {solutions?.length || 0} լուծում
               </p>
             </div>
             <div className="flex items-center space-x-4">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select
+                value={correctnessFilter}
+                onValueChange={setCorrectnessFilter}
+              >
                 <SelectTrigger className="w-full sm:w-48 text-sm">
                   <SelectValue placeholder="Ընտրել կարգավիճակ" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">Բոլորը</SelectItem>
-                  <SelectItem value="PENDING">Սպասում է</SelectItem>
-                  <SelectItem value="APPROVED">Հաստատված</SelectItem>
-                  <SelectItem value="REJECTED">Մերժված</SelectItem>
-                  <SelectItem value="NEEDS_WORK">Կարիք է շտկման</SelectItem>
+                  <SelectItem value="CORRECT">Ճիշտ պատասխաններ</SelectItem>
+                  <SelectItem value="INCORRECT">Սխալ պատասխաններ</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -278,22 +192,13 @@ export default function AdminSolutionsPage() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 flex-wrap">
-                      {getStatusBadge(solution.status)}
-                      {solution.isCorrect && (
-                        <Badge
-                          variant="outline"
-                          className="text-green-600 text-xs"
-                        >
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Ճիշտ պատասխան
-                        </Badge>
-                      )}
+                      {getCorrectnessBadge(solution.isCorrect)}
                       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                         <DialogTrigger asChild>
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => openReviewDialog(solution)}
+                            onClick={() => openSolutionDialog(solution)}
                             className="text-sm"
                           >
                             <Eye className="h-4 w-4 mr-2" />
@@ -304,7 +209,7 @@ export default function AdminSolutionsPage() {
                           <DialogHeader>
                             <DialogTitle className="flex items-center gap-2 text-lg md:text-xl">
                               <span>🔍</span>
-                              Լուծման վերանայում
+                              Լուծման մանրամասներ
                             </DialogTitle>
                           </DialogHeader>
 
@@ -331,116 +236,55 @@ export default function AdminSolutionsPage() {
                                 />
                               </div>
 
-                              {/* Student's Given Data */}
-                              <div>
-                                <h4 className="font-semibold mb-2">Տրված է</h4>
-                                <MathContent
-                                  content={selectedSolution.givenData}
-                                />
-                              </div>
-
-                              {/* Student's Solution Steps */}
-                              <div>
-                                <h4 className="font-semibold mb-2">Լուծում</h4>
-                                <MathContent
-                                  content={selectedSolution.solutionSteps}
-                                />
-                                {selectedSolution.solutionImage && (
-                                  <div className="mt-4">
-                                    <h5 className="font-medium mb-2">
-                                      Լուծման նկար
-                                    </h5>
-                                    <img
-                                      src={selectedSolution.solutionImage}
-                                      alt="Լուծման նկար"
-                                      className="max-w-full h-auto rounded-lg border"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-
                               {/* Student's Final Answer */}
                               <div>
-                                <h4 className="font-semibold mb-2">Պատասխան</h4>
+                                <h4 className="font-semibold mb-2">
+                                  Ուսանողի պատասխան
+                                </h4>
                                 <p className="text-lg font-mono bg-gray-100 p-2 rounded">
                                   {selectedSolution.finalAnswer ||
                                     "Պատասխան չկա"}
                                 </p>
+                                <div className="mt-2">
+                                  {getCorrectnessBadge(
+                                    selectedSolution.isCorrect
+                                  )}
+                                </div>
                               </div>
 
-                              {/* Admin Feedback */}
-                              <div>
+                              {/* Student Info */}
+                              <div className="bg-blue-50 p-4 rounded-lg">
                                 <h4 className="font-semibold mb-2">
-                                  Ձեր մեկնաբանությունը
+                                  Ուսանողի տվյալներ
                                 </h4>
-                                <Textarea
-                                  value={feedback}
-                                  onChange={(e) => setFeedback(e.target.value)}
-                                  placeholder="Գրեք ձեր մեկնաբանությունը..."
-                                  rows={4}
-                                />
+                                <p>
+                                  <strong>Անուն:</strong>{" "}
+                                  {selectedSolution.user.name}
+                                </p>
+                                <p>
+                                  <strong>Էլ․ փոստ:</strong>{" "}
+                                  {selectedSolution.user.email}
+                                </p>
+                                <p>
+                                  <strong>Ամսաթիվ:</strong>{" "}
+                                  {new Date(
+                                    selectedSolution.createdAt
+                                  ).toLocaleDateString("hy-AM")}
+                                </p>
                               </div>
 
-                              {/* Action Buttons */}
-                              <div className="flex flex-col sm:flex-row justify-end gap-2">
-                                {selectedSolution.status === "APPROVED" && (
-                                  <div className="text-sm text-green-600 font-medium flex items-center">
-                                    ✅ Այս լուծումն արդեն հաստատված է
-                                  </div>
-                                )}
+                              {/* Close Button */}
+                              <div className="flex justify-end">
                                 <Button
                                   variant="outline"
                                   onClick={() => {
                                     setSelectedSolution(null);
-                                    setFeedback("");
                                     setIsModalOpen(false);
                                   }}
                                   className="text-sm"
                                 >
                                   Փակել
                                 </Button>
-                                {selectedSolution.status !== "APPROVED" && (
-                                  <>
-                                    <Button
-                                      variant="destructive"
-                                      onClick={() =>
-                                        handleStatusUpdate(
-                                          selectedSolution.id,
-                                          "REJECTED"
-                                        )
-                                      }
-                                      disabled={isUpdating}
-                                      className="text-sm"
-                                    >
-                                      Մերժել
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      onClick={() =>
-                                        handleStatusUpdate(
-                                          selectedSolution.id,
-                                          "NEEDS_WORK"
-                                        )
-                                      }
-                                      disabled={isUpdating}
-                                      className="text-sm"
-                                    >
-                                      Կարիք է շտկման
-                                    </Button>
-                                    <Button
-                                      onClick={() =>
-                                        handleStatusUpdate(
-                                          selectedSolution.id,
-                                          "APPROVED"
-                                        )
-                                      }
-                                      disabled={isUpdating}
-                                      className="text-sm"
-                                    >
-                                      Հաստատել
-                                    </Button>
-                                  </>
-                                )}
                               </div>
                             </div>
                           )}
@@ -452,51 +296,16 @@ export default function AdminSolutionsPage() {
 
                 {/* Preview of solution content */}
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs md:text-sm">
-                    <div>
-                      <span className="font-medium">Տրված է:</span>
-                      <div className="mt-1 text-gray-600 line-clamp-2">
-                        {solution.givenData ? (
-                          <MathContent content={solution.givenData} />
-                        ) : (
-                          <span className="text-gray-400 italic">
-                            Բովանդակություն չկա
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="font-medium">Լուծում:</span>
-                      <div className="mt-1 text-gray-600 line-clamp-2">
-                        {solution.solutionSteps ? (
-                          <MathContent content={solution.solutionSteps} />
-                        ) : (
-                          <span className="text-gray-400 italic">
-                            Բովանդակություն չկա
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="font-medium">Պատասխան:</span>
-                      <div className="mt-1 font-mono">
-                        {solution.finalAnswer || (
-                          <span className="text-gray-400 italic">
-                            Պատասխան չկա
-                          </span>
-                        )}
-                      </div>
+                  <div className="text-sm">
+                    <span className="font-medium">Պատասխան:</span>
+                    <div className="mt-1 font-mono">
+                      {solution.finalAnswer || (
+                        <span className="text-gray-400 italic">
+                          Պատասխան չկա
+                        </span>
+                      )}
                     </div>
                   </div>
-
-                  {solution.adminFeedback && (
-                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <p className="text-sm text-blue-800">
-                        <span className="font-medium">Մեկնաբանություն:</span>{" "}
-                        {solution.adminFeedback}
-                      </p>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             ))}

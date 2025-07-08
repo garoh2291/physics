@@ -8,47 +8,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import {
-  ArrowLeft,
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertTriangle,
-} from "lucide-react";
-import { MathEditor } from "@/components/math-editor";
+import { ArrowLeft, CheckCircle, Eye } from "lucide-react";
 import { FileViewer } from "@/components/ui/file-viewer";
-import { FileUpload } from "@/components/ui/file-upload";
 import { useExercise, useSubmitSolution } from "@/hooks/use-api";
-
-// Math Content Display Component (same as admin)
-function MathContent({ content }: { content: string }) {
-  const decodedContent = content
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
-
-  return (
-    <div
-      className="math-content-display"
-      dangerouslySetInnerHTML={{ __html: decodedContent }}
-    />
-  );
-}
 
 export default function StudentExercisePage() {
   const params = useParams();
   const exerciseId = params.id as string;
 
-  const [givenData, setGivenData] = useState("");
-  const [solutionSteps, setSolutionSteps] = useState("");
-  const [solutionImage, setSolutionImage] = useState("");
   const [finalAnswer, setFinalAnswer] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showSolution, setShowSolution] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   const {
     data: exercise,
@@ -57,14 +30,11 @@ export default function StudentExercisePage() {
   } = useExercise(exerciseId);
   const submitSolutionMutation = useSubmitSolution();
 
-  // Load existing solution if any
   useEffect(() => {
     if (exercise?.solutions && exercise.solutions.length > 0) {
-      const solution = exercise.solutions[0]; // Only one solution per user per exercise
-      setGivenData(solution.givenData || "");
-      setSolutionSteps(solution.solutionSteps || "");
-      setSolutionImage(solution.solutionImage || "");
+      const solution = exercise.solutions[0];
       setFinalAnswer(solution.finalAnswer || "");
+      setIsCompleted(solution.isCorrect);
     }
   }, [exercise]);
 
@@ -74,9 +44,8 @@ export default function StudentExercisePage() {
     setSuccess("");
     setIsSubmitting(true);
 
-    // All fields are optional, but at least one solution method should be provided
-    if (!solutionSteps.trim() && !solutionImage) {
-      setError("Խնդրում ենք տրամադրել լուծումը (տեքստ կամ նկար)");
+    if (!finalAnswer.trim()) {
+      setError("Պատասխանը պարտադիր է");
       setIsSubmitting(false);
       return;
     }
@@ -84,76 +53,21 @@ export default function StudentExercisePage() {
     try {
       const result = await submitSolutionMutation.mutateAsync({
         exerciseId,
-        givenData,
-        solutionSteps,
-        solutionImage,
         finalAnswer,
       });
-
-      if (exercise?.exerciseAnswer?.correctAnswer) {
-        // Exercise has a correct answer, show correctness feedback
-        if (result.isCorrect) {
-          setSuccess(
-            "Շնորհավորում ենք! Ձեր պատասխանը ճիշտ է։ Այժմ սպասեք ադմինիստրատորի ստուգմանը։"
-          );
-        } else {
-          setError(
-            "Ձեր պատասխանը սխալ է։ Կարող եք փորձել կրկին կամ շարունակել աշխատել։"
-          );
-        }
+      if (result.isCorrect) {
+        setSuccess("Շնորհավորանքներ, ճիշտ պատասխան է!");
+        setIsCompleted(true);
       } else {
-        // Exercise has no correct answer, just show submission success
-        setSuccess(
-          "Ձեր լուծումը հաջողությամբ ուղարկվել է։ Այժմ սպասեք ադմինիստրատորի ստուգմանը։"
-        );
+        setError("Պատասխանը սխալ է, փորձեք նորից:");
       }
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "Սխալ է տեղի ունեցել";
+        error instanceof Error ? error.message : "Սխալ տեղի ունեցավ";
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      PENDING: {
-        variant: "outline" as const,
-        icon: Clock,
-        text: "Սպասում է",
-        className: "text-orange-600",
-      },
-      APPROVED: {
-        variant: "outline" as const,
-        icon: CheckCircle,
-        text: "Հաստատված",
-        className: "text-green-600",
-      },
-      REJECTED: {
-        variant: "outline" as const,
-        icon: XCircle,
-        text: "Մերժված",
-        className: "text-red-600",
-      },
-      NEEDS_WORK: {
-        variant: "outline" as const,
-        icon: AlertTriangle,
-        text: "Կարիք է շտկման",
-        className: "text-yellow-600",
-      },
-    };
-
-    const config = statusConfig[status as keyof typeof statusConfig];
-    if (!config) return null;
-
-    const Icon = config.icon;
-    return (
-      <Badge variant={config.variant} className={config.className}>
-        <Icon className="h-3 w-3 mr-1" />
-        {config.text}
-      </Badge>
-    );
   };
 
   if (isLoading) {
@@ -174,8 +88,6 @@ export default function StudentExercisePage() {
     );
   }
 
-  const solution = exercise.solutions?.[0]; // Only one solution per user per exercise
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -193,228 +105,143 @@ export default function StudentExercisePage() {
                 <h1 className="text-xl md:text-2xl font-bold text-gray-900 truncate">
                   {exercise.title}
                 </h1>
-                <p className="text-sm md:text-base text-gray-600">
-                  Փորձեր՝ {exercise.solutions?.length || 0}
-                </p>
               </div>
             </div>
-            {solution && (
-              <div className="flex items-center space-x-2 flex-wrap">
-                {getStatusBadge(solution.status)}
-                {solution.isCorrect && (
-                  <Badge variant="outline" className="text-green-600 text-xs">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Ճիշտ պատասխան
-                  </Badge>
-                )}
+            {isCompleted && (
+              <div className="flex items-center space-x-2 text-green-600">
+                <CheckCircle className="h-5 w-5" />
+                <span className="font-medium">Ավարտված</span>
               </div>
             )}
           </div>
         </div>
       </header>
-
-      <main className="container mx-auto px-4 py-6 md:py-8 space-y-4 md:space-y-6">
-        {/* Problem Display */}
-        <Card>
+      <main className="container mx-auto px-4 py-6 md:py-8">
+        <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <span>📝</span>
-              Խնդիր
-            </CardTitle>
+            <CardTitle>Տրված տվյալներ</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             {exercise.problemImage && (
-              <FileViewer url={exercise.problemImage} title="Խնդիրի նկար" />
+              <FileViewer
+                url={exercise.problemImage}
+                title="Տրվածի նկար"
+                className="mb-4"
+              />
             )}
-            {!exercise.problemImage && (
-              <MathContent content={exercise.problemText || ""} />
-            )}
-            {exercise.problemText && exercise.problemImage && (
-              <div className="mt-4">
-                <h3 className="font-medium mb-2">Խնդիրի նկարագրություն</h3>
-                <MathContent content={exercise.problemText} />
+            {exercise.problemText && (
+              <div className="prose prose-lg max-w-none bg-white p-6 rounded-lg border">
+                {exercise.problemText}
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Solution Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-          {/* Given Data */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span>📊</span>
-                Տրված է (ոչ պարտադիր)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <MathEditor
-                value={givenData}
-                onChange={setGivenData}
-                height={200}
-                placeholder="Մուտքագրեք տրված տվյալները...
-
-Օրինակ՝
-N₀ = 20
-S = 3 կմ
-u = 2,5 մ/վ
-v = 5 մ/վ
-t₀ = 60 վ"
-              />
-            </CardContent>
-          </Card>
-
-          {/* Solution Steps */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span>🔧</span>
-                Լուծում
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="solutionSteps">
-                  Լուծման քայլեր (ոչ պարտադիր)
-                </Label>
-                <MathEditor
-                  value={solutionSteps}
-                  onChange={setSolutionSteps}
-                  height={300}
-                  placeholder="Մուտքագրեք լուծման քայլերը...
-
-Օրինակ՝
-Տատիկի տուն հասնելու ժամանակը՝
-t = S/u
-
-Գայլի կերած կարկանդակների քանակը՝
-N' = t/t' = 10
-
-Հետևաբար տատիկի տուն հասած կարկանդակների քանակը՝
-N = N₀ - N' = 10"
-                />
-              </div>
-
-              <div>
-                <Label>Լուծման նկար (ոչ պարտադիր)</Label>
-                <FileUpload
-                  value={solutionImage}
-                  onChange={setSolutionImage}
-                  label="Վերբեռնել լուծման նկար (առավելագույնը 5MB)"
-                />
-              </div>
-
-              {solutionImage && (
-                <FileViewer
-                  url={solutionImage}
-                  title="Լուծման նկար"
-                  className="mt-4"
-                />
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Final Answer - Only show if exercise has a correct answer */}
-          {!!exercise.exerciseAnswer?.correctAnswer ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <span>✅</span>
-                  Պատասխան (ոչ պարտադիր)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Label htmlFor="answer">Վերջնական պատասխան</Label>
-                  <Input
-                    id="answer"
-                    value={finalAnswer}
-                    onChange={(e) => setFinalAnswer(e.target.value)}
-                    placeholder="Օրինակ՝ 10"
-                    disabled={solution?.isCorrect}
-                  />
-                  {solution?.isCorrect && (
-                    <p className="text-sm text-green-600">
-                      ✅ Ձեր պատասխանը ճիշտ է։ Այժմ սպասեք ադմինիստրատորի
-                      ստուգմանը։
-                    </p>
-                  )}
-                  {solution?.status === "APPROVED" && (
-                    <p className="text-sm text-green-600">
-                      ✅ Ձեր լուծումը հաստատված է ադմինիստրատորի կողմից։
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <span>📝</span>
-                  Լուծման տեսակ
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <p className="text-blue-800 text-sm">
-                    Այս վարժությունը չունի ճիշտ պատասխան։ Ձեր լուծումը կստուգվի
-                    ադմինիստրատորի կողմից։
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Submit Button */}
-          <div className="flex justify-end">
-            <Button
-              type="submit"
-              disabled={
-                isSubmitting ||
-                (!!exercise.exerciseAnswer?.correctAnswer &&
-                  solution?.isCorrect &&
-                  solution?.status === "APPROVED") ||
-                (!exercise.exerciseAnswer?.correctAnswer &&
-                  solution?.status === "APPROVED")
-              }
-              size="lg"
-              className="w-full sm:w-auto text-sm md:text-base"
-            >
-              {isSubmitting ? "Ուղարկվում է..." : "Ուղարկել լուծումը"}
-            </Button>
-          </div>
-        </form>
-
-        {/* Messages */}
         {error && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="mb-6">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-
         {success && (
-          <Alert>
+          <Alert className="mb-6">
             <AlertDescription>{success}</AlertDescription>
           </Alert>
         )}
 
-        {/* Admin Feedback */}
-        {solution?.adminFeedback && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span>💬</span>
-                Ադմինիստրատորի մեկնաբանություն
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <p className="text-blue-800">{solution.adminFeedback}</p>
-              </div>
-            </CardContent>
-          </Card>
+        {!isCompleted ? (
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Պատասխան</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Label htmlFor="finalAnswer">Ձեր պատասխանը *</Label>
+                <Input
+                  id="finalAnswer"
+                  value={finalAnswer}
+                  onChange={(e) => setFinalAnswer(e.target.value)}
+                  placeholder="Օրինակ՝ 42"
+                  required
+                  disabled={isSubmitting}
+                />
+              </CardContent>
+            </Card>
+            <Button type="submit" disabled={isSubmitting} className="w-full">
+              {isSubmitting ? "Ուղարկվում է..." : "Ուղարկել"}
+            </Button>
+          </form>
+        ) : (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span>Վարժությունը ավարտված է</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">
+                  Շնորհավորանքներ! Դուք ճիշտ պատասխանել եք այս վարժությանը:
+                </p>
+                <Button
+                  onClick={() => setShowSolution(!showSolution)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  {showSolution ? "Թաքցնել լուծումը" : "Տեսնել լուծումը"}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {showSolution && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Լուծում</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Correct Answer */}
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h4 className="font-semibold mb-2 text-green-800">
+                      Ճիշտ պատասխան:
+                    </h4>
+                    <p className="text-lg font-mono text-green-700 bg-white p-2 rounded border">
+                      {exercise.correctAnswer}
+                    </p>
+                  </div>
+
+                  {exercise.givenImage && (
+                    <FileViewer
+                      url={exercise.givenImage}
+                      title="Լրացուցիչ տրվածի նկար"
+                      className="mb-4"
+                    />
+                  )}
+                  {exercise.givenText && (
+                    <div className="prose prose-lg max-w-none bg-white p-6 rounded-lg border">
+                      <h4 className="font-semibold mb-2">
+                        Լրացուցիչ տրված տվյալներ:
+                      </h4>
+                      {exercise.givenText}
+                    </div>
+                  )}
+                  {exercise.solutionImage && (
+                    <FileViewer
+                      url={exercise.solutionImage}
+                      title="Լուծման նկար"
+                      className="mb-4"
+                    />
+                  )}
+                  {exercise.solutionSteps && (
+                    <div className="prose prose-lg max-w-none bg-white p-6 rounded-lg border">
+                      <h4 className="font-semibold mb-2">Լուծման քայլեր:</h4>
+                      {exercise.solutionSteps}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
         )}
       </main>
     </div>
