@@ -95,7 +95,7 @@ export function AdminNav() {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden absolute  top-[25px] left-0 right-0 bg-white border-b shadow-lg z-50">
+          <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b shadow-lg z-50">
             <div className="px-4 py-2 space-y-1">
               {navItems.map((item) => {
                 const Icon = item.icon;

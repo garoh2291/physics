@@ -334,24 +334,24 @@ export default function AdminExerciseDetailPage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center space-x-2 md:space-x-4">
               <Button variant="outline" size="sm" asChild>
                 <Link href="/admin/exercises">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Վարժություններ
+                  <span className="hidden sm:inline">Վարժություններ</span>
                 </Link>
               </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 truncate">
                   {exercise.title}
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-sm md:text-base text-gray-600">
                   {solutions.length} ուսանող է լուծել
                 </p>
               </div>
             </div>
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="w-full sm:w-auto">
               <Link href={`/admin/exercises/${exercise.id}/edit`}>
                 <Edit className="h-4 w-4 mr-2" />
                 Խմբագրել

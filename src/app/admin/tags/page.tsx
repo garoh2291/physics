@@ -135,7 +135,7 @@ export default function TagsPage() {
           </Alert>
         )}
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
           {/* Create New Tag */}
           <Card>
             <CardHeader>

@@ -148,7 +148,7 @@ export default function EditExercisePage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col space-y-4">
             <div className="flex items-center space-x-2 md:space-x-4">
               <Button variant="outline" size="sm" asChild>
                 <Link href="/admin/exercises">
@@ -156,11 +156,11 @@ export default function EditExercisePage() {
                   <span className="hidden sm:inline">Վերադառնալ</span>
                 </Link>
               </Button>
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+              <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900">
                 Խմբագրել վարժությունը
               </h1>
             </div>
-            <div className="flex items-center space-x-2 w-full sm:w-auto">
+            <div className="flex items-center space-x-2">
               <Button
                 onClick={handleSubmit}
                 disabled={updateExerciseMutation.isPending}

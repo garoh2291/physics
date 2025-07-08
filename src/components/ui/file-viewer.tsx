@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 interface FileViewerProps {
   url: string;
@@ -18,10 +19,12 @@ export function FileViewer({ url, title, className = "" }: FileViewerProps) {
     <div className={`space-y-2 ${className}`}>
       {title && <h3 className="font-medium text-gray-900">{title}</h3>}
       <div className="border rounded-lg overflow-hidden">
-        <img
+        <Image
           src={url}
           alt={title || "Image"}
-          className="w-full h-auto max-h-96 object-contain"
+          width={800}
+          height={600}
+          className="w-full h-auto max-h-48 sm:max-h-64 md:max-h-96 object-contain"
           onLoad={() => setLoading(false)}
           onError={() => {
             setLoading(false);

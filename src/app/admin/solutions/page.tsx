@@ -106,16 +106,16 @@ export default function AdminSolutionsPage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4 md:py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col space-y-4">
             <div>
-              <h1 className="text-xl md:text-3xl font-bold text-gray-900">
+              <h1 className="text-lg md:text-xl lg:text-3xl font-bold text-gray-900">
                 Ուսանողների լուծումներ
               </h1>
               <p className="text-sm md:text-base text-gray-600 mt-1">
                 Ընդհանուր՝ {solutions?.length || 0} լուծում • Ավտոմատ ստուգում
               </p>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center">
               <Select
                 value={correctnessFilter}
                 onValueChange={setCorrectnessFilter}

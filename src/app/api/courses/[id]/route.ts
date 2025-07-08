@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (
@@ -22,12 +22,13 @@ export async function PUT(
         { status: 400 }
       );
     }
+    const { id } = await params;
     const updated = await db.course.update({
-      where: { id: params.id },
+      where: { id },
       data: { name: name.trim(), url: url || null },
     });
     return NextResponse.json(updated);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Կուրսի թարմացման սխալ" },
       { status: 500 }
@@ -37,7 +38,7 @@ export async function PUT(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (
@@ -47,9 +48,10 @@ export async function DELETE(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   try {
-    await db.course.delete({ where: { id: params.id } });
+    const { id } = await params;
+    await db.course.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Կուրսի ջնջման սխալ" }, { status: 500 });
   }
 }

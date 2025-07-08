@@ -213,7 +213,7 @@ export default function StudentExercisePage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col space-y-4">
             <div className="flex items-center space-x-2 md:space-x-4">
               <Button variant="outline" size="sm" asChild>
                 <Link href="/dashboard">
@@ -222,12 +222,12 @@ export default function StudentExercisePage() {
                 </Link>
               </Button>
               <div className="flex-1 min-w-0">
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900 truncate">
+                <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 truncate">
                   {exercise.title}
                 </h1>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-wrap items-center gap-2 md:gap-4">
               {/* Credits */}
               {userProfile && (
                 <span className="flex items-center px-3 py-1 rounded-full bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm font-semibold">
@@ -238,7 +238,9 @@ export default function StudentExercisePage() {
               {isCompleted && (
                 <div className="flex items-center space-x-2 text-green-600">
                   <CheckCircle className="h-5 w-5" />
-                  <span className="font-medium">Ավարտված</span>
+                  <span className="font-medium text-sm md:text-base">
+                    Ավարտված
+                  </span>
                 </div>
               )}
             </div>

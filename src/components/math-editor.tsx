@@ -79,7 +79,7 @@ export const MathEditor: FC<MathEditorProps> = ({
         placeholder={placeholder}
         style={{
           width: "100%",
-          minHeight: height - 100,
+          minHeight: Math.max(height - 100, 150),
           border: "none",
           outline: "none",
           resize: "vertical",

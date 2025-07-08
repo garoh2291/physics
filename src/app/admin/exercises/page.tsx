@@ -108,7 +108,7 @@ export default function AdminExercisesPage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col space-y-4">
             <div className="flex items-center space-x-2 md:space-x-4">
               <Button variant="outline" size="sm" asChild>
                 <Link href="/admin">
@@ -116,8 +116,8 @@ export default function AdminExercisesPage() {
                   <span className="hidden sm:inline">Վահանակ</span>
                 </Link>
               </Button>
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 truncate">
                   Վարժությունների կառավարում
                 </h1>
                 <p className="text-sm md:text-base text-gray-600">

@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -22,7 +22,7 @@ export async function DELETE(
       );
     }
 
-    const tagId = params.id;
+    const { id: tagId } = await params;
 
     // Check if tag exists and is used by exercises
     const tag = await db.tag.findUnique({

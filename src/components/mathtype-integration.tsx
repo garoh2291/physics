@@ -47,7 +47,7 @@ export function MathTypeIntegration({
           Equation Editor
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg w-[95vw] sm:max-w-xl md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calculator className="h-5 w-5" />

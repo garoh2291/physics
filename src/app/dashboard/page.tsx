@@ -39,7 +39,10 @@ export default function StudentDashboard() {
     return exercises;
   }, [exercises, filter, selectedCourse, solvedIds]);
 
-  const getExerciseStatus = (exercise: any) => {
+  const getExerciseStatus = (exercise: {
+    id: string;
+    solutions: Array<{ isCorrect: boolean }>;
+  }) => {
     if (!userProfile) return { status: "new", text: "Նոր", color: "default" };
     const solved = solvedIds.has(exercise.id);
     if (solved)
@@ -118,31 +121,37 @@ export default function StudentDashboard() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6 md:py-8">
         {/* Filters */}
-        <div className="mb-6 flex flex-wrap gap-2 items-center">
-          <Button
-            variant={filter === "all" ? "default" : "outline"}
-            onClick={() => {
-              setFilter("all");
-              setSelectedCourse("");
-            }}
-            size="sm"
-          >
-            Բոլոր վարժությունները
-          </Button>
-          <Button
-            variant={filter === "solved" ? "default" : "outline"}
-            onClick={() => {
-              setFilter("solved");
-              setSelectedCourse("");
-            }}
-            size="sm"
-          >
-            Ավարտվածները
-          </Button>
-          <div className="flex items-center gap-1">
-            <span className="text-sm text-gray-600">Թեմա՝</span>
+        <div className="mb-6 space-y-3">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={filter === "all" ? "default" : "outline"}
+              onClick={() => {
+                setFilter("all");
+                setSelectedCourse("");
+              }}
+              size="sm"
+              className="flex-1 sm:flex-none"
+            >
+              Բոլորը
+            </Button>
+            <Button
+              variant={filter === "solved" ? "default" : "outline"}
+              onClick={() => {
+                setFilter("solved");
+                setSelectedCourse("");
+              }}
+              size="sm"
+              className="flex-1 sm:flex-none"
+            >
+              Ավարտված
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 whitespace-nowrap">
+              Թեմա՝
+            </span>
             <select
-              className="border rounded px-2 py-1 text-sm"
+              className="border rounded px-3 py-2 text-sm flex-1 max-w-xs"
               value={selectedCourse}
               onChange={(e) => {
                 setSelectedCourse(e.target.value);

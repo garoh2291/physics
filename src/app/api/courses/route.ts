@@ -9,7 +9,7 @@ export async function GET() {
       orderBy: { name: "asc" },
     });
     return NextResponse.json(courses);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch courses" },
       { status: 500 }
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       data: { name: name.trim(), url: url || null },
     });
     return NextResponse.json(course);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Կուրսի ստեղծման սխալ" },
       { status: 500 }

@@ -177,7 +177,7 @@ export default function AdminCoursesPage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col space-y-4">
             <div className="flex items-center space-x-2 md:space-x-4">
               <Button variant="outline" size="sm" asChild>
                 <Link href="/admin">
@@ -185,7 +185,7 @@ export default function AdminCoursesPage() {
                   <span className="hidden sm:inline">Վերադառնալ</span>
                 </Link>
               </Button>
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+              <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900">
                 Թեմաների կառավարում
               </h1>
             </div>
@@ -194,7 +194,7 @@ export default function AdminCoursesPage() {
               onOpenChange={setIsCreateDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button className="flex-1 sm:flex-none text-sm">
+                <Button className="w-full sm:w-auto text-sm">
                   <Plus className="h-4 w-4 mr-2" />
                   Նոր թեմա
                 </Button>
