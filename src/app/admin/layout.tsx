@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { AdminNav } from "@/components/admin-nav";
+import { AdminLayoutWrapper } from "@/components/admin-layout-wrapper";
+import { AdminSidebarProvider } from "@/components/admin-sidebar-context";
 
 export default async function AdminLayout({
   children,
@@ -20,9 +22,11 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AdminNav />
-      {children}
-    </div>
+    <AdminSidebarProvider>
+      <div className="min-h-screen bg-gray-50">
+        <AdminNav />
+        <AdminLayoutWrapper>{children}</AdminLayoutWrapper>
+      </div>
+    </AdminSidebarProvider>
   );
 }
