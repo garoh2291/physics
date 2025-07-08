@@ -27,14 +27,12 @@ export default function AdminDashboard() {
     (acc, ex) => acc + ex.solutions.length,
     0
   );
-  const pendingSolutions = exercises.reduce(
-    (acc, ex) =>
-      acc + ex.solutions.filter((s) => s.status === "PENDING").length,
+  const correctSolutions = exercises.reduce(
+    (acc, ex) => acc + ex.solutions.filter((s) => s.isCorrect).length,
     0
   );
-  const approvedSolutions = exercises.reduce(
-    (acc, ex) =>
-      acc + ex.solutions.filter((s) => s.status === "APPROVED").length,
+  const incorrectSolutions = exercises.reduce(
+    (acc, ex) => acc + ex.solutions.filter((s) => !s.isCorrect).length,
     0
   );
 
@@ -127,30 +125,30 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Ստուգման կարիք
+                Սխալ պատասխաններ
               </CardTitle>
-              <Clock className="h-4 w-4 text-orange-500" />
+              <Clock className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
-                {pendingSolutions}
+              <div className="text-2xl font-bold text-red-600">
+                {incorrectSolutions}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Սպասում է գնահատման
-              </p>
+              <p className="text-xs text-muted-foreground">Ավտոմատ ստուգված</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Հաստատված</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Ճիշտ պատասխաններ
+              </CardTitle>
               <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {approvedSolutions}
+                {correctSolutions}
               </div>
-              <p className="text-xs text-muted-foreground">Հաջողվել է</p>
+              <p className="text-xs text-muted-foreground">Ավտոմատ ստուգված</p>
             </CardContent>
           </Card>
         </div>
@@ -200,17 +198,10 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-600 mb-4">
-                Գնահատեք ուսանողների լուծումները:
+                Դիտեք ուսանողների լուծումները և արդյունքները:
               </p>
               <Button asChild variant="outline" className="w-full">
-                <Link href="/admin/solutions">
-                  Գնահատել
-                  {pendingSolutions > 0 && (
-                    <Badge variant="destructive" className="ml-2">
-                      {pendingSolutions}
-                    </Badge>
-                  )}
-                </Link>
+                <Link href="/admin/solutions">Դիտել լուծումներ</Link>
               </Button>
             </CardContent>
           </Card>

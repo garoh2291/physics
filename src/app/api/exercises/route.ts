@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const exercises = await db.exercise.findMany({
       include: {
         tags: true,
+        courses: true,
         solutions: {
           include: {
             user: { select: { id: true, name: true, email: true } },
@@ -54,11 +55,18 @@ export async function GET(request: NextRequest) {
         solutionSteps: exercise.solutionSteps,
         solutionImage: exercise.solutionImage,
         correctAnswer: decryptedAnswer,
+        hintText1: exercise.hintText1,
+        hintImage1: exercise.hintImage1,
+        hintText2: exercise.hintText2,
+        hintImage2: exercise.hintImage2,
+        hintText3: exercise.hintText3,
+        hintImage3: exercise.hintImage3,
         createdAt: exercise.createdAt,
         updatedAt: exercise.updatedAt,
         createdBy: exercise.createdBy,
         solutions: exercise.solutions,
         tags: exercise.tags,
+        courses: exercise.courses,
       };
     });
 
@@ -95,6 +103,13 @@ export async function POST(request: NextRequest) {
       solutionImage,
       correctAnswer,
       tagIds,
+      courseIds,
+      hintText1,
+      hintImage1,
+      hintText2,
+      hintImage2,
+      hintText3,
+      hintImage3,
     } = await request.json();
 
     if (!title) {
@@ -134,6 +149,13 @@ export async function POST(request: NextRequest) {
         tagConnect.push({ id: tagId });
       }
     }
+    // Handle courses: connect by IDs
+    const courseConnect = [];
+    if (Array.isArray(courseIds)) {
+      for (const courseId of courseIds) {
+        courseConnect.push({ id: courseId });
+      }
+    }
 
     const exercise = await db.exercise.create({
       data: {
@@ -145,11 +167,19 @@ export async function POST(request: NextRequest) {
         solutionSteps: solutionSteps || null,
         solutionImage: solutionImage || null,
         correctAnswer: encrypt(correctAnswer),
+        hintText1: hintText1 || null,
+        hintImage1: hintImage1 || null,
+        hintText2: hintText2 || null,
+        hintImage2: hintImage2 || null,
+        hintText3: hintText3 || null,
+        hintImage3: hintImage3 || null,
         createdById: session.user.id,
         tags: { connect: tagConnect },
+        courses: { connect: courseConnect },
       },
       include: {
         tags: true,
+        courses: true,
         createdBy: { select: { id: true, name: true, email: true } },
       },
     });

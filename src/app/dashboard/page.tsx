@@ -1,46 +1,52 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LogOut, BookOpen, CheckCircle } from "lucide-react";
-import { useExercises } from "@/hooks/use-api";
+import { LogOut, BookOpen, CheckCircle, Coins } from "lucide-react";
+import { useExercises, useUserProfile, useCourses } from "@/hooks/use-api";
 import Link from "next/link";
-
-interface Exercise {
-  id: string;
-  title: string;
-  createdAt: string;
-  exerciseAnswer?: {
-    id: string;
-    correctAnswer: string;
-  };
-  solutions: {
-    id: string;
-    status: string;
-    isCorrect: boolean;
-  }[];
-}
 
 export default function StudentDashboard() {
   const { data: session } = useSession();
   const { data: exercises = [], isLoading, error } = useExercises();
+  const { data: userProfile } = useUserProfile();
+  const { data: courses = [] } = useCourses();
+  const [filter, setFilter] = useState<string>("all");
+  const [selectedCourse, setSelectedCourse] = useState<string>("");
 
-  const getExerciseStatus = (exercise: Exercise) => {
-    if (exercise.solutions.length === 0) {
-      return { status: "new", text: "Նոր", color: "default" };
+  // Helper: solved exercise IDs
+  const solvedIds = useMemo(() => {
+    if (!userProfile) return new Set<string>();
+    return new Set(
+      userProfile.solutions.filter((s) => s.isCorrect).map((s) => s.exerciseId)
+    );
+  }, [userProfile]);
+
+  // Filtered exercises
+  const filteredExercises = useMemo(() => {
+    if (filter === "solved") {
+      return exercises.filter((ex) => solvedIds.has(ex.id));
     }
+    if (filter === "course" && selectedCourse) {
+      return exercises.filter((ex) =>
+        ex.courses.some((c) => c.id === selectedCourse)
+      );
+    }
+    return exercises;
+  }, [exercises, filter, selectedCourse, solvedIds]);
 
-    const latestSolution = exercise.solutions[exercise.solutions.length - 1];
-
-    // Check if the latest solution is correct
-    if (latestSolution.isCorrect) {
+  const getExerciseStatus = (exercise: any) => {
+    if (!userProfile) return { status: "new", text: "Նոր", color: "default" };
+    const solved = solvedIds.has(exercise.id);
+    if (solved)
       return { status: "completed", text: "Ավարտված", color: "success" };
-    } else {
+    if (exercise.solutions.length > 0)
       return { status: "in_progress", text: "Ընթացքում", color: "secondary" };
-    }
+    return { status: "new", text: "Նոր", color: "default" };
   };
 
   const getStatusIcon = (status: string) => {
@@ -88,6 +94,13 @@ export default function StudentDashboard() {
                   {session?.user?.name}
                 </span>
               </div>
+              {/* Credits */}
+              {userProfile && (
+                <span className="flex items-center px-3 py-1 rounded-full bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm font-semibold">
+                  <Coins className="h-4 w-4 mr-1 text-yellow-500" />
+                  {userProfile.credits} կրեդիտ
+                </span>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -104,18 +117,51 @@ export default function StudentDashboard() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6 md:py-8">
-        <div className="mb-6 md:mb-8">
-          <h2 className="text-lg md:text-xl font-semibold mb-2">
-            Բարի գալուստ, {session?.user?.name}!
-          </h2>
-          <p className="text-gray-600 text-sm md:text-base">
-            Ստորև տեսնում եք ձեր վարժությունների ցանկը:
-          </p>
+        {/* Filters */}
+        <div className="mb-6 flex flex-wrap gap-2 items-center">
+          <Button
+            variant={filter === "all" ? "default" : "outline"}
+            onClick={() => {
+              setFilter("all");
+              setSelectedCourse("");
+            }}
+            size="sm"
+          >
+            Բոլոր վարժությունները
+          </Button>
+          <Button
+            variant={filter === "solved" ? "default" : "outline"}
+            onClick={() => {
+              setFilter("solved");
+              setSelectedCourse("");
+            }}
+            size="sm"
+          >
+            Ավարտվածները
+          </Button>
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-gray-600">Թեմա՝</span>
+            <select
+              className="border rounded px-2 py-1 text-sm"
+              value={selectedCourse}
+              onChange={(e) => {
+                setSelectedCourse(e.target.value);
+                setFilter("course");
+              }}
+            >
+              <option value="">Ընտրել թեմա</option>
+              {courses.map((course) => (
+                <option key={course.id} value={course.id}>
+                  {course.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Exercises Grid */}
         <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {exercises.map((exercise) => {
+          {filteredExercises.map((exercise) => {
             const status = getExerciseStatus(exercise);
             return (
               <Link
@@ -155,7 +201,11 @@ export default function StudentDashboard() {
                       <p>Փորձեր՝ {exercise.solutions.length}</p>
                     </div>
                     <Button className="w-full mt-4 text-sm" variant="outline">
-                      {exercise.solutions.length === 0 ? "Սկսել" : "Շարունակել"}
+                      {status.status === "completed"
+                        ? "Դիտել"
+                        : exercise.solutions.length === 0
+                        ? "Սկսել"
+                        : "Շարունակել"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -164,13 +214,15 @@ export default function StudentDashboard() {
           })}
         </div>
 
-        {exercises.length === 0 && (
+        {filteredExercises.length === 0 && (
           <div className="text-center py-12">
             <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               Վարժություններ չկան
             </h3>
-            <p className="text-gray-500">Դեռ վարժություններ չեն ավելացվել:</p>
+            <p className="text-gray-500">
+              Դեռ վարժություններ չեն ավելացվել կամ ֆիլտրի արդյունք չկա:
+            </p>
           </div>
         )}
       </main>

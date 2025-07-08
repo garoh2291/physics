@@ -26,9 +26,20 @@ interface Exercise {
   solutionSteps?: string;
   solutionImage?: string;
   correctAnswer?: string; // Decrypted for admins
+  hintText1?: string;
+  hintImage1?: string;
+  hintText2?: string;
+  hintImage2?: string;
+  hintText3?: string;
+  hintImage3?: string;
   createdAt: string;
   createdBy?: User;
   tags: Array<{
+    id: string;
+    name: string;
+    url?: string | null;
+  }>;
+  courses: Array<{
     id: string;
     name: string;
     url?: string | null;
@@ -72,6 +83,13 @@ interface CreateExerciseData {
   solutionImage?: string;
   correctAnswer: string;
   tagIds?: string[];
+  courseIds?: string[];
+  hintText1?: string;
+  hintImage1?: string;
+  hintText2?: string;
+  hintImage2?: string;
+  hintText3?: string;
+  hintImage3?: string;
 }
 
 interface UpdateExerciseData {
@@ -84,6 +102,13 @@ interface UpdateExerciseData {
   solutionImage?: string;
   correctAnswer: string;
   tagIds?: string[];
+  courseIds?: string[];
+  hintText1?: string;
+  hintImage1?: string;
+  hintText2?: string;
+  hintImage2?: string;
+  hintText3?: string;
+  hintImage3?: string;
 }
 
 interface SubmitSolutionData {
@@ -342,6 +367,76 @@ export const useLogin = () => {
       });
       if (result?.error) throw new Error("Սխալ էլ. փոստ կամ գաղտնաբառ");
       return result;
+    },
+  });
+};
+
+// User Profile Hook
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  credits: number;
+  solutions: { exerciseId: string; isCorrect: boolean }[];
+  hintUsages: { exerciseId: string; hintLevel: number; usedAt: string }[];
+}
+
+export const useUserProfile = () => {
+  return useQuery<UserProfile>({
+    queryKey: ["user-profile"],
+    queryFn: async () => {
+      const response = await fetch("/api/user-profile");
+      if (!response.ok) throw new Error("Օգտատիրոջ տվյալները բեռնելու սխալ");
+      return response.json();
+    },
+  });
+};
+
+export interface Course {
+  id: string;
+  name: string;
+  url?: string | null;
+}
+
+export const useCourses = () => {
+  return useQuery<Course[]>({
+    queryKey: ["courses"],
+    queryFn: async () => {
+      const response = await fetch("/api/courses");
+      if (!response.ok) throw new Error("Թեմաները բեռնելու սխալ");
+      return response.json();
+    },
+  });
+};
+
+// Hint Usage Hook
+interface HintUsageData {
+  exerciseId: string;
+  hintLevel: 1 | 2 | 3;
+}
+
+interface HintUsageResponse {
+  credits: number;
+  unlockedHints: number[];
+}
+
+export const useHintUsage = () => {
+  const queryClient = useQueryClient();
+  return useMutation<HintUsageResponse, Error, HintUsageData>({
+    mutationFn: async (data) => {
+      console.log("Hint usage hook sending data:", data);
+      const response = await fetch("/api/hint-usage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Հուշում բացելու սխալ");
+      return result;
+    },
+    onSuccess: () => {
+      // Invalidate user profile to update credits
+      queryClient.invalidateQueries({ queryKey: ["user-profile"] });
     },
   });
 };

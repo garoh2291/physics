@@ -20,11 +20,13 @@ model User {
   password  String
   name      String
   role      Role     @default(STUDENT)
+  credits   Int      @default(20) // Credits for hints
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  solutions Solution[]
-  exercises Exercise[] @relation("CreatedBy")
+  solutions   Solution[]
+  exercises   Exercise[] @relation("CreatedBy")
+  hintUsages  HintUsage[]
 }
 
 model Exercise {
@@ -37,6 +39,15 @@ model Exercise {
   solutionSteps String?  // Solution steps text (optional)
   solutionImage String? // Solution steps image (optional, Cloudinary URL)
   correctAnswer String  // The answer to be checked automatically
+  
+  // Hints
+  hintText1    String?  // First hint text (optional)
+  hintImage1   String?  // First hint image (optional, Cloudinary URL)
+  hintText2    String?  // Second hint text (optional)
+  hintImage2   String?  // Second hint image (optional, Cloudinary URL)
+  hintText3    String?  // Third hint text (optional)
+  hintImage3   String?  // Third hint image (optional, Cloudinary URL)
+  
   createdById   String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -44,6 +55,8 @@ model Exercise {
   createdBy   User      @relation("CreatedBy", fields: [createdById], references: [id])
   solutions   Solution[]
   tags        Tag[]     @relation("ExerciseTags")
+  courses     Course[]  @relation("ExerciseCourses")
+  hintUsages  HintUsage[]
 }
 
 model Solution {
@@ -61,9 +74,30 @@ model Solution {
   @@unique([userId, exerciseId])
 }
 
+// Track which hints a student has used for each exercise
+model HintUsage {
+  id         String   @id @default(cuid())
+  userId     String
+  exerciseId String
+  hintLevel  Int      // 1, 2, or 3 for which hint was used
+  usedAt     DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, exerciseId, hintLevel])
+}
+
 model Tag {
   id        String     @id @default(cuid())
   name      String     @unique
   url       String?
   exercises Exercise[] @relation("ExerciseTags")
+}
+
+model Course {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  url       String?
+  exercises Exercise[] @relation("ExerciseCourses")
 }

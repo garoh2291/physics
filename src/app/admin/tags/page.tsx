@@ -72,7 +72,7 @@ export default function TagsPage() {
         const errorData = await response.json();
         setError(errorData.error || "Սխալ պիտակ ստեղծելիս");
       }
-    } catch (err) {
+    } catch {
       setError("Սերվերի սխալ");
     } finally {
       setIsCreating(false);
@@ -96,7 +96,7 @@ export default function TagsPage() {
         const errorData = await response.json();
         setError(errorData.error || "Սխալ պիտակ ջնջելիս");
       }
-    } catch (err) {
+    } catch {
       setError("Սերվերի սխալ");
     }
   };

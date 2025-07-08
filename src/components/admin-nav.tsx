@@ -4,7 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { BookOpen, MessageSquare, Plus, Menu, X, Tag } from "lucide-react";
+import {
+  BookOpen,
+  MessageSquare,
+  Plus,
+  Menu,
+  X,
+  Tag,
+  GraduationCap,
+} from "lucide-react";
 
 export function AdminNav() {
   const pathname = usePathname();
@@ -25,6 +33,11 @@ export function AdminNav() {
       href: "/admin/exercises/create",
       label: "Ստեղծել վարժություն",
       icon: Plus,
+    },
+    {
+      href: "/admin/courses",
+      label: "Թեմաներ",
+      icon: GraduationCap,
     },
     {
       href: "/admin/tags",

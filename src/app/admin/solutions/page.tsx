@@ -38,30 +38,8 @@ type Solution = {
   exercise: {
     id: string;
     title: string;
-    problemText?: string;
-    problemImage?: string;
   };
 };
-
-// Math Content Display Component
-function MathContent({ content }: { content?: string }) {
-  if (!content)
-    return <p className="text-gray-500 italic">Բովանդակություն չկա</p>;
-
-  const decodedContent = content
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
-
-  return (
-    <div
-      className="math-content-display"
-      dangerouslySetInnerHTML={{ __html: decodedContent }}
-    />
-  );
-}
 
 export default function AdminSolutionsPage() {
   const [correctnessFilter, setCorrectnessFilter] = useState<string>("ALL");
@@ -71,6 +49,8 @@ export default function AdminSolutionsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: solutions, isLoading, error } = useSolutions();
+
+  console.log("Solutions data:", solutions);
 
   const filteredSolutions =
     solutions?.filter((solution) => {
@@ -132,7 +112,7 @@ export default function AdminSolutionsPage() {
                 Ուսանողների լուծումներ
               </h1>
               <p className="text-sm md:text-base text-gray-600 mt-1">
-                Ընդհանուր՝ {solutions?.length || 0} լուծում
+                Ընդհանուր՝ {solutions?.length || 0} լուծում • Ավտոմատ ստուգում
               </p>
             </div>
             <div className="flex items-center space-x-4">
@@ -208,7 +188,7 @@ export default function AdminSolutionsPage() {
                         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4 md:p-6">
                           <DialogHeader>
                             <DialogTitle className="flex items-center gap-2 text-lg md:text-xl">
-                              <span>🔍</span>
+                              <span>📋</span>
                               Լուծման մանրամասներ
                             </DialogTitle>
                           </DialogHeader>
@@ -217,23 +197,12 @@ export default function AdminSolutionsPage() {
                             <div className="space-y-6">
                               {/* Exercise Info */}
                               <div className="bg-gray-50 p-4 rounded-lg">
-                                <h4 className="font-semibold mb-2">Խնդիր</h4>
-                                {selectedSolution.exercise.problemImage && (
-                                  <div className="mb-4">
-                                    <img
-                                      src={
-                                        selectedSolution.exercise.problemImage
-                                      }
-                                      alt="Խնդիրի նկար"
-                                      className="max-w-full h-auto rounded-lg border"
-                                    />
-                                  </div>
-                                )}
-                                <MathContent
-                                  content={
-                                    selectedSolution.exercise.problemText
-                                  }
-                                />
+                                <h4 className="font-semibold mb-2">
+                                  {selectedSolution.exercise.title}
+                                </h4>
+                                <p className="text-sm text-gray-600">
+                                  Վարժության ID: {selectedSolution.exercise.id}
+                                </p>
                               </div>
 
                               {/* Student's Final Answer */}

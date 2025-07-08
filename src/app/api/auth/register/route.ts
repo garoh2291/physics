@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
         email,
         password: hashedPassword,
         role: "STUDENT", // Default role
+        credits: 20, // Initial credits
       },
     });
 

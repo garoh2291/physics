@@ -8,9 +8,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, CheckCircle, Eye } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle,
+  Eye,
+  Lightbulb,
+  ChevronDown,
+  ChevronUp,
+  Coins,
+} from "lucide-react";
 import { FileViewer } from "@/components/ui/file-viewer";
-import { useExercise, useSubmitSolution } from "@/hooks/use-api";
+import {
+  useExercise,
+  useSubmitSolution,
+  useUserProfile,
+  useHintUsage,
+} from "@/hooks/use-api";
+import { useSession } from "next-auth/react";
+
+const HINT_COSTS = { 1: 1, 2: 3, 3: 5 };
 
 export default function StudentExercisePage() {
   const params = useParams();
@@ -22,13 +38,29 @@ export default function StudentExercisePage() {
   const [success, setSuccess] = useState("");
   const [showSolution, setShowSolution] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showHints, setShowHints] = useState(false);
+  const [unlockedHints, setUnlockedHints] = useState<number[]>([]);
 
   const {
     data: exercise,
     isLoading,
     error: fetchError,
   } = useExercise(exerciseId);
+  const {
+    data: userProfile,
+    isLoading: userLoading,
+    error: userError,
+  } = useUserProfile();
   const submitSolutionMutation = useSubmitSolution();
+  const hintUsageMutation = useHintUsage();
+  const { data: session } = useSession();
+
+  console.log("User profile state:", {
+    userProfile,
+    userLoading,
+    userError,
+    session,
+  });
 
   useEffect(() => {
     if (exercise?.solutions && exercise.solutions.length > 0) {
@@ -37,6 +69,21 @@ export default function StudentExercisePage() {
       setIsCompleted(solution.isCorrect);
     }
   }, [exercise]);
+
+  // Get unlocked hints for this exercise from user profile
+  useEffect(() => {
+    if (userProfile && exerciseId) {
+      const exerciseHints = userProfile.hintUsages
+        .filter((usage) => usage.exerciseId === exerciseId)
+        .map((usage) => usage.hintLevel);
+      console.log("Setting unlocked hints", {
+        exerciseHints,
+        userProfile,
+        exerciseId,
+      });
+      setUnlockedHints(exerciseHints);
+    }
+  }, [userProfile, exerciseId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,8 +105,10 @@ export default function StudentExercisePage() {
       if (result.isCorrect) {
         setSuccess("Շնորհավորանքներ, ճիշտ պատասխան է!");
         setIsCompleted(true);
+        setShowHints(false);
       } else {
-        setError("Պատասխանը սխալ է, փորձեք նորից:");
+        setError("Պատասխանը սխալ է, փորձեք նորից կամ օգտվեք հուշումներից:");
+        setShowHints(true);
       }
     } catch (error: unknown) {
       const errorMessage =
@@ -70,7 +119,68 @@ export default function StudentExercisePage() {
     }
   };
 
-  if (isLoading) {
+  const requestHint = async (hintLevel: 1 | 2 | 3) => {
+    if (!userProfile || !exerciseId) {
+      console.log("No userProfile or exerciseId", { userProfile, exerciseId });
+      return;
+    }
+
+    const cost = HINT_COSTS[hintLevel];
+    const currentCredits = userProfile.credits ?? 0;
+    console.log("Requesting hint", {
+      hintLevel,
+      cost,
+      currentCredits,
+      unlockedHints,
+    });
+
+    if (currentCredits < cost) {
+      setError(`Բավարար կրեդիտներ չկան: պետք է ${cost} կրեդիտ`);
+      return;
+    }
+
+    try {
+      console.log("Calling hint usage API...");
+      const requestData = {
+        exerciseId,
+        hintLevel,
+      };
+      console.log("Request data being sent:", requestData);
+      const result = await hintUsageMutation.mutateAsync(requestData);
+      console.log("Hint usage result", result);
+      setUnlockedHints(result.unlockedHints);
+      setError(""); // Clear any previous errors
+    } catch (error: unknown) {
+      console.error("Hint usage error", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Հուշում բացելու սխալ";
+      setError(errorMessage);
+    }
+  };
+
+  const hasHints =
+    exercise?.hintText1 ||
+    exercise?.hintImage1 ||
+    exercise?.hintText2 ||
+    exercise?.hintImage2 ||
+    exercise?.hintText3 ||
+    exercise?.hintImage3;
+
+  const getNextAvailableHint = () => {
+    if (!unlockedHints.includes(1)) return 1;
+    if (!unlockedHints.includes(2)) return 2;
+    if (!unlockedHints.includes(3)) return 3;
+    return null; // All hints unlocked
+  };
+
+  const nextHint = getNextAvailableHint();
+  console.log("Hint state", {
+    unlockedHints,
+    nextHint,
+    userProfile: userProfile?.credits,
+  });
+
+  if (isLoading || userLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-lg">Բեռնվում...</div>
@@ -83,6 +193,16 @@ export default function StudentExercisePage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-lg text-red-600">
           Սխալ՝ {fetchError?.message || "Վարժությունը չգտնվեց"}
+        </div>
+      </div>
+    );
+  }
+
+  if (userError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-lg text-red-600">
+          Սխալ՝ {userError.message || "Օգտատիրոջ տվյալները բեռնելու սխալ"}
         </div>
       </div>
     );
@@ -107,12 +227,21 @@ export default function StudentExercisePage() {
                 </h1>
               </div>
             </div>
-            {isCompleted && (
-              <div className="flex items-center space-x-2 text-green-600">
-                <CheckCircle className="h-5 w-5" />
-                <span className="font-medium">Ավարտված</span>
-              </div>
-            )}
+            <div className="flex items-center space-x-4">
+              {/* Credits */}
+              {userProfile && (
+                <span className="flex items-center px-3 py-1 rounded-full bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm font-semibold">
+                  <Coins className="h-4 w-4 mr-1 text-yellow-500" />
+                  {userProfile.credits} կրեդիտ
+                </span>
+              )}
+              {isCompleted && (
+                <div className="flex items-center space-x-2 text-green-600">
+                  <CheckCircle className="h-5 w-5" />
+                  <span className="font-medium">Ավարտված</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -146,6 +275,183 @@ export default function StudentExercisePage() {
           <Alert className="mb-6">
             <AlertDescription>{success}</AlertDescription>
           </Alert>
+        )}
+
+        {/* Hints Section */}
+        {hasHints && !isCompleted && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Lightbulb className="h-5 w-5 text-yellow-600" />
+                <span>Հուշումներ</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowHints(!showHints)}
+                  className="ml-auto"
+                >
+                  {showHints ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            {(showHints || unlockedHints.length > 0) && (
+              <CardContent className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Օգտվեք հուշումներից՝ ձեր պատասխանը ստուգելուց հետո:
+                </p>
+                {nextHint && (
+                  <p className="text-sm text-blue-600 font-medium">
+                    Հասանելի է՝ Հուշում {nextHint} ({HINT_COSTS[nextHint]}{" "}
+                    կրեդիտ)
+                  </p>
+                )}
+                {!nextHint && unlockedHints.length > 0 && (
+                  <p className="text-sm text-green-600 font-medium">
+                    Բոլոր հուշումները օգտագործված են
+                  </p>
+                )}
+
+                {/* Hint 1 */}
+                {(exercise.hintText1 || exercise.hintImage1) && (
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-blue-800 flex items-center">
+                        <Lightbulb className="h-4 w-4 mr-2" />
+                        Հուշում 1
+                        {unlockedHints.includes(1) && (
+                          <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                            Օգտագործված
+                          </span>
+                        )}
+                      </h4>
+                      {!unlockedHints.includes(1) && nextHint === 1 && (
+                        <Button
+                          onClick={() => requestHint(1)}
+                          disabled={hintUsageMutation.isPending}
+                          size="sm"
+                          variant="outline"
+                          className="text-blue-600 border-blue-300 hover:bg-blue-100"
+                        >
+                          <Coins className="h-3 w-3 mr-1" />
+                          {HINT_COSTS[1]} կրեդիտ
+                        </Button>
+                      )}
+                    </div>
+                    {unlockedHints.includes(1) && (
+                      <>
+                        {exercise.hintImage1 && (
+                          <FileViewer
+                            url={exercise.hintImage1}
+                            title="Հուշում 1 նկար"
+                            className="mb-3"
+                          />
+                        )}
+                        {exercise.hintText1 && (
+                          <div className="prose prose-sm max-w-none">
+                            {exercise.hintText1}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* Hint 2 */}
+                {(exercise.hintText2 || exercise.hintImage2) && (
+                  <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-orange-800 flex items-center">
+                        <Lightbulb className="h-4 w-4 mr-2" />
+                        Հուշում 2
+                        {unlockedHints.includes(2) && (
+                          <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                            Օգտագործված
+                          </span>
+                        )}
+                      </h4>
+                      {!unlockedHints.includes(2) && nextHint === 2 && (
+                        <Button
+                          onClick={() => requestHint(2)}
+                          disabled={hintUsageMutation.isPending}
+                          size="sm"
+                          variant="outline"
+                          className="text-orange-600 border-orange-300 hover:bg-orange-100"
+                        >
+                          <Coins className="h-3 w-3 mr-1" />
+                          {HINT_COSTS[2]} կրեդիտ
+                        </Button>
+                      )}
+                    </div>
+                    {unlockedHints.includes(2) && (
+                      <>
+                        {exercise.hintImage2 && (
+                          <FileViewer
+                            url={exercise.hintImage2}
+                            title="Հուշում 2 նկար"
+                            className="mb-3"
+                          />
+                        )}
+                        {exercise.hintText2 && (
+                          <div className="prose prose-sm max-w-none">
+                            {exercise.hintText2}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* Hint 3 */}
+                {(exercise.hintText3 || exercise.hintImage3) && (
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-red-800 flex items-center">
+                        <Lightbulb className="h-4 w-4 mr-2" />
+                        Հուշում 3
+                        {unlockedHints.includes(3) && (
+                          <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                            Օգտագործված
+                          </span>
+                        )}
+                      </h4>
+                      {!unlockedHints.includes(3) && nextHint === 3 && (
+                        <Button
+                          onClick={() => requestHint(3)}
+                          disabled={hintUsageMutation.isPending}
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 border-red-300 hover:bg-red-100"
+                        >
+                          <Coins className="h-3 w-3 mr-1" />
+                          {HINT_COSTS[3]} կրեդիտ
+                        </Button>
+                      )}
+                    </div>
+                    {unlockedHints.includes(3) && (
+                      <>
+                        {exercise.hintImage3 && (
+                          <FileViewer
+                            url={exercise.hintImage3}
+                            title="Հուշում 3 նկար"
+                            className="mb-3"
+                          />
+                        )}
+                        {exercise.hintText3 && (
+                          <div className="prose prose-sm max-w-none">
+                            {exercise.hintText3}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            )}
+          </Card>
         )}
 
         {!isCompleted ? (

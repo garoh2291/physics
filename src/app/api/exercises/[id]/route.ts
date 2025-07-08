@@ -26,6 +26,7 @@ export async function GET(
           },
         },
         tags: true,
+        courses: true,
       },
     });
 
@@ -72,11 +73,18 @@ export async function GET(
       solutionSteps: exercise.solutionSteps,
       solutionImage: exercise.solutionImage,
       correctAnswer: decryptedAnswer,
+      hintText1: exercise.hintText1,
+      hintImage1: exercise.hintImage1,
+      hintText2: exercise.hintText2,
+      hintImage2: exercise.hintImage2,
+      hintText3: exercise.hintText3,
+      hintImage3: exercise.hintImage3,
       createdAt: exercise.createdAt,
       updatedAt: exercise.updatedAt,
       createdBy: exercise.createdBy,
       solutions: exercise.solutions,
       tags: exercise.tags,
+      courses: exercise.courses,
     };
 
     return NextResponse.json(transformedExercise);
@@ -113,6 +121,13 @@ export async function PUT(
       solutionImage,
       correctAnswer,
       tagIds,
+      courseIds,
+      hintText1,
+      hintImage1,
+      hintText2,
+      hintImage2,
+      hintText3,
+      hintImage3,
     } = await request.json();
     if (!title) {
       return NextResponse.json(
@@ -151,6 +166,13 @@ export async function PUT(
         tagConnect.push({ id: tagId });
       }
     }
+    // Handle courses: connect by IDs
+    const courseConnect = [];
+    if (Array.isArray(courseIds)) {
+      for (const courseId of courseIds) {
+        courseConnect.push({ id: courseId });
+      }
+    }
 
     const updatedExercise = await db.exercise.update({
       where: { id },
@@ -163,12 +185,20 @@ export async function PUT(
         solutionSteps: solutionSteps || null,
         solutionImage: solutionImage || null,
         correctAnswer: encrypt(correctAnswer),
+        hintText1: hintText1 || null,
+        hintImage1: hintImage1 || null,
+        hintText2: hintText2 || null,
+        hintImage2: hintImage2 || null,
+        hintText3: hintText3 || null,
+        hintImage3: hintImage3 || null,
         tags: { set: tagConnect },
+        courses: { set: courseConnect },
         updatedAt: new Date(),
       },
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
         tags: true,
+        courses: true,
       },
     });
 

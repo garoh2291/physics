@@ -13,6 +13,7 @@ import { MathEditor } from "@/components/math-editor";
 import { FileUpload } from "@/components/ui/file-upload";
 import { FileViewer } from "@/components/ui/file-viewer";
 import { TagSelector } from "@/components/ui/tag-selector";
+import { CourseSelector } from "@/components/ui/course-selector";
 import { useCreateExercise } from "@/hooks/use-api";
 
 export default function CreateExercisePage() {
@@ -27,6 +28,15 @@ export default function CreateExercisePage() {
   const [selectedTags, setSelectedTags] = useState<
     Array<{ id: string; name: string; url?: string | null }>
   >([]);
+  const [selectedCourses, setSelectedCourses] = useState<
+    Array<{ id: string; name: string; url?: string | null }>
+  >([]);
+  const [hintText1, setHintText1] = useState("");
+  const [hintImage1, setHintImage1] = useState("");
+  const [hintText2, setHintText2] = useState("");
+  const [hintImage2, setHintImage2] = useState("");
+  const [hintText3, setHintText3] = useState("");
+  const [hintImage3, setHintImage3] = useState("");
   const [isPreview, setIsPreview] = useState(false);
   const [error, setError] = useState("");
 
@@ -65,6 +75,13 @@ export default function CreateExercisePage() {
         solutionImage,
         correctAnswer,
         tagIds: selectedTags.map((tag) => tag.id),
+        courseIds: selectedCourses.map((course) => course.id),
+        hintText1,
+        hintImage1,
+        hintText2,
+        hintImage2,
+        hintText3,
+        hintImage3,
       },
       {
         onSuccess: () => {
@@ -271,7 +288,117 @@ export default function CreateExercisePage() {
             </CardContent>
           </Card>
 
-          {/* Tags Section (optional) */}
+          {/* Hints Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Հուշումներ (ոչ պարտադիր)</CardTitle>
+              <p className="text-sm text-gray-600">
+                Ավելացրեք մինչև 3 հուշում ուսանողներին օգնելու համար
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Hint 1 */}
+              <div className="space-y-4">
+                <Label className="text-sm font-medium">Հուշում 1</Label>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="hintText1" className="text-sm">
+                      Հուշման տեքստ
+                    </Label>
+                    <MathEditor
+                      value={hintText1}
+                      onChange={setHintText1}
+                      height={150}
+                      placeholder="Մուտքագրեք առաջին հուշումը..."
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Հուշման նկար</Label>
+                    <FileUpload
+                      value={hintImage1}
+                      onChange={setHintImage1}
+                      label="Վերբեռնել հուշման նկար (առավելագույնը 5MB)"
+                    />
+                  </div>
+                  {hintImage1 && (
+                    <FileViewer
+                      url={hintImage1}
+                      title="Հուշում 1 նկար"
+                      className="mt-2"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Hint 2 */}
+              <div className="space-y-4">
+                <Label className="text-sm font-medium">Հուշում 2</Label>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="hintText2" className="text-sm">
+                      Հուշման տեքստ
+                    </Label>
+                    <MathEditor
+                      value={hintText2}
+                      onChange={setHintText2}
+                      height={150}
+                      placeholder="Մուտքագրեք երկրորդ հուշումը..."
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Հուշման նկար</Label>
+                    <FileUpload
+                      value={hintImage2}
+                      onChange={setHintImage2}
+                      label="Վերբեռնել հուշման նկար (առավելագույնը 5MB)"
+                    />
+                  </div>
+                  {hintImage2 && (
+                    <FileViewer
+                      url={hintImage2}
+                      title="Հուշում 2 նկար"
+                      className="mt-2"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Hint 3 */}
+              <div className="space-y-4">
+                <Label className="text-sm font-medium">Հուշում 3</Label>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="hintText3" className="text-sm">
+                      Հուշման տեքստ
+                    </Label>
+                    <MathEditor
+                      value={hintText3}
+                      onChange={setHintText3}
+                      height={150}
+                      placeholder="Մուտքագրեք երրորդ հուշումը..."
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Հուշման նկար</Label>
+                    <FileUpload
+                      value={hintImage3}
+                      onChange={setHintImage3}
+                      label="Վերբեռնել հուշման նկար (առավելագույնը 5MB)"
+                    />
+                  </div>
+                  {hintImage3 && (
+                    <FileViewer
+                      url={hintImage3}
+                      title="Հուշում 3 նկար"
+                      className="mt-2"
+                    />
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tags Section */}
           <Card>
             <CardHeader>
               <CardTitle>Պիտակներ (ոչ պարտադիր)</CardTitle>
@@ -280,6 +407,19 @@ export default function CreateExercisePage() {
               <TagSelector
                 selectedTags={selectedTags}
                 onTagsChange={setSelectedTags}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Courses Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Թեմաներ (ոչ պարտադիր)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CourseSelector
+                selectedCourses={selectedCourses}
+                onCoursesChange={setSelectedCourses}
               />
             </CardContent>
           </Card>
