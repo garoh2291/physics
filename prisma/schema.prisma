@@ -14,6 +14,12 @@ enum Role {
   SUPERADMIN
 }
 
+enum StudiedPlace {
+  SCHOOL
+  UNIVERSITY
+  NOT_STUDYING
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -21,6 +27,18 @@ model User {
   name      String
   role      Role     @default(STUDENT)
   credits   Int      @default(20) // Credits for hints
+  
+  // Onboarding fields
+  city      String?
+  country   String?
+  age       Int?
+  studiedPlace StudiedPlace?
+  class     Int?     // For school students (7-12)
+  course    Int?     // For university students (1-4)
+  schoolName String? // School or university name
+  preferredLevel Int? // Preferred exercise level (1-5)
+  isOnboarded Boolean @default(false) // Track if user completed onboarding
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -32,13 +50,19 @@ model User {
 model Exercise {
   id           String   @id @default(cuid())
   title        String
+  exerciseNumber String? // Exercise number/identifier
+  level        Int      @default(1) // Difficulty level (1-5)
+  class        Int?     // Target class (7-12)
+  
   problemText    String?  // Text for given data (optional)
   problemImage   String?  // Image for given data (optional, Cloudinary URL)
   givenText    String?  // Text for given data (optional)
   givenImage   String?  // Image for given data (optional, Cloudinary URL)
   solutionSteps String?  // Solution steps text (optional)
   solutionImage String? // Solution steps image (optional, Cloudinary URL)
-  correctAnswer String  // The answer to be checked automatically
+  
+  // Multiple correct answers support
+  correctAnswers String[] // Array of correct answers (encrypted)
   
   // Hints
   hintText1    String?  // First hint text (optional)
@@ -55,7 +79,9 @@ model Exercise {
   createdBy   User      @relation("CreatedBy", fields: [createdById], references: [id])
   solutions   Solution[]
   tags        Tag[]     @relation("ExerciseTags")
-  courses     Course[]  @relation("ExerciseCourses")
+  sources     Source[]  @relation("ExerciseSources")
+  sections    Section[] @relation("ExerciseSections")
+  themes      Theme[]   @relation("ExerciseThemes")
   hintUsages  HintUsage[]
 }
 
@@ -95,9 +121,30 @@ model Tag {
   exercises Exercise[] @relation("ExerciseTags")
 }
 
-model Course {
+model Source {
   id        String     @id @default(cuid())
   name      String     @unique
   url       String?
-  exercises Exercise[] @relation("ExerciseCourses")
+  exercises Exercise[] @relation("ExerciseSources")
+}
+
+model Section {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  url       String?
+  themes    Theme[]
+  exercises Exercise[] @relation("ExerciseSections")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Theme {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  url       String?
+  sectionId String
+  section   Section    @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  exercises Exercise[] @relation("ExerciseThemes")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }

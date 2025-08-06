@@ -33,7 +33,8 @@ export default function RegisterPage() {
       { name, email, password },
       {
         onSuccess: () => {
-          router.push("/login?message=Գրանցումը հաջողվել է");
+          // Redirect to onboarding instead of login
+          router.push("/onboarding");
         },
         onError: (error: Error) => {
           setError(error.message);

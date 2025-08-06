@@ -43,15 +43,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if answer is correct (if exercise has an answer and student provided an answer)
+    // Check if answer is correct (if exercise has answers and student provided an answer)
     let isCorrect = false;
-    if (exercise.correctAnswer && finalAnswer?.trim()) {
+    if (
+      exercise.correctAnswers &&
+      exercise.correctAnswers.length > 0 &&
+      finalAnswer?.trim()
+    ) {
       try {
-        const correctAnswer = safeDecrypt(exercise.correctAnswer);
-        // Normalize answers for comparison (remove spaces, convert to lowercase)
+        // Decrypt all correct answers and check if student's answer matches any of them
+        const correctAnswers = exercise.correctAnswers.map((answer) =>
+          safeDecrypt(answer)
+        );
         const normalizedStudentAnswer = finalAnswer.trim().toLowerCase();
-        const normalizedCorrectAnswer = correctAnswer.trim().toLowerCase();
-        isCorrect = normalizedStudentAnswer === normalizedCorrectAnswer;
+
+        isCorrect = correctAnswers.some((correctAnswer) => {
+          const normalizedCorrectAnswer = correctAnswer.trim().toLowerCase();
+          return normalizedStudentAnswer === normalizedCorrectAnswer;
+        });
       } catch (error) {
         console.error("Error checking answer:", error);
         isCorrect = false;

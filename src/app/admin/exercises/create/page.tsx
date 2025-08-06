@@ -8,29 +8,64 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ArrowLeft, Save } from "lucide-react";
 import { MathEditor } from "@/components/math-editor";
 import { FileUpload } from "@/components/ui/file-upload";
 import { FileViewer } from "@/components/ui/file-viewer";
 import { TagSelector } from "@/components/ui/tag-selector";
-import { CourseSelector } from "@/components/ui/course-selector";
+import { SourceSelector } from "@/components/ui/source-selector";
+import { SectionSelector } from "@/components/ui/section-selector";
+import { ThemeSelector } from "@/components/ui/theme-selector";
+import { MultipleAnswersInput } from "@/components/ui/multiple-answers-input";
 import { useCreateExercise } from "@/hooks/use-api";
+
+interface Source {
+  id: string;
+  name: string;
+  url?: string | null;
+}
+
+interface Section {
+  id: string;
+  name: string;
+  url?: string | null;
+}
+
+interface Theme {
+  id: string;
+  name: string;
+  url?: string | null;
+  section: {
+    id: string;
+    name: string;
+  };
+}
 
 export default function CreateExercisePage() {
   const [title, setTitle] = useState("");
+  const [exerciseNumber, setExerciseNumber] = useState("");
+  const [level, setLevel] = useState(1);
+  const [classGrade, setClassGrade] = useState<number | undefined>(undefined);
   const [problemText, setProblemText] = useState("");
   const [problemImage, setProblemImage] = useState("");
   const [givenText, setGivenText] = useState("");
   const [givenImage, setGivenImage] = useState("");
   const [solutionSteps, setSolutionSteps] = useState("");
   const [solutionImage, setSolutionImage] = useState("");
-  const [correctAnswer, setCorrectAnswer] = useState("");
+  const [correctAnswers, setCorrectAnswers] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<
     Array<{ id: string; name: string; url?: string | null }>
   >([]);
-  const [selectedCourses, setSelectedCourses] = useState<
-    Array<{ id: string; name: string; url?: string | null }>
-  >([]);
+  const [selectedSources, setSelectedSources] = useState<Source[]>([]);
+  const [selectedSections, setSelectedSections] = useState<Section[]>([]);
+  const [selectedThemes, setSelectedThemes] = useState<Theme[]>([]);
   const [hintText1, setHintText1] = useState("");
   const [hintImage1, setHintImage1] = useState("");
   const [hintText2, setHintText2] = useState("");
@@ -58,23 +93,28 @@ export default function CreateExercisePage() {
       setError("Լուծման քայլերը պետք է պարունակեն տեքստ կամ նկար");
       return;
     }
-    if (!correctAnswer.trim()) {
-      setError("Ճիշտ պատասխանը պարտադիր է");
+    if (correctAnswers.length === 0) {
+      setError("Առնվազն մեկ ճիշտ պատասխան պարտադիր է");
       return;
     }
 
     createExerciseMutation.mutate(
       {
         title,
+        exerciseNumber,
+        level,
+        class: classGrade,
         problemText,
         problemImage,
         givenText,
         givenImage,
         solutionSteps,
         solutionImage,
-        correctAnswer,
+        correctAnswers,
         tagIds: selectedTags.map((tag) => tag.id),
-        courseIds: selectedCourses.map((course) => course.id),
+        sourceIds: selectedSources.map((source) => source.id),
+        sectionIds: selectedSections.map((section) => section.id),
+        themeIds: selectedThemes.map((theme) => theme.id),
         hintText1,
         hintImage1,
         hintText2,
@@ -134,19 +174,72 @@ export default function CreateExercisePage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
-          {/* Title */}
+          {/* Basic Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Վարժության վերնագիր *</CardTitle>
+              <CardTitle>Հիմնական տվյալներ</CardTitle>
             </CardHeader>
-            <CardContent>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Օրինակ՝ Մարմնի շարժում թեք հարթության վրա"
-                required
-              />
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="title">Վարժության վերնագիր *</Label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Օրինակ՝ Մարմնի շարժում թեք հարթության վրա"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="exerciseNumber">Վարժության համար</Label>
+                <Input
+                  id="exerciseNumber"
+                  value={exerciseNumber}
+                  onChange={(e) => setExerciseNumber(e.target.value)}
+                  placeholder="Օրինակ՝ 1.2, A3, կամ թողեք դատարկ"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="level">Մակարդակ *</Label>
+                  <Select
+                    value={level.toString()}
+                    onValueChange={(value) => setLevel(parseInt(value))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Ընտրեք մակարդակ" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 - Հեշտ</SelectItem>
+                      <SelectItem value="2">2</SelectItem>
+                      <SelectItem value="3">3</SelectItem>
+                      <SelectItem value="4">4</SelectItem>
+                      <SelectItem value="5">5 - Դժվար</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="class">Դասարան</Label>
+                  <Select
+                    value={classGrade ? classGrade.toString() : ""}
+                    onValueChange={(value) =>
+                      setClassGrade(value ? parseInt(value) : undefined)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Ընտրեք դասարանը (ոչ պարտադիր)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="7">7</SelectItem>
+                      <SelectItem value="8">8</SelectItem>
+                      <SelectItem value="9">9</SelectItem>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="11">11</SelectItem>
+                      <SelectItem value="12">12</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -258,18 +351,16 @@ export default function CreateExercisePage() {
             </CardContent>
           </Card>
 
-          {/* Correct Answer Section */}
+          {/* Correct Answers Section */}
           <Card>
             <CardHeader>
-              <CardTitle>Ճիշտ պատասխան *</CardTitle>
+              <CardTitle>Ճիշտ պատասխաններ *</CardTitle>
             </CardHeader>
             <CardContent>
-              <Input
-                id="correctAnswer"
-                value={correctAnswer}
-                onChange={(e) => setCorrectAnswer(e.target.value)}
-                placeholder="Օրինակ՝ 42"
-                required
+              <MultipleAnswersInput
+                answers={correctAnswers}
+                onAnswersChange={setCorrectAnswers}
+                placeholder="Օրինակ՝ 42 կամ 42.0 կամ 42,00"
               />
             </CardContent>
           </Card>
@@ -397,15 +488,41 @@ export default function CreateExercisePage() {
             </CardContent>
           </Card>
 
-          {/* Courses Section */}
+          {/* Sources Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Աղբյուրներ (ոչ պարտադիր)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SourceSelector
+                selectedSources={selectedSources}
+                onSourcesChange={setSelectedSources}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Sections Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Բաժիններ (ոչ պարտադիր)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SectionSelector
+                selectedSections={selectedSections}
+                onSectionsChange={setSelectedSections}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Themes Section */}
           <Card>
             <CardHeader>
               <CardTitle>Թեմաներ (ոչ պարտադիր)</CardTitle>
             </CardHeader>
             <CardContent>
-              <CourseSelector
-                selectedCourses={selectedCourses}
-                onCoursesChange={setSelectedCourses}
+              <ThemeSelector
+                selectedThemes={selectedThemes}
+                onThemesChange={setSelectedThemes}
               />
             </CardContent>
           </Card>

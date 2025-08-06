@@ -38,6 +38,8 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
+          studiedPlace: user.studiedPlace || undefined,
+          isOnboarded: user.isOnboarded,
         };
       },
     }),
@@ -49,13 +51,32 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role;
+        token.studiedPlace = user.studiedPlace;
+        token.isOnboarded = user.isOnboarded;
       }
+
+      // Always fetch fresh user data to ensure onboarding status is up to date
+      if (token?.sub) {
+        const freshUser = await db.user.findUnique({
+          where: { id: token.sub },
+          select: { role: true, studiedPlace: true, isOnboarded: true },
+        });
+
+        if (freshUser) {
+          token.role = freshUser.role;
+          token.studiedPlace = freshUser.studiedPlace || undefined;
+          token.isOnboarded = freshUser.isOnboarded;
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.sub!;
         session.user.role = token.role;
+        session.user.studiedPlace = token.studiedPlace;
+        session.user.isOnboarded = token.isOnboarded;
       }
       return session;
     },

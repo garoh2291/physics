@@ -19,8 +19,42 @@ export default withAuth(
       return Response.redirect(new URL("/dashboard", req.url));
     }
 
-    // Protect student dashboard
+    // Check onboarding for students
+    if (token?.role === "STUDENT" && !token?.isOnboarded) {
+      console.log("Middleware: Student not onboarded", {
+        pathname,
+        role: token?.role,
+        isOnboarded: token?.isOnboarded,
+        onboardedParam: req.nextUrl.searchParams.get("onboarded"),
+      });
+
+      // Allow access to onboarding page
+      if (pathname === "/onboarding") {
+        return;
+      }
+      // Allow access to dashboard if onboarded=true parameter is present
+      if (
+        pathname === "/dashboard" &&
+        req.nextUrl.searchParams.get("onboarded") === "true"
+      ) {
+        console.log(
+          "Middleware: Allowing dashboard access with onboarded param"
+        );
+        return;
+      }
+      // Redirect to onboarding for all other pages
+      if (pathname !== "/onboarding") {
+        console.log("Middleware: Redirecting to onboarding");
+        return Response.redirect(new URL("/onboarding", req.url));
+      }
+    }
+
+    // Protect student dashboard and exercise pages
     if (pathname.startsWith("/dashboard") && !token?.role) {
+      return Response.redirect(new URL("/login", req.url));
+    }
+
+    if (pathname.startsWith("/exercises") && !token?.role) {
       return Response.redirect(new URL("/login", req.url));
     }
   },

@@ -11,9 +11,9 @@ import {
   Menu,
   X,
   Tag,
-  GraduationCap,
   ChevronLeft,
   ChevronRight,
+  FolderOpen,
 } from "lucide-react";
 import { useAdminSidebar } from "./admin-sidebar-context";
 
@@ -39,9 +39,9 @@ export function AdminNav() {
       icon: Plus,
     },
     {
-      href: "/admin/courses",
-      label: "Թեմաներ",
-      icon: GraduationCap,
+      href: "/admin/sections",
+      label: "Բաժիններ",
+      icon: FolderOpen,
     },
     {
       href: "/admin/tags",

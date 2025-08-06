@@ -1,22 +1,33 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LogOut, BookOpen, CheckCircle, Coins, XCircle } from "lucide-react";
-import { useExercises, useUserProfile, useCourses } from "@/hooks/use-api";
+import { useExercises, useUserProfile, useSources } from "@/hooks/use-api";
 import Link from "next/link";
 
 export default function StudentDashboard() {
   const { data: session } = useSession();
   const { data: exercises = [], isLoading, error } = useExercises();
   const { data: userProfile } = useUserProfile();
-  const { data: courses = [] } = useCourses();
+  const { data: sources = [] } = useSources();
   const [filter, setFilter] = useState<string>("all");
   const [selectedCourse, setSelectedCourse] = useState<string>("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Handle onboarding completion
+  useEffect(() => {
+    if (searchParams.get("onboarded") === "true") {
+      // Remove the query parameter and refresh the page to update session
+      router.replace("/dashboard");
+    }
+  }, [searchParams, router]);
 
   // Helper: solved exercise IDs
   const solvedIds = useMemo(() => {
@@ -33,7 +44,7 @@ export default function StudentDashboard() {
     }
     if (filter === "course" && selectedCourse) {
       return exercises.filter((ex) =>
-        ex.courses.some((c) => c.id === selectedCourse)
+        ex.sources.some((s) => s.id === selectedCourse)
       );
     }
     return exercises;
@@ -167,9 +178,9 @@ export default function StudentDashboard() {
               }}
             >
               <option value="">Ընտրել թեմա</option>
-              {courses.map((course) => (
-                <option key={course.id} value={course.id}>
-                  {course.name}
+              {sources.map((source) => (
+                <option key={source.id} value={source.id}>
+                  {source.name}
                 </option>
               ))}
             </select>

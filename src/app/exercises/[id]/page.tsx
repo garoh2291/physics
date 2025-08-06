@@ -518,9 +518,25 @@ export default function StudentExercisePage() {
                     <h4 className="font-semibold mb-2 text-green-800">
                       Ճիշտ պատասխան:
                     </h4>
-                    <p className="text-lg font-mono text-green-700 bg-white p-2 rounded border">
-                      {exercise.correctAnswer}
-                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {exercise.correctAnswers &&
+                      exercise.correctAnswers.length > 0 ? (
+                        exercise.correctAnswers.map(
+                          (ans: string, idx: number) => (
+                            <span
+                              key={idx}
+                              className="text-lg font-mono text-green-700 bg-white p-2 rounded border"
+                            >
+                              {ans}
+                            </span>
+                          )
+                        )
+                      ) : (
+                        <span className="text-lg font-mono text-green-700 bg-white p-2 rounded border">
+                          Չկա պատասխան
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {exercise.givenImage && (

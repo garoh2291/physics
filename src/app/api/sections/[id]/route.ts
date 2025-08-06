@@ -23,14 +23,23 @@ export async function PUT(
       );
     }
     const { id } = await params;
-    const updated = await db.course.update({
+    const updated = await db.section.update({
       where: { id },
       data: { name: name.trim(), url: url || null },
+      include: {
+        themes: {
+          select: {
+            id: true,
+            name: true,
+            url: true,
+          },
+        },
+      },
     });
     return NextResponse.json(updated);
   } catch {
     return NextResponse.json(
-      { error: "Կուրսի թարմացման սխալ" },
+      { error: "Բաժնի թարմացման սխալ" },
       { status: 500 }
     );
   }
@@ -49,9 +58,9 @@ export async function DELETE(
   }
   try {
     const { id } = await params;
-    await db.course.delete({ where: { id } });
+    await db.section.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: "Կուրսի ջնջման սխալ" }, { status: 500 });
+    return NextResponse.json({ error: "Բաժնի ջնջման սխալ" }, { status: 500 });
   }
 }

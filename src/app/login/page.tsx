@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLogin } from "@/hooks/use-api";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -28,7 +29,12 @@ export default function LoginPage() {
         onSuccess: async () => {
           const session = await getSession();
           if (session?.user?.role === "STUDENT") {
-            router.push("/dashboard");
+            // Check if user has completed onboarding
+            if (!session.user.isOnboarded) {
+              router.push("/onboarding");
+            } else {
+              router.push("/dashboard");
+            }
           } else if (session?.user?.role === "ADMIN") {
             router.push("/admin");
           } else if (session?.user?.role === "SUPERADMIN") {
@@ -47,7 +53,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="pb-4">
           <CardTitle className="text-center text-xl md:text-2xl">
-            Ֆիզիկայի վարժություններ
+            Մուտք գործել
           </CardTitle>
         </CardHeader>
         <CardContent className="px-4 md:px-6">
@@ -88,9 +94,17 @@ export default function LoginPage() {
               className="w-full text-sm md:text-base"
               disabled={loginMutation.isPending}
             >
-              {loginMutation.isPending ? "Մուտք գործում..." : "Մուտք"}
+              {loginMutation.isPending ? "Մուտք գործվում..." : "Մուտք գործել"}
             </Button>
           </form>
+          <div className="mt-4 text-center">
+            <Link
+              href="/register"
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Գրանցված չե՞ք: Գրանցվել
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

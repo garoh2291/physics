@@ -1,5 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { signIn, type SignInResponse } from "next-auth/react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { signIn } from "next-auth/react";
 
 // Types
 interface User {
@@ -7,44 +7,6 @@ interface User {
   name: string;
   email: string;
   role: string;
-}
-
-interface RegisterResponse {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
-
-interface Exercise {
-  id: string;
-  title: string;
-  problemText?: string;
-  problemImage?: string;
-  givenText?: string;
-  givenImage?: string;
-  solutionSteps?: string;
-  solutionImage?: string;
-  correctAnswer?: string; // Decrypted for admins
-  hintText1?: string;
-  hintImage1?: string;
-  hintText2?: string;
-  hintImage2?: string;
-  hintText3?: string;
-  hintImage3?: string;
-  createdAt: string;
-  createdBy?: User;
-  tags: Array<{
-    id: string;
-    name: string;
-    url?: string | null;
-  }>;
-  courses: Array<{
-    id: string;
-    name: string;
-    url?: string | null;
-  }>;
-  solutions: Solution[];
 }
 
 interface Solution {
@@ -62,6 +24,100 @@ interface Solution {
   };
 }
 
+interface Exercise {
+  id: string;
+  title: string;
+  exerciseNumber?: string;
+  level: number;
+  class?: number;
+  problemText?: string;
+  problemImage?: string;
+  givenText?: string;
+  givenImage?: string;
+  solutionSteps?: string;
+  solutionImage?: string;
+  correctAnswers: string[];
+  hintText1?: string;
+  hintImage1?: string;
+  hintText2?: string;
+  hintImage2?: string;
+  hintText3?: string;
+  hintImage3?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: User;
+  tags: Array<{ id: string; name: string; url?: string | null }>;
+  sources: Array<{ id: string; name: string; url?: string | null }>;
+  sections: Array<{ id: string; name: string; url?: string | null }>;
+  themes: Array<{
+    id: string;
+    name: string;
+    url?: string | null;
+    section: { id: string; name: string };
+  }>;
+  solutions: Solution[];
+}
+
+interface Tag {
+  id: string;
+  name: string;
+  url?: string | null;
+}
+
+interface Source {
+  id: string;
+  name: string;
+  url?: string | null;
+}
+
+interface Section {
+  id: string;
+  name: string;
+  url?: string | null;
+  themes: Array<{ id: string; name: string; url?: string | null }>;
+}
+
+interface Theme {
+  id: string;
+  name: string;
+  url?: string | null;
+  section: {
+    id: string;
+    name: string;
+  };
+}
+
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  credits: number;
+  solutions: Array<{ exerciseId: string; isCorrect: boolean }>;
+  hintUsages: Array<{
+    exerciseId: string;
+    hintLevel: number;
+    usedAt: string;
+  }>;
+}
+
+// API Response Types
+interface RegisterResponse {
+  message: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
+}
+
+interface SignInResponse {
+  error?: string | null;
+  ok?: boolean;
+  url?: string | null;
+}
+
+// API Request Types
 interface RegisterData {
   name: string;
   email: string;
@@ -73,17 +129,27 @@ interface LoginData {
   password: string;
 }
 
+interface SubmitSolutionData {
+  exerciseId: string;
+  finalAnswer: string;
+}
+
 interface CreateExerciseData {
   title: string;
+  exerciseNumber?: string;
+  level: number;
+  class?: number;
   problemText?: string;
   problemImage?: string;
   givenText?: string;
   givenImage?: string;
   solutionSteps?: string;
   solutionImage?: string;
-  correctAnswer: string;
+  correctAnswers: string[];
   tagIds?: string[];
-  courseIds?: string[];
+  sourceIds?: string[];
+  sectionIds?: string[];
+  themeIds?: string[];
   hintText1?: string;
   hintImage1?: string;
   hintText2?: string;
@@ -94,15 +160,20 @@ interface CreateExerciseData {
 
 interface UpdateExerciseData {
   title: string;
+  exerciseNumber?: string;
+  level: number;
+  class?: number;
   problemText?: string;
   problemImage?: string;
   givenText?: string;
   givenImage?: string;
   solutionSteps?: string;
   solutionImage?: string;
-  correctAnswer: string;
+  correctAnswers: string[];
   tagIds?: string[];
-  courseIds?: string[];
+  sourceIds?: string[];
+  sectionIds?: string[];
+  themeIds?: string[];
   hintText1?: string;
   hintImage1?: string;
   hintText2?: string;
@@ -111,18 +182,13 @@ interface UpdateExerciseData {
   hintImage3?: string;
 }
 
-interface SubmitSolutionData {
-  exerciseId: string;
-  finalAnswer: string;
-}
-
 // Exercise Hooks
 export const useExercises = () => {
   return useQuery<Exercise[]>({
     queryKey: ["exercises"],
     queryFn: async () => {
       const response = await fetch("/api/exercises");
-      if (!response.ok) throw new Error("Վարժությունները բեռնելու սխալ");
+      if (!response.ok) throw new Error("Failed to fetch exercises");
       return response.json();
     },
   });
@@ -133,10 +199,7 @@ export const useExercise = (id: string) => {
     queryKey: ["exercises", id],
     queryFn: async () => {
       const response = await fetch(`/api/exercises/${id}`);
-      if (!response.ok) {
-        if (response.status === 404) throw new Error("Վարժությունը չգտնվեց");
-        throw new Error("Վարժությունը բեռնելու սխալ");
-      }
+      if (!response.ok) throw new Error("Failed to fetch exercise");
       return response.json();
     },
     enabled: !!id,
@@ -178,37 +241,8 @@ export const useUpdateExercise = () => {
           throw new Error(result.error || "Վարժության թարմացման սխալ");
         return result;
       },
-      onSuccess: (updatedExercise) => {
+      onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["exercises"] });
-        queryClient.invalidateQueries({
-          queryKey: ["exercises", updatedExercise.id],
-        });
-      },
-    }
-  );
-};
-
-// PATCH hook for Exercise
-export const usePatchExercise = () => {
-  const queryClient = useQueryClient();
-  return useMutation<Exercise, Error, { id: string; data: UpdateExerciseData }>(
-    {
-      mutationFn: async ({ id, data }) => {
-        const response = await fetch(`/api/exercises/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
-        const result = await response.json();
-        if (!response.ok)
-          throw new Error(result.error || "Վարժության թարմացման սխալ");
-        return result;
-      },
-      onSuccess: (updatedExercise) => {
-        queryClient.invalidateQueries({ queryKey: ["exercises"] });
-        queryClient.invalidateQueries({
-          queryKey: ["exercises", updatedExercise.id],
-        });
       },
     }
   );
@@ -228,7 +262,6 @@ export const useDeleteExercise = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["exercises"] });
-      queryClient.invalidateQueries({ queryKey: ["solutions"] });
     },
   });
 };
@@ -239,10 +272,8 @@ export const useSolutions = () => {
     queryKey: ["solutions"],
     queryFn: async () => {
       const response = await fetch("/api/solutions");
-      const result = await response.json();
-      if (!response.ok)
-        throw new Error(result.error || "Լուծումները բեռնելու սխալ");
-      return result;
+      if (!response.ok) throw new Error("Failed to fetch solutions");
+      return response.json();
     },
   });
 };
@@ -276,48 +307,86 @@ export const useSubmitSolution = () => {
   });
 };
 
-// PATCH hook for ExerciseAnswer
-interface PatchExerciseAnswerData {
-  exerciseId: string;
-  correctAnswer?: string;
-  givenData?: string;
-  solutionSteps?: string;
-  solutionImage?: string;
-}
+// User Profile Hooks
+export const useUserProfile = () => {
+  return useQuery<UserProfile>({
+    queryKey: ["user-profile"],
+    queryFn: async () => {
+      const response = await fetch("/api/user-profile");
+      if (!response.ok) throw new Error("Failed to fetch user profile");
+      return response.json();
+    },
+  });
+};
 
-interface PatchExerciseAnswerResponse {
-  message: string;
-  exerciseAnswer: {
-    id: string;
-    exerciseId: string;
-    correctAnswer: string;
-    givenData?: string;
-    solutionSteps?: string;
-    solutionImage?: string;
-    createdAt: string;
-  };
-}
-
-export const usePatchExerciseAnswer = () => {
+// Hint Usage Hooks
+export const useHintUsage = () => {
   const queryClient = useQueryClient();
   return useMutation<
-    PatchExerciseAnswerResponse,
+    { credits: number; unlockedHints: number[] },
     Error,
-    PatchExerciseAnswerData
+    { exerciseId: string; hintLevel: number }
   >({
     mutationFn: async (data) => {
-      const response = await fetch(`/api/exercises/${data.exerciseId}/answer`, {
-        method: "PATCH",
+      const response = await fetch("/api/hint-usage", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       const result = await response.json();
       if (!response.ok)
-        throw new Error(result.error || "Պատասխանի թարմացման սխալ");
+        throw new Error(result.error || "Հուշման օգտագործման սխալ");
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["exercises"] });
+      queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+    },
+  });
+};
+
+// Tag Hooks
+export const useTags = () => {
+  return useQuery<Tag[]>({
+    queryKey: ["tags"],
+    queryFn: async () => {
+      const response = await fetch("/api/tags");
+      if (!response.ok) throw new Error("Failed to fetch tags");
+      return response.json();
+    },
+  });
+};
+
+// Source Hooks
+export const useSources = () => {
+  return useQuery<Source[]>({
+    queryKey: ["sources"],
+    queryFn: async () => {
+      const response = await fetch("/api/sources");
+      if (!response.ok) throw new Error("Failed to fetch sources");
+      return response.json();
+    },
+  });
+};
+
+// Theme Hooks
+export const useSections = () => {
+  return useQuery<Section[]>({
+    queryKey: ["sections"],
+    queryFn: async () => {
+      const response = await fetch("/api/sections");
+      if (!response.ok) throw new Error("Failed to fetch sections");
+      return response.json();
+    },
+  });
+};
+
+export const useThemes = () => {
+  return useQuery<Theme[]>({
+    queryKey: ["themes"],
+    queryFn: async () => {
+      const response = await fetch("/api/themes");
+      if (!response.ok) throw new Error("Failed to fetch themes");
+      return response.json();
     },
   });
 };
@@ -367,76 +436,6 @@ export const useLogin = () => {
       });
       if (result?.error) throw new Error("Սխալ էլ. փոստ կամ գաղտնաբառ");
       return result;
-    },
-  });
-};
-
-// User Profile Hook
-export interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  credits: number;
-  solutions: { exerciseId: string; isCorrect: boolean }[];
-  hintUsages: { exerciseId: string; hintLevel: number; usedAt: string }[];
-}
-
-export const useUserProfile = () => {
-  return useQuery<UserProfile>({
-    queryKey: ["user-profile"],
-    queryFn: async () => {
-      const response = await fetch("/api/user-profile");
-      if (!response.ok) throw new Error("Օգտատիրոջ տվյալները բեռնելու սխալ");
-      return response.json();
-    },
-  });
-};
-
-export interface Course {
-  id: string;
-  name: string;
-  url?: string | null;
-}
-
-export const useCourses = () => {
-  return useQuery<Course[]>({
-    queryKey: ["courses"],
-    queryFn: async () => {
-      const response = await fetch("/api/courses");
-      if (!response.ok) throw new Error("Թեմաները բեռնելու սխալ");
-      return response.json();
-    },
-  });
-};
-
-// Hint Usage Hook
-interface HintUsageData {
-  exerciseId: string;
-  hintLevel: 1 | 2 | 3;
-}
-
-interface HintUsageResponse {
-  credits: number;
-  unlockedHints: number[];
-}
-
-export const useHintUsage = () => {
-  const queryClient = useQueryClient();
-  return useMutation<HintUsageResponse, Error, HintUsageData>({
-    mutationFn: async (data) => {
-      console.log("Hint usage hook sending data:", data);
-      const response = await fetch("/api/hint-usage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Հուշում բացելու սխալ");
-      return result;
-    },
-    onSuccess: () => {
-      // Invalidate user profile to update credits
-      queryClient.invalidateQueries({ queryKey: ["user-profile"] });
     },
   });
 };
