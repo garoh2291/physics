@@ -251,13 +251,13 @@ export default function StudentExercisePage() {
       <main className="container mx-auto px-4 py-6 md:py-8">
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Տրված տվյալներ</CardTitle>
+            <CardTitle>Խնդիր</CardTitle>
           </CardHeader>
           <CardContent>
             {exercise.problemImage && (
               <FileViewer
                 url={exercise.problemImage}
-                title="Տրվածի նկար"
+                title="Խնդրի նկար"
                 className="mb-4"
               />
             )}
@@ -542,7 +542,7 @@ export default function StudentExercisePage() {
                   {exercise.givenImage && (
                     <FileViewer
                       url={exercise.givenImage}
-                      title="Լրացուցիչ տրվածի նկար"
+                      title="Տրված տվյալների նկար"
                       className="mb-4"
                     />
                   )}

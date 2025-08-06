@@ -86,7 +86,7 @@ export default function CreateExercisePage() {
       return;
     }
     if (!problemText.trim() && !problemImage) {
-      setError("Տրված տվյալները պետք է պարունակեն տեքստ կամ նկար");
+      setError("Խնդիրը պետք է պարունակի տեքստ կամ նկար");
       return;
     }
     if (!solutionSteps.trim() && !solutionImage) {
@@ -246,33 +246,33 @@ export default function CreateExercisePage() {
           {/* Given Data Section */}
           <Card>
             <CardHeader>
-              <CardTitle>Տրված տվյալներ *</CardTitle>
+              <CardTitle>Խնդիր *</CardTitle>
               <p className="text-sm text-gray-600">
-                Պարտադիր է մուտքագրել տրվածի տեքստ կամ վերբեռնել նկար
+                Պարտադիր է մուտքագրել խնդրի տեքստ կամ վերբեռնել նկար
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="problemText">Տրվածի տեքստ</Label>
+                <Label htmlFor="problemText">Խնդրի տեքստ</Label>
                 <MathEditor
                   value={problemText}
                   onChange={setProblemText}
                   height={200}
-                  placeholder="Մուտքագրեք տրվածի տեքստը..."
+                  placeholder="Մուտքագրեք խնդրի տեքստը..."
                 />
               </div>
               <div>
-                <Label>Տրվածի նկար</Label>
+                <Label>Խնդրի նկար</Label>
                 <FileUpload
                   value={problemImage}
                   onChange={setProblemImage}
-                  label="Վերբեռնել տրվածի նկար (առավելագույնը 5MB)"
+                  label="Վերբեռնել խնդրի նկար (առավելագույնը 5MB)"
                 />
               </div>
               {problemImage && (
                 <FileViewer
                   url={problemImage}
-                  title="Տրվածի նկար"
+                  title="Խնդրի նկար"
                   className="mt-4"
                 />
               )}
@@ -282,33 +282,33 @@ export default function CreateExercisePage() {
           {/* Additional Given Data Section */}
           <Card>
             <CardHeader>
-              <CardTitle>Լրացուցիչ տրված տվյալներ</CardTitle>
+              <CardTitle>Տրված տվյալներ</CardTitle>
               <p className="text-sm text-gray-600">
-                Լրացուցիչ տրված տվյալներ (ոչ պարտադիր)
+                Տրված տվյալներ (ոչ պարտադիր)
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="givenText">Լրացուցիչ տրվածի տեքստ</Label>
+                <Label htmlFor="givenText">Տրված տվյալների տեքստ</Label>
                 <MathEditor
                   value={givenText}
                   onChange={setGivenText}
                   height={200}
-                  placeholder="Մուտքագրեք լրացուցիչ տրվածի տեքստը..."
+                  placeholder="Մուտքագրեք տրված տվյալների տեքստը..."
                 />
               </div>
               <div>
-                <Label>Լրացուցիչ տրվածի նկար</Label>
+                <Label>Տրված տվյալների նկար</Label>
                 <FileUpload
                   value={givenImage}
                   onChange={setGivenImage}
-                  label="Վերբեռնել լրացուցիչ տրվածի նկար (առավելագույնը 5MB)"
+                  label="Վերբեռնել տրված տվյալների նկար (առավելագույնը 5MB)"
                 />
               </div>
               {givenImage && (
                 <FileViewer
                   url={givenImage}
-                  title="Լրացուցիչ տրվածի նկար"
+                  title="Տրված տվյալների նկար"
                   className="mt-4"
                 />
               )}

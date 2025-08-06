@@ -141,7 +141,7 @@ export async function PUT(
     // Validate that either problemText or problemImage is provided
     if (!problemText?.trim() && !problemImage) {
       return NextResponse.json(
-        { error: "Տրված տվյալները պետք է պարունակեն տեքստ կամ նկար" },
+        { error: "Խնդիրը պետք է պարունակի տեքստ կամ նկար" },
         { status: 400 }
       );
     }
