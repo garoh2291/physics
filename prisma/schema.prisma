@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-1.0.x"]
 }
 
@@ -21,78 +21,80 @@ enum StudiedPlace {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      Role     @default(STUDENT)
-  credits   Int      @default(20) // Credits for hints
-  
+  id       String @id @default(cuid())
+  email    String @unique
+  password String
+  name     String
+  role     Role   @default(STUDENT)
+  credits  Int    @default(20) // Credits for hints
+
   // Onboarding fields
-  city      String?
-  country   String?
-  age       Int?
-  studiedPlace StudiedPlace?
-  class     Int?     // For school students (7-12)
-  course    Int?     // For university students (1-4)
-  schoolName String? // School or university name
+  city           String?
+  country        String?
+  age            Int?
+  studiedPlace   StudiedPlace?
+  class          Int? // For school students (7-12)
+  course         Int? // For university students (1-4)
+  schoolName     String? // School or university name
   preferredLevel Int? // Preferred exercise level (1-5)
-  isOnboarded Boolean @default(false) // Track if user completed onboarding
-  
+  isOnboarded    Boolean       @default(false) // Track if user completed onboarding
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  solutions   Solution[]
-  exercises   Exercise[] @relation("CreatedBy")
-  hintUsages  HintUsage[]
+  solutions  Solution[]
+  exercises  Exercise[]  @relation("CreatedBy")
+  hintUsages HintUsage[]
 }
 
 model Exercise {
-  id           String   @id @default(cuid())
-  title        String
+  id             String  @id @default(cuid())
+  title          String
   exerciseNumber String? // Exercise number/identifier
-  level        Int      @default(1) // Difficulty level (1-5)
-  class        Int?     // Target class (7-12)
-  
-  problemText    String?  // Text for given data (optional)
-  problemImage   String?  // Image for given data (optional, Cloudinary URL)
-  givenText    String?  // Text for given data (optional)
-  givenImage   String?  // Image for given data (optional, Cloudinary URL)
-  solutionSteps String?  // Solution steps text (optional)
+  level          Int     @default(1) // Difficulty level (1-5)
+  class          Int? // Target class (7-12)
+
+  problemText   String? // Text for given data (optional)
+  problemImage  String? // Image for given data (optional, Cloudinary URL)
+  givenText     String? // Text for given data (optional)
+  givenImage    String? // Image for given data (optional, Cloudinary URL)
+  solutionSteps String? // Solution steps text (optional)
   solutionImage String? // Solution steps image (optional, Cloudinary URL)
-  
+
   // Multiple correct answers support
   correctAnswers String[] // Array of correct answers (encrypted)
-  
-  // Hints
-  hintText1    String?  // First hint text (optional)
-  hintImage1   String?  // First hint image (optional, Cloudinary URL)
-  hintText2    String?  // Second hint text (optional)
-  hintImage2   String?  // Second hint image (optional, Cloudinary URL)
-  hintText3    String?  // Third hint text (optional)
-  hintImage3   String?  // Third hint image (optional, Cloudinary URL)
-  
-  createdById   String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
 
-  createdBy   User      @relation("CreatedBy", fields: [createdById], references: [id])
-  solutions   Solution[]
-  tags        Tag[]     @relation("ExerciseTags")
-  sources     Source[]  @relation("ExerciseSources")
-  sections    Section[] @relation("ExerciseSections")
-  themes      Theme[]   @relation("ExerciseThemes")
-  hintUsages  HintUsage[]
+  // Hints
+  hintText1  String? // First hint text (optional)
+  hintImage1 String? // First hint image (optional, Cloudinary URL)
+  hintText2  String? // Second hint text (optional)
+  hintImage2 String? // Second hint image (optional, Cloudinary URL)
+  hintText3  String? // Third hint text (optional)
+  hintImage3 String? // Third hint image (optional, Cloudinary URL)
+
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy  User        @relation("CreatedBy", fields: [createdById], references: [id])
+  solutions  Solution[]
+  tags       Tag[]       @relation("ExerciseTags")
+  sources    Source[]    @relation("ExerciseSources")
+  sections   Section[]   @relation("ExerciseSections")
+  themes     Theme[]     @relation("ExerciseThemes")
+  hintUsages HintUsage[]
 }
 
 model Solution {
-  id            String   @id @default(cuid())
-  userId        String
-  exerciseId    String
-  finalAnswer   String   // Student's final answer (required)
-  isCorrect     Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  userId              String
+  exerciseId          String
+  finalAnswer         String // Student's final answer (required)
+  isCorrect           Boolean  @default(false)
+  submittedAnswers    Json[] // Array of partial answer submissions
+  correctAnswersCount Int      @default(0) // Number of correct answers submitted
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   user     User     @relation(fields: [userId], references: [id])
   exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
@@ -105,7 +107,7 @@ model HintUsage {
   id         String   @id @default(cuid())
   userId     String
   exerciseId String
-  hintLevel  Int      // 1, 2, or 3 for which hint was used
+  hintLevel  Int // 1, 2, or 3 for which hint was used
   usedAt     DateTime @default(now())
 
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)

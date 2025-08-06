@@ -19,6 +19,9 @@ export async function GET(request: NextRequest) {
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
         solutions: {
+          where: {
+            userId: session.user.id, // Only get current user's solutions
+          },
           include: {
             user: { select: { id: true, name: true, email: true } },
           },
@@ -43,6 +46,8 @@ export async function GET(request: NextRequest) {
     // Transform field names and decrypt answers for admins
     const transformedExercises = exercises.map((exercise) => {
       let decryptedAnswers: string[] = [];
+      const originalAnswersCount = exercise.correctAnswers?.length || 0;
+
       if (exercise.correctAnswers && exercise.correctAnswers.length > 0) {
         // Decrypt for admins
         if (["ADMIN", "SUPERADMIN"].includes(session.user.role)) {
@@ -58,6 +63,9 @@ export async function GET(request: NextRequest) {
           } catch (error) {
             console.error("Error processing answers:", error);
           }
+        } else {
+          // For students, provide placeholder array with correct length for status calculation
+          decryptedAnswers = new Array(originalAnswersCount).fill("HIDDEN");
         }
       }
 

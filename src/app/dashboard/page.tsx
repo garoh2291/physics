@@ -16,6 +16,7 @@ export default function StudentDashboard() {
   const { data: exercises = [], isLoading, error } = useExercises();
   const { data: userProfile } = useUserProfile();
   const { data: sources = [] } = useSources();
+  
   const [filter, setFilter] = useState<string>("all");
   const [selectedCourse, setSelectedCourse] = useState<string>("");
   const router = useRouter();
@@ -29,18 +30,26 @@ export default function StudentDashboard() {
     }
   }, [searchParams, router]);
 
-  // Helper: solved exercise IDs
-  const solvedIds = useMemo(() => {
-    if (!userProfile) return new Set<string>();
-    return new Set(
-      userProfile.solutions.filter((s) => s.isCorrect).map((s) => s.exerciseId)
-    );
-  }, [userProfile]);
-
   // Filtered exercises
   const filteredExercises = useMemo(() => {
     if (filter === "solved") {
-      return exercises.filter((ex) => solvedIds.has(ex.id));
+      const solvedExercises = exercises.filter((ex) => {
+        if (!userProfile) return false;
+        const userSolution = ex.solutions.find(s => s.userId === userProfile.id);
+        if (!userSolution) return false;
+        
+        // Check if exercise is completed (either legacy isCorrect or all partial answers correct)
+        if (userSolution.isCorrect) {
+          return true;
+        }
+        if (userSolution.submittedAnswers && Array.isArray(userSolution.submittedAnswers)) {
+          const correctCount = userSolution.correctAnswersCount || 0;
+          const isCompleted = correctCount === ex.correctAnswers.length;
+          return isCompleted;
+        }
+        return false;
+      });
+      return solvedExercises;
     }
     if (filter === "course" && selectedCourse) {
       return exercises.filter((ex) =>
@@ -48,31 +57,70 @@ export default function StudentDashboard() {
       );
     }
     return exercises;
-  }, [exercises, filter, selectedCourse, solvedIds]);
+  }, [exercises, filter, selectedCourse, userProfile]);
 
   const getExerciseStatus = (exercise: {
     id: string;
-    solutions: Array<{ isCorrect: boolean }>;
+    correctAnswers: string[];
+    solutions: Array<{ 
+      isCorrect: boolean; 
+      userId: string; 
+      submittedAnswers?: { index: number; answer: string; isCorrect: boolean; submittedAt: string }[];
+      correctAnswersCount?: number;
+    }>;
   }) => {
-    if (!userProfile) return { status: "new", text: "Նոր", color: "default" };
-    const solved = solvedIds.has(exercise.id);
-    if (solved)
-      return { status: "completed", text: "Ավարտված", color: "success" };
-    if (exercise.solutions.length > 0) {
-      // Check if any solution is correct
-      const hasCorrectSolution = exercise.solutions.some((s) => s.isCorrect);
-      if (!hasCorrectSolution) {
-        return { status: "wrong", text: "Սխալ պատասխան", color: "destructive" };
+    if (!userProfile) return { status: "new", text: "Նոր", color: "default", progress: null };
+    
+    // Get the user's solution for this exercise
+    const userSolution = exercise.solutions.find(s => s.userId === userProfile.id);
+    
+    if (userSolution) {
+      // Check for partial completion using submittedAnswers and correctAnswersCount
+      if (userSolution.submittedAnswers && Array.isArray(userSolution.submittedAnswers)) {
+        const totalAnswers = exercise.correctAnswers.length;
+        const correctCount = userSolution.correctAnswersCount || 0;
+        
+        if (correctCount === 0) {
+          return { 
+            status: "wrong", 
+            text: "Սխալ պատասխան", 
+            color: "destructive",
+            progress: `0/${totalAnswers}`
+          };
+        } else if (correctCount < totalAnswers) {
+          return { 
+            status: "partial", 
+            text: `${correctCount}/${totalAnswers}`, 
+            color: "warning",
+            progress: `${correctCount}/${totalAnswers}`
+          };
+        } else {
+          return { 
+            status: "completed", 
+            text: "Ավարտված", 
+            color: "success",
+            progress: null
+          };
+        }
+      } else {
+        // Legacy solution - check if it's marked as correct
+        if (userSolution.isCorrect) {
+          return { status: "completed", text: "Ավարտված", color: "success", progress: null };
+        } else {
+          return { status: "wrong", text: "Սխալ պատասխան", color: "destructive", progress: null };
+        }
       }
-      return { status: "in_progress", text: "Ընթացքում", color: "secondary" };
     }
-    return { status: "new", text: "Նոր", color: "default" };
+    
+    return { status: "new", text: "Նոր", color: "default", progress: null };
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
         return <CheckCircle className="h-4 w-4" />;
+      case "partial":
+        return <div className="h-4 w-4 rounded-full border-2 border-yellow-500 bg-yellow-100" />;
       case "wrong":
         return <XCircle className="h-4 w-4" />;
       default:
@@ -205,12 +253,15 @@ export default function StudentDashboard() {
                       </CardTitle>
                       <Badge
                         variant={
-                          status.color as
-                            | "default"
-                            | "destructive"
-                            | "secondary"
+                          status.color === "warning" 
+                            ? "secondary" 
+                            : (status.color as "default" | "destructive" | "secondary")
                         }
-                        className="flex items-center gap-1 text-xs"
+                        className={`flex items-center gap-1 text-xs ${
+                          status.color === "warning" 
+                            ? "bg-yellow-100 text-yellow-800 border-yellow-300" 
+                            : ""
+                        }`}
                       >
                         {getStatusIcon(status.status)}
                         <span className="hidden sm:inline">{status.text}</span>
@@ -227,6 +278,11 @@ export default function StudentDashboard() {
                         )}
                       </p>
                       <p>Փորձեր՝ {exercise.solutions.length}</p>
+                      {status.progress && (
+                        <p className="text-yellow-700 font-medium">
+                          Պատասխանված՝ {status.progress}
+                        </p>
+                      )}
                     </div>
                     <Button className="w-full mt-4 text-sm" variant="outline">
                       {status.status === "completed"

@@ -21,6 +21,9 @@ export async function GET(
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
         solutions: {
+          where: {
+            userId: session.user.id, // Only get current user's solutions
+          },
           include: {
             user: { select: { id: true, name: true, email: true } },
           },
@@ -61,7 +64,8 @@ export async function GET(
           console.error("Error decrypting answers:", error);
         }
       }
-      // Decrypt for students who have answered correctly
+      // For students, show placeholders so they know how many answers there are
+      // Only decrypt if they have solved it completely
       else if (session.user.role === "STUDENT") {
         const userSolution = exercise.solutions.find(
           (s) => s.userId === session.user.id && s.isCorrect
@@ -74,6 +78,11 @@ export async function GET(
           } catch (error) {
             console.error("Error decrypting answers:", error);
           }
+        } else {
+          // For unsolved exercises, show placeholders to indicate number of answers
+          decryptedAnswers = exercise.correctAnswers.map(
+            (_, index) => `Պատասխան ${index + 1}`
+          );
         }
       }
     }

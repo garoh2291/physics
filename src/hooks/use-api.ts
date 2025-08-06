@@ -15,6 +15,8 @@ interface Solution {
   exerciseId: string;
   finalAnswer?: string;
   isCorrect: boolean;
+  submittedAnswers?: SubmittedAnswer[];
+  correctAnswersCount?: number;
   createdAt: string;
   updatedAt: string;
   user: User;
@@ -22,6 +24,20 @@ interface Solution {
     id: string;
     title: string;
   };
+}
+
+interface SubmittedAnswer {
+  index: number;
+  answer: string;
+  isCorrect: boolean;
+  submittedAt: string;
+}
+
+interface ExerciseStats {
+  completelyCorrect: number;
+  partiallyCorrect: number;
+  totalAttempts: number;
+  totalSolved: number;
 }
 
 interface Exercise {
@@ -421,6 +437,51 @@ export const useRegisterAdmin = () => {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Գրանցման սխալ");
+      return result;
+    },
+  });
+};
+
+// Partial answer submission
+export const useSubmitPartialAnswer = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    Solution,
+    Error,
+    { exerciseId: string; answerIndex: number; answer: string }
+  >({
+    mutationFn: async ({ exerciseId, answerIndex, answer }) => {
+      const response = await fetch("/api/solutions/partial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ exerciseId, answerIndex, answer }),
+      });
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.error || "Պատասխանի ուղարկման սխալ");
+      return result;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["exercise", data.exerciseId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["my-solution", data.exerciseId],
+      });
+    },
+  });
+};
+
+// Exercise statistics
+export const useExerciseStats = (exerciseId: string) => {
+  return useQuery<ExerciseStats, Error>({
+    queryKey: ["exercise-stats", exerciseId],
+    queryFn: async () => {
+      const response = await fetch(`/api/exercises/${exerciseId}/stats`);
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.error || "Վիճակագրության ցուցադրման սխալ");
       return result;
     },
   });
