@@ -74,6 +74,18 @@ export default function EditExercisePage() {
   } = useExercise(exerciseId);
   const updateExerciseMutation = useUpdateExercise();
 
+  // Handle section changes and clear themes when sections change
+  const handleSectionsChange = (sections: Array<{ id: string; name: string; url?: string | null }>) => {
+    setSelectedSections(sections);
+    // Clear themes that are not in the selected sections
+    const validThemes = selectedThemes.filter(theme =>
+      sections.some(section => section.id === theme.section.id)
+    );
+    if (validThemes.length !== selectedThemes.length) {
+      setSelectedThemes(validThemes);
+    }
+  };
+
   useEffect(() => {
     if (exercise) {
       setTitle(exercise.title || "");
@@ -551,7 +563,7 @@ export default function EditExercisePage() {
             <CardContent>
               <SectionSelector
                 selectedSections={selectedSections}
-                onSectionsChange={setSelectedSections}
+                onSectionsChange={handleSectionsChange}
               />
             </CardContent>
           </Card>
@@ -565,6 +577,7 @@ export default function EditExercisePage() {
               <ThemeSelector
                 selectedThemes={selectedThemes}
                 onThemesChange={setSelectedThemes}
+                selectedSections={selectedSections}
               />
             </CardContent>
           </Card>

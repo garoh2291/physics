@@ -77,6 +77,18 @@ export default function CreateExercisePage() {
   const router = useRouter();
   const createExerciseMutation = useCreateExercise();
 
+  // Handle section changes and clear themes when sections change
+  const handleSectionsChange = (sections: Section[]) => {
+    setSelectedSections(sections);
+    // Clear themes that are not in the selected sections
+    const validThemes = selectedThemes.filter(theme =>
+      sections.some(section => section.id === theme.section.id)
+    );
+    if (validThemes.length !== selectedThemes.length) {
+      setSelectedThemes(validThemes);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -509,7 +521,7 @@ export default function CreateExercisePage() {
             <CardContent>
               <SectionSelector
                 selectedSections={selectedSections}
-                onSectionsChange={setSelectedSections}
+                onSectionsChange={handleSectionsChange}
               />
             </CardContent>
           </Card>
@@ -523,6 +535,7 @@ export default function CreateExercisePage() {
               <ThemeSelector
                 selectedThemes={selectedThemes}
                 onThemesChange={setSelectedThemes}
+                selectedSections={selectedSections}
               />
             </CardContent>
           </Card>

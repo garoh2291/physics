@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { X, Plus, Tag } from "lucide-react";
+import { X, Plus, Tag, Search } from "lucide-react";
 
 interface Tag {
   id: string;
@@ -26,6 +26,7 @@ export function TagSelector({
   className,
 }: TagSelectorProps) {
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [newTagName, setNewTagName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState("");
@@ -93,7 +94,9 @@ export function TagSelector({
   };
 
   const unselectedTags = availableTags.filter(
-    (tag) => !selectedTags.find((selected) => selected.id === tag.id)
+    (tag) => 
+      !selectedTags.find((selected) => selected.id === tag.id) &&
+      tag.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -161,18 +164,34 @@ export function TagSelector({
           <Label className="text-sm font-medium mb-2 block">
             Գոյություն ունեցող պիտակներ
           </Label>
-          <div className="flex flex-wrap gap-2">
-            {unselectedTags.map((tag) => (
-              <Badge
-                key={tag.id}
-                variant="outline"
-                className="cursor-pointer hover:bg-gray-50 px-3 py-1"
-                onClick={() => addTag(tag)}
-              >
-                <Tag className="h-3 w-3 mr-1" />
-                {tag.name}
-              </Badge>
-            ))}
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Որոնել պիտակներ..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {unselectedTags.map((tag) => (
+                <Badge
+                  key={tag.id}
+                  variant="outline"
+                  className="cursor-pointer hover:bg-gray-50 px-3 py-1"
+                  onClick={() => addTag(tag)}
+                >
+                  <Tag className="h-3 w-3 mr-1" />
+                  {tag.name}
+                </Badge>
+              ))}
+              {searchTerm && unselectedTags.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-2 w-full">
+                  Պիտակ չի գտնվել
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}
