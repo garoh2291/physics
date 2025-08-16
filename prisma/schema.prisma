@@ -49,7 +49,6 @@ model User {
 
 model Exercise {
   id             String  @id @default(cuid())
-  title          String
   exerciseNumber String? // Exercise number/identifier
   level          Int     @default(1) // Difficulty level (1-5)
   class          Int? // Target class (7-12)

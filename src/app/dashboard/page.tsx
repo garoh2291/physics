@@ -249,7 +249,7 @@ export default function StudentDashboard() {
                   <CardHeader className="pb-3">
                     <div className="flex flex-col sm:flex-row justify-between items-start space-y-2 sm:space-y-0">
                       <CardTitle className="text-base md:text-lg line-clamp-2 flex-1">
-                        {exercise.title}
+                        {exercise.exerciseNumber || `Վարժություն ${exercise.id.slice(-6)}`}
                       </CardTitle>
                       <Badge
                         variant={

@@ -37,11 +37,15 @@ export default function StudentExercisePage() {
   const exerciseId = params.id as string;
 
   const [partialAnswers, setPartialAnswers] = useState<string[]>([]);
-  const [submittedAnswers, setSubmittedAnswers] = useState<{ [key: number]: { answer: string; isCorrect: boolean; submittedAt: string } }>({});
+  const [submittedAnswers, setSubmittedAnswers] = useState<{
+    [key: number]: { answer: string; isCorrect: boolean; submittedAt: string };
+  }>({});
   const [submittingIndex, setSubmittingIndex] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [answerErrors, setAnswerErrors] = useState<{ [key: number]: string }>({});
+  const [answerErrors, setAnswerErrors] = useState<{ [key: number]: string }>(
+    {}
+  );
   const [showSolution, setShowSolution] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showHints, setShowHints] = useState(false);
@@ -57,9 +61,7 @@ export default function StudentExercisePage() {
     isLoading: userLoading,
     error: userError,
   } = useUserProfile();
-  const {
-    data: exerciseStats,
-  } = useExerciseStats(exerciseId);
+  const { data: exerciseStats } = useExerciseStats(exerciseId);
   const submitPartialAnswerMutation = useSubmitPartialAnswer();
   const hintUsageMutation = useHintUsage();
 
@@ -80,24 +82,44 @@ export default function StudentExercisePage() {
   useEffect(() => {
     if (exercise?.solutions && exercise.solutions.length > 0) {
       const solution = exercise.solutions[0];
-      
+
       // Handle partial answers if they exist
-      if (solution.submittedAnswers && Array.isArray(solution.submittedAnswers)) {
-        const answersMap: { [key: number]: { answer: string; isCorrect: boolean; submittedAt: string } } = {};
-        solution.submittedAnswers.forEach((submittedAnswer: { index: number; answer: string; isCorrect: boolean; submittedAt: string }) => {
-          answersMap[submittedAnswer.index] = {
-            answer: submittedAnswer.answer,
-            isCorrect: submittedAnswer.isCorrect,
-            submittedAt: submittedAnswer.submittedAt,
+      if (
+        solution.submittedAnswers &&
+        Array.isArray(solution.submittedAnswers)
+      ) {
+        const answersMap: {
+          [key: number]: {
+            answer: string;
+            isCorrect: boolean;
+            submittedAt: string;
           };
-        });
-        
+        } = {};
+        solution.submittedAnswers.forEach(
+          (submittedAnswer: {
+            index: number;
+            answer: string;
+            isCorrect: boolean;
+            submittedAt: string;
+          }) => {
+            answersMap[submittedAnswer.index] = {
+              answer: submittedAnswer.answer,
+              isCorrect: submittedAnswer.isCorrect,
+              submittedAt: submittedAnswer.submittedAt,
+            };
+          }
+        );
+
         setSubmittedAnswers(answersMap);
-        
+
         // Check if ALL answers are correct for completion
-        const allAnswersCorrect = solution.submittedAnswers.length === exercise.correctAnswers?.length &&
-                                  solution.submittedAnswers.every((sa: { isCorrect: boolean }) => sa.isCorrect);
-        
+        const allAnswersCorrect =
+          solution.submittedAnswers.length ===
+            exercise.correctAnswers?.length &&
+          solution.submittedAnswers.every(
+            (sa: { isCorrect: boolean }) => sa.isCorrect
+          );
+
         setIsCompleted(allAnswersCorrect);
       } else {
         // Fallback to old solution.isCorrect logic
@@ -160,7 +182,10 @@ export default function StudentExercisePage() {
     }
   };
 
-  const handlePartialAnswerSubmit = async (answerIndex: number, answer: string) => {
+  const handlePartialAnswerSubmit = async (
+    answerIndex: number,
+    answer: string
+  ) => {
     if (!answer.trim()) {
       setError("Պատասխանը պարտադիր է");
       return;
@@ -170,7 +195,7 @@ export default function StudentExercisePage() {
     setError("");
     setSuccess("");
     // Clear any existing error for this answer
-    setAnswerErrors(prev => {
+    setAnswerErrors((prev) => {
       const newErrors = { ...prev };
       delete newErrors[answerIndex];
       return newErrors;
@@ -185,22 +210,37 @@ export default function StudentExercisePage() {
 
       // Update submitted answers
       if (result.submittedAnswers && Array.isArray(result.submittedAnswers)) {
-        const answersMap: { [key: number]: { answer: string; isCorrect: boolean; submittedAt: string } } = {};
-        result.submittedAnswers.forEach((submittedAnswer: { index: number; answer: string; isCorrect: boolean; submittedAt: string }) => {
-          answersMap[submittedAnswer.index] = {
-            answer: submittedAnswer.answer,
-            isCorrect: submittedAnswer.isCorrect,
-            submittedAt: submittedAnswer.submittedAt,
+        const answersMap: {
+          [key: number]: {
+            answer: string;
+            isCorrect: boolean;
+            submittedAt: string;
           };
-        });
-        
+        } = {};
+        result.submittedAnswers.forEach(
+          (submittedAnswer: {
+            index: number;
+            answer: string;
+            isCorrect: boolean;
+            submittedAt: string;
+          }) => {
+            answersMap[submittedAnswer.index] = {
+              answer: submittedAnswer.answer,
+              isCorrect: submittedAnswer.isCorrect,
+              submittedAt: submittedAnswer.submittedAt,
+            };
+          }
+        );
+
         // Update both states in a way that ensures consistency
         setSubmittedAnswers(answersMap);
-        
+
         // Only clear the input field if the answer is correct - do this after setting submitted answers
-        const currentSubmission = result.submittedAnswers.find((sa: { index: number }) => sa.index === answerIndex);
+        const currentSubmission = result.submittedAnswers.find(
+          (sa: { index: number }) => sa.index === answerIndex
+        );
         if (currentSubmission?.isCorrect) {
-          setPartialAnswers(prev => {
+          setPartialAnswers((prev) => {
             const newPartialAnswers = [...prev];
             newPartialAnswers[answerIndex] = "";
             return newPartialAnswers;
@@ -209,8 +249,12 @@ export default function StudentExercisePage() {
       }
 
       // Check if exercise is complete - only when ALL answers are correct
-      const allAnswersCorrect = exercise && result.submittedAnswers?.length === exercise.correctAnswers?.length &&
-                                result.submittedAnswers?.every((sa: { isCorrect: boolean }) => sa.isCorrect);
+      const allAnswersCorrect =
+        exercise &&
+        result.submittedAnswers?.length === exercise.correctAnswers?.length &&
+        result.submittedAnswers?.every(
+          (sa: { isCorrect: boolean }) => sa.isCorrect
+        );
       setIsCompleted(!!allAnswersCorrect);
 
       if (allAnswersCorrect) {
@@ -218,30 +262,33 @@ export default function StudentExercisePage() {
         setShowHints(false);
       } else {
         // Show success for individual answer if correct
-        const submittedAnswer = result.submittedAnswers?.find((sa: { index: number }) => sa.index === answerIndex);
-        
+        const submittedAnswer = result.submittedAnswers?.find(
+          (sa: { index: number }) => sa.index === answerIndex
+        );
+
         if (submittedAnswer?.isCorrect) {
           setSuccess(`Պատասխան ${answerIndex + 1}-ը ճիշտ է!`);
           // Clear any error for this answer
-          setAnswerErrors(prev => {
+          setAnswerErrors((prev) => {
             const newErrors = { ...prev };
             delete newErrors[answerIndex];
             return newErrors;
           });
         } else {
           // Set individual error message for this answer
-          setAnswerErrors(prev => ({
+          setAnswerErrors((prev) => ({
             ...prev,
-            [answerIndex]: `Պատասխան ${answerIndex + 1}-ը սխալ է, փորձեք նորից`
+            [answerIndex]: `Պատասխան ${answerIndex + 1}-ը սխալ է, փորձեք նորից`,
           }));
         }
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Սխալ տեղի ունեցավ";
+      const errorMessage =
+        error instanceof Error ? error.message : "Սխալ տեղի ունեցավ";
       // Set individual error message for this answer
-      setAnswerErrors(prev => ({
+      setAnswerErrors((prev) => ({
         ...prev,
-        [answerIndex]: errorMessage
+        [answerIndex]: errorMessage,
       }));
     } finally {
       setSubmittingIndex(null);
@@ -313,7 +360,8 @@ export default function StudentExercisePage() {
               </Button>
               <div className="flex-1 min-w-0">
                 <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 truncate">
-                  {exercise.title}
+                  {exercise.exerciseNumber ||
+                    `Վարժություն ${exercise.id.slice(-6)}`}
                 </h1>
               </div>
             </div>
@@ -341,7 +389,12 @@ export default function StudentExercisePage() {
                         <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                       </div>
                       <span className="font-medium text-sm md:text-base">
-                        {Object.values(submittedAnswers).filter(answer => answer.isCorrect).length}/{exercise?.correctAnswers?.length || 0}
+                        {
+                          Object.values(submittedAnswers).filter(
+                            (answer) => answer.isCorrect
+                          ).length
+                        }
+                        /{exercise?.correctAnswers?.length || 0}
                       </span>
                     </div>
                   )}
@@ -574,13 +627,20 @@ export default function StudentExercisePage() {
                     <div className="relative group">
                       <Info className="h-4 w-4 text-gray-500 cursor-help" />
                       <div className="absolute top-6 right-0 bg-gray-900 text-white p-2 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                        {exerciseStats.completelyCorrect > 0 || exerciseStats.partiallyCorrect > 0 ? (
+                        {exerciseStats.completelyCorrect > 0 ||
+                        exerciseStats.partiallyCorrect > 0 ? (
                           <>
                             {exerciseStats.completelyCorrect > 0 && (
-                              <div>{exerciseStats.completelyCorrect} մարդ ամբողջությամբ լուծել է</div>
+                              <div>
+                                {exerciseStats.completelyCorrect} մարդ
+                                ամբողջությամբ լուծել է
+                              </div>
                             )}
                             {exerciseStats.partiallyCorrect > 0 && (
-                              <div>{exerciseStats.partiallyCorrect} մարդ մասնակի լուծել է</div>
+                              <div>
+                                {exerciseStats.partiallyCorrect} մարդ մասնակի
+                                լուծել է
+                              </div>
                             )}
                           </>
                         ) : (
@@ -593,113 +653,139 @@ export default function StudentExercisePage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {exercise?.correctAnswers?.length > 0 ? (
-                  exercise.correctAnswers.map((correctAnswer: string, index: number) => {
-                    const submittedAnswer = submittedAnswers[index];
-                    const isSubmitted = !!submittedAnswer;
-                    const isCorrect = submittedAnswer?.isCorrect;
-                    
-                    return (
-                      <div key={index} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <Label htmlFor={`answer-${index}`} className="font-medium">
-                            Պատասխան {index + 1}
-                            {/* Show expected format if it's a placeholder */}
-                            {correctAnswer.startsWith("Պատասխան ") && (
-                              <span className="text-xs text-gray-500 ml-2">
-                                (պետք է լրացնել)
-                              </span>
-                            )}
-                          </Label>
-                          {isSubmitted && (
-                            <div className={`flex items-center space-x-1 text-sm ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                              {isCorrect ? (
-                                <>
-                                  <Check className="h-4 w-4" />
-                                  <span>Ճիշտ</span>
-                                </>
-                              ) : (
-                                <>
-                                  <X className="h-4 w-4" />
-                                  <span>Սխալ - կարող եք փորձել նորից</span>
-                                </>
+                  exercise.correctAnswers.map(
+                    (correctAnswer: string, index: number) => {
+                      const submittedAnswer = submittedAnswers[index];
+                      const isSubmitted = !!submittedAnswer;
+                      const isCorrect = submittedAnswer?.isCorrect;
+
+                      return (
+                        <div key={index} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <Label
+                              htmlFor={`answer-${index}`}
+                              className="font-medium"
+                            >
+                              Պատասխան {index + 1}
+                              {/* Show expected format if it's a placeholder */}
+                              {correctAnswer.startsWith("Պատասխան ") && (
+                                <span className="text-xs text-gray-500 ml-2">
+                                  (պետք է լրացնել)
+                                </span>
                               )}
+                            </Label>
+                            {isSubmitted && (
+                              <div
+                                className={`flex items-center space-x-1 text-sm ${
+                                  isCorrect ? "text-green-600" : "text-red-600"
+                                }`}
+                              >
+                                {isCorrect ? (
+                                  <>
+                                    <Check className="h-4 w-4" />
+                                    <span>Ճիշտ</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <X className="h-4 w-4" />
+                                    <span>Սխալ - կարող եք փորձել նորից</span>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Input
+                              id={`answer-${index}`}
+                              value={(() => {
+                                const displayValue = isCorrect
+                                  ? submittedAnswer.answer
+                                  : partialAnswers[index] || "";
+                                console.log(
+                                  `Input ${index} value calculation:`,
+                                  {
+                                    isCorrect,
+                                    submittedAnswerValue:
+                                      submittedAnswer?.answer,
+                                    partialAnswerValue: partialAnswers[index],
+                                    displayValue,
+                                  }
+                                );
+                                return displayValue;
+                              })()}
+                              onChange={(e) => {
+                                if (!isCorrect) {
+                                  // Allow editing if not correct
+                                  const newAnswers = [...partialAnswers];
+                                  newAnswers[index] = e.target.value;
+                                  setPartialAnswers(newAnswers);
+
+                                  // Clear error for this answer when user starts typing
+                                  if (answerErrors[index]) {
+                                    setAnswerErrors((prev) => {
+                                      const newErrors = { ...prev };
+                                      delete newErrors[index];
+                                      return newErrors;
+                                    });
+                                  }
+                                }
+                              }}
+                              placeholder={`Մուտքագրեք պատասխան ${index + 1}-ը`}
+                              disabled={isCorrect || submittingIndex === index} // Only disable if correct
+                              className={`${
+                                isSubmitted
+                                  ? isCorrect
+                                    ? "bg-green-50 border-green-300"
+                                    : "bg-yellow-50 border-yellow-300" // Changed to yellow for retry state
+                                  : ""
+                              }`}
+                            />
+                            <Button
+                              onClick={() =>
+                                handlePartialAnswerSubmit(
+                                  index,
+                                  partialAnswers[index] || ""
+                                )
+                              }
+                              disabled={
+                                isCorrect || // Disable if already correct
+                                submittingIndex !== null ||
+                                !partialAnswers[index]?.trim()
+                              }
+                              size="default"
+                              className="whitespace-nowrap"
+                            >
+                              {submittingIndex === index
+                                ? "Ուղարկվում է..."
+                                : isSubmitted && !isCorrect
+                                ? "Նորից փորձել"
+                                : "Ուղարկել"}
+                            </Button>
+                          </div>
+
+                          {/* Individual error message for this answer */}
+                          {answerErrors[index] && (
+                            <div className="mt-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
+                              {answerErrors[index]}
                             </div>
                           )}
+
+                          {isSubmitted && (
+                            <p className="text-xs text-gray-500 mt-2">
+                              {isCorrect
+                                ? `Ճիշտ պատասխանվել է՝ ${new Date(
+                                    submittedAnswer.submittedAt
+                                  ).toLocaleString("hy-AM")}`
+                                : `Վերջին փորձը՝ ${new Date(
+                                    submittedAnswer.submittedAt
+                                  ).toLocaleString("hy-AM")} - փորձեք նորից`}
+                            </p>
+                          )}
                         </div>
-                        
-                        <div className="flex gap-2">
-                          <Input
-                            id={`answer-${index}`}
-                            value={(() => {
-                              const displayValue = isCorrect 
-                                ? submittedAnswer.answer 
-                                : (partialAnswers[index] || "");
-                              console.log(`Input ${index} value calculation:`, {
-                                isCorrect,
-                                submittedAnswerValue: submittedAnswer?.answer,
-                                partialAnswerValue: partialAnswers[index],
-                                displayValue
-                              });
-                              return displayValue;
-                            })()}
-                            onChange={(e) => {
-                              if (!isCorrect) {  // Allow editing if not correct
-                                const newAnswers = [...partialAnswers];
-                                newAnswers[index] = e.target.value;
-                                setPartialAnswers(newAnswers);
-                                
-                                // Clear error for this answer when user starts typing
-                                if (answerErrors[index]) {
-                                  setAnswerErrors(prev => {
-                                    const newErrors = { ...prev };
-                                    delete newErrors[index];
-                                    return newErrors;
-                                  });
-                                }
-                              }
-                            }}
-                            placeholder={`Մուտքագրեք պատասխան ${index + 1}-ը`}
-                            disabled={isCorrect || submittingIndex === index}  // Only disable if correct
-                            className={`${
-                              isSubmitted 
-                                ? isCorrect 
-                                  ? 'bg-green-50 border-green-300' 
-                                  : 'bg-yellow-50 border-yellow-300'  // Changed to yellow for retry state
-                                : ''
-                            }`}
-                          />
-                          <Button
-                            onClick={() => handlePartialAnswerSubmit(index, partialAnswers[index] || "")}
-                            disabled={
-                              isCorrect ||  // Disable if already correct
-                              submittingIndex !== null || 
-                              !(partialAnswers[index]?.trim())
-                            }
-                            size="default"
-                            className="whitespace-nowrap"
-                          >
-                            {submittingIndex === index ? "Ուղարկվում է..." : (isSubmitted && !isCorrect ? "Նորից փորձել" : "Ուղարկել")}
-                          </Button>
-                        </div>
-                        
-                        {/* Individual error message for this answer */}
-                        {answerErrors[index] && (
-                          <div className="mt-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
-                            {answerErrors[index]}
-                          </div>
-                        )}
-                        
-                        {isSubmitted && (
-                          <p className="text-xs text-gray-500 mt-2">
-                            {isCorrect 
-                              ? `Ճիշտ պատասխանվել է՝ ${new Date(submittedAnswer.submittedAt).toLocaleString('hy-AM')}`
-                              : `Վերջին փորձը՝ ${new Date(submittedAnswer.submittedAt).toLocaleString('hy-AM')} - փորձեք նորից`
-                            }
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })
+                      );
+                    }
+                  )
                 ) : (
                   <div className="text-center text-gray-500 py-8">
                     <p>Այս վարժության համար պատասխանները դեռ սահմանված չեն:</p>
@@ -709,16 +795,30 @@ export default function StudentExercisePage() {
                 {/* Progress indicator */}
                 {Object.keys(submittedAnswers).length > 0 && (
                   <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-4">
-                    <h4 className="font-semibold text-blue-800 mb-2">Առաջընթաց</h4>
+                    <h4 className="font-semibold text-blue-800 mb-2">
+                      Առաջընթաց
+                    </h4>
                     <div className="flex items-center space-x-2">
                       <div className="text-sm text-blue-700">
-                        {Object.values(submittedAnswers).filter(answer => answer.isCorrect).length} / {exercise?.correctAnswers?.length || 0} ճիշտ պատասխաններ
+                        {
+                          Object.values(submittedAnswers).filter(
+                            (answer) => answer.isCorrect
+                          ).length
+                        }{" "}
+                        / {exercise?.correctAnswers?.length || 0} ճիշտ
+                        պատասխաններ
                       </div>
                       <div className="flex-1 bg-blue-200 rounded-full h-2">
-                        <div 
+                        <div
                           className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                          style={{ 
-                            width: `${((Object.values(submittedAnswers).filter(answer => answer.isCorrect).length) / (exercise?.correctAnswers?.length || 1)) * 100}%` 
+                          style={{
+                            width: `${
+                              (Object.values(submittedAnswers).filter(
+                                (answer) => answer.isCorrect
+                              ).length /
+                                (exercise?.correctAnswers?.length || 1)) *
+                              100
+                            }%`,
                           }}
                         />
                       </div>

@@ -99,7 +99,6 @@ export async function POST(request: NextRequest) {
     }
 
     const {
-      title,
       exerciseNumber,
       level,
       class: classGrade,
@@ -122,9 +121,9 @@ export async function POST(request: NextRequest) {
       hintImage3,
     } = await request.json();
 
-    if (!title) {
+    if (!exerciseNumber?.trim()) {
       return NextResponse.json(
-        { error: "Վերնագիրը պարտադիր է" },
+        { error: "Վարժության համարը պարտադիր է" },
         { status: 400 }
       );
     }
@@ -205,7 +204,6 @@ export async function POST(request: NextRequest) {
 
     const exercise = await db.exercise.create({
       data: {
-        title,
         exerciseNumber: exerciseNumber || null,
         level,
         class: classGrade || null,

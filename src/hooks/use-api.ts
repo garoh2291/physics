@@ -22,7 +22,7 @@ interface Solution {
   user: User;
   exercise: {
     id: string;
-    title: string;
+    exerciseNumber?: string;
   };
 }
 
@@ -42,7 +42,6 @@ interface ExerciseStats {
 
 interface Exercise {
   id: string;
-  title: string;
   exerciseNumber?: string;
   level: number;
   class?: number;
@@ -151,7 +150,6 @@ interface SubmitSolutionData {
 }
 
 interface CreateExerciseData {
-  title: string;
   exerciseNumber?: string;
   level: number;
   class?: number;
@@ -175,7 +173,6 @@ interface CreateExerciseData {
 }
 
 interface UpdateExerciseData {
-  title: string;
   exerciseNumber?: string;
   level: number;
   class?: number;

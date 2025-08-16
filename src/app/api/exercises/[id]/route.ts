@@ -117,7 +117,6 @@ export async function PUT(
     }
 
     const {
-      title,
       exerciseNumber,
       level,
       class: classGrade,
@@ -140,9 +139,9 @@ export async function PUT(
       hintImage3,
     } = await request.json();
 
-    if (!title) {
+    if (!exerciseNumber?.trim()) {
       return NextResponse.json(
-        { error: "Վերնագիրը պարտադիր է" },
+        { error: "Վարժության համարը պարտադիր է" },
         { status: 400 }
       );
     }
@@ -224,7 +223,6 @@ export async function PUT(
     const updatedExercise = await db.exercise.update({
       where: { id },
       data: {
-        title,
         exerciseNumber: exerciseNumber || null,
         level,
         class: classGrade || null,

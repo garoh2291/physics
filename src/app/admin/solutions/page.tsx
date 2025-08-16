@@ -37,7 +37,7 @@ type Solution = {
   };
   exercise: {
     id: string;
-    title: string;
+    exerciseNumber?: string;
   };
 };
 
@@ -159,7 +159,8 @@ export default function AdminSolutionsPage() {
                     <div className="flex items-start space-x-4">
                       <div className="flex-1 min-w-0">
                         <h3 className="text-base md:text-lg font-semibold truncate">
-                          {solution.exercise.title}
+                          {solution.exercise.exerciseNumber ||
+                            `Վարժություն ${solution.exercise.id.slice(-6)}`}
                         </h3>
                         <p className="text-sm text-gray-600">
                           {solution.user.name} • {solution.user.email}
@@ -198,7 +199,10 @@ export default function AdminSolutionsPage() {
                               {/* Exercise Info */}
                               <div className="bg-gray-50 p-4 rounded-lg">
                                 <h4 className="font-semibold mb-2">
-                                  {selectedSolution.exercise.title}
+                                  {selectedSolution.exercise.exerciseNumber ||
+                                    `Վարժություն ${selectedSolution.exercise.id.slice(
+                                      -6
+                                    )}`}
                                 </h4>
                                 <p className="text-sm text-gray-600">
                                   Վարժության ID: {selectedSolution.exercise.id}

@@ -49,7 +49,7 @@ interface Theme {
 }
 
 export default function CreateExercisePage() {
-  const [title, setTitle] = useState("");
+
   const [exerciseNumber, setExerciseNumber] = useState("");
   const [level, setLevel] = useState(1);
   const [classGrade, setClassGrade] = useState<number | undefined>(undefined);
@@ -93,8 +93,8 @@ export default function CreateExercisePage() {
     e.preventDefault();
     setError("");
 
-    if (!title.trim()) {
-      setError("Վերնագիրը պարտադիր է");
+    if (!exerciseNumber?.trim()) {
+      setError("Վարժության համարը պարտադիր է");
       return;
     }
     if (!problemText.trim() && !problemImage) {
@@ -112,7 +112,6 @@ export default function CreateExercisePage() {
 
     createExerciseMutation.mutate(
       {
-        title,
         exerciseNumber,
         level,
         class: classGrade,
@@ -162,18 +161,7 @@ export default function CreateExercisePage() {
                 Նոր վարժություն
               </h1>
             </div>
-            <div className="flex justify-end">
-              <Button
-                onClick={handleSubmit}
-                disabled={createExerciseMutation.isPending}
-                className="text-sm"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {createExerciseMutation.isPending
-                  ? "Պահպանվում..."
-                  : "Պահպանել"}
-              </Button>
-            </div>
+
           </div>
         </div>
       </header>
@@ -193,22 +181,13 @@ export default function CreateExercisePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="title">Վարժության վերնագիր *</Label>
-                <Input
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Օրինակ՝ Մարմնի շարժում թեք հարթության վրա"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="exerciseNumber">Վարժության համար</Label>
+                <Label htmlFor="exerciseNumber">Վարժության համար *</Label>
                 <Input
                   id="exerciseNumber"
                   value={exerciseNumber}
                   onChange={(e) => setExerciseNumber(e.target.value)}
                   placeholder="Օրինակ՝ 1.2, A3, կամ թողեք դատարկ"
+                  required
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -539,6 +518,20 @@ export default function CreateExercisePage() {
               />
             </CardContent>
           </Card>
+
+          {/* Save Button */}
+          <div className="flex justify-end pt-6">
+            <Button
+              onClick={handleSubmit}
+              disabled={createExerciseMutation.isPending}
+              className="text-sm"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {createExerciseMutation.isPending
+                ? "Պահպանվում..."
+                : "Պահպանել"}
+            </Button>
+          </div>
         </form>
       </main>
     </div>

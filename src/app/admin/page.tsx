@@ -238,7 +238,8 @@ export default function AdminDashboard() {
                   >
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-sm md:text-base truncate">
-                        {exercise.title}
+                        {exercise.exerciseNumber ||
+                          `Վարժություն ${exercise.id.slice(-6)}`}
                       </h4>
                       <p className="text-xs md:text-sm text-gray-500">
                         Ստեղծված՝{" "}

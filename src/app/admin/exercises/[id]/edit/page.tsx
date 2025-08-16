@@ -30,7 +30,6 @@ export default function EditExercisePage() {
   const params = useParams();
   const exerciseId = params.id as string;
 
-  const [title, setTitle] = useState("");
   const [exerciseNumber, setExerciseNumber] = useState("");
   const [level, setLevel] = useState(1);
   const [classGrade, setClassGrade] = useState<number | undefined>(undefined);
@@ -75,11 +74,13 @@ export default function EditExercisePage() {
   const updateExerciseMutation = useUpdateExercise();
 
   // Handle section changes and clear themes when sections change
-  const handleSectionsChange = (sections: Array<{ id: string; name: string; url?: string | null }>) => {
+  const handleSectionsChange = (
+    sections: Array<{ id: string; name: string; url?: string | null }>
+  ) => {
     setSelectedSections(sections);
     // Clear themes that are not in the selected sections
-    const validThemes = selectedThemes.filter(theme =>
-      sections.some(section => section.id === theme.section.id)
+    const validThemes = selectedThemes.filter((theme) =>
+      sections.some((section) => section.id === theme.section.id)
     );
     if (validThemes.length !== selectedThemes.length) {
       setSelectedThemes(validThemes);
@@ -88,10 +89,13 @@ export default function EditExercisePage() {
 
   useEffect(() => {
     if (exercise) {
-      setTitle(exercise.title || "");
       setExerciseNumber(exercise.exerciseNumber || "");
       setLevel(exercise.level || 1);
-      setClassGrade(exercise.class || undefined);
+      setClassGrade(
+        exercise.class !== null && exercise.class !== undefined
+          ? exercise.class
+          : undefined
+      );
       setProblemText(exercise.problemText || "");
       setProblemImage(exercise.problemImage || "");
       setGivenText(exercise.givenText || "");
@@ -116,8 +120,8 @@ export default function EditExercisePage() {
     e.preventDefault();
     setError("");
 
-    if (!title.trim()) {
-      setError("Վերնագիրը պարտադիր է");
+    if (!exerciseNumber?.trim()) {
+      setError("Վարժության համարը պարտադիր է");
       return;
     }
     if (!problemText.trim() && !problemImage) {
@@ -137,7 +141,6 @@ export default function EditExercisePage() {
       {
         id: exerciseId,
         data: {
-          title,
           exerciseNumber,
           level,
           class: classGrade,
@@ -206,18 +209,6 @@ export default function EditExercisePage() {
                 Խմբագրել վարժությունը
               </h1>
             </div>
-            <div className="flex justify-end">
-              <Button
-                onClick={handleSubmit}
-                disabled={updateExerciseMutation.isPending}
-                className="text-sm"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {updateExerciseMutation.isPending
-                  ? "Պահպանվում..."
-                  : "Պահպանել"}
-              </Button>
-            </div>
           </div>
         </div>
       </header>
@@ -235,25 +226,16 @@ export default function EditExercisePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="title">Վարժության վերնագիր *</Label>
+                <Label htmlFor="exerciseNumber">Վարժության համար *</Label>
                 <Input
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Օրինակ՝ Մարմնի շարժում թեք հարթության վրա"
+                  id="exerciseNumber"
+                  value={exerciseNumber}
+                  onChange={(e) => setExerciseNumber(e.target.value)}
+                  placeholder="Օրինակ՝ 1.2, A3, կամ թողեք դատարկ"
                   required
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="exerciseNumber">Վարժության համար</Label>
-                  <Input
-                    id="exerciseNumber"
-                    value={exerciseNumber}
-                    onChange={(e) => setExerciseNumber(e.target.value)}
-                    placeholder="Օրինակ՝ 1.2"
-                  />
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="level">Մակարդակ *</Label>
                   <Select
@@ -275,7 +257,8 @@ export default function EditExercisePage() {
                 <div>
                   <Label htmlFor="class">Դասարան</Label>
                   <Select
-                    value={classGrade ? classGrade.toString() : ""}
+                    key={`class-${classGrade}`}
+                    value={classGrade?.toString() || ""}
                     onValueChange={(value) =>
                       setClassGrade(value ? parseInt(value) : undefined)
                     }
@@ -581,6 +564,18 @@ export default function EditExercisePage() {
               />
             </CardContent>
           </Card>
+
+          {/* Save Button */}
+          <div className="flex justify-end pt-6">
+            <Button
+              onClick={handleSubmit}
+              disabled={updateExerciseMutation.isPending}
+              className="text-sm"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {updateExerciseMutation.isPending ? "Պահպանվում..." : "Պահպանել"}
+            </Button>
+          </div>
         </form>
       </main>
     </div>

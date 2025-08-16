@@ -152,7 +152,6 @@ export async function POST(request: NextRequest) {
           exercise: {
             select: {
               id: true,
-              title: true,
               correctAnswers: true,
             },
           },
@@ -182,7 +181,6 @@ export async function POST(request: NextRequest) {
           exercise: {
             select: {
               id: true,
-              title: true,
               correctAnswers: true,
             },
           },

@@ -344,7 +344,7 @@ export default function AdminExerciseDetailPage() {
               </Button>
               <div className="flex-1 min-w-0">
                 <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 truncate">
-                  {exercise.title}
+                  {exercise.exerciseNumber || `Վարժություն ${exercise.id.slice(-6)}`}
                 </h1>
                 <p className="text-sm md:text-base text-gray-600">
                   {solutions.length} ուսանող է լուծել
@@ -402,6 +402,27 @@ export default function AdminExerciseDetailPage() {
               {exercise.problemText && (
                 <MathContent content={exercise.problemText} />
               )}
+            </div>
+
+            {/* Right Answer Section */}
+            <div>
+              <h3 className="font-medium mb-2">Ճիշտ պատասխաններ</h3>
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                {exercise.correctAnswers && exercise.correctAnswers.length > 0 ? (
+                  <div className="space-y-2">
+                    {exercise.correctAnswers.map((answer, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <span className="font-mono text-green-800">
+                          Պատասխան {index + 1}: {answer}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-green-700">Ճիշտ պատասխաններ չկան</p>
+                )}
+              </div>
             </div>
 
             {/* Solution Statistics */}

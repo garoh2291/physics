@@ -55,9 +55,12 @@ export default function AdminExercisesPage() {
   const deleteExerciseMutation = useDeleteExercise();
 
   // Filter exercises based on search
-  const filteredExercises = exercises.filter((exercise) =>
-    exercise.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredExercises = exercises.filter((exercise) => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      exercise.exerciseNumber?.toLowerCase().includes(searchLower) || false
+    );
+  });
 
   const handleDeleteConfirm = () => {
     if (deleteDialog.exercise) {
@@ -196,7 +199,8 @@ export default function AdminExercisesPage() {
                           <div className="flex justify-between items-start">
                             <div className="flex-1 min-w-0">
                               <h3 className="font-medium text-sm truncate">
-                                {exercise.title}
+                                {exercise.exerciseNumber ||
+                                  `Վարժություն ${exercise.id.slice(-6)}`}
                               </h3>
                               <p className="text-xs text-gray-500">
                                 ID: {exercise.id.substring(0, 8)}...
@@ -341,7 +345,8 @@ export default function AdminExercisesPage() {
                             <TableCell>
                               <div className="space-y-1">
                                 <div className="font-medium">
-                                  {exercise.title}
+                                  {exercise.exerciseNumber ||
+                                    `Վարժություն ${exercise.id.slice(-6)}`}
                                 </div>
                                 <div className="text-sm text-gray-500">
                                   ID: {exercise.id.substring(0, 8)}...
