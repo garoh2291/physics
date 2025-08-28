@@ -69,8 +69,15 @@ export async function GET(
       // For students, show placeholders so they know how many answers there are
       // Only decrypt if they have solved it completely
       else if (session.user.role === "STUDENT") {
+        // Check if student has completed the exercise using the new partial answer logic
         const userSolution = exercise.solutions.find(
-          (s) => s.userId === session.user.id && s.isCorrect
+          (s) => s.userId === session.user.id && (
+            // Check new partial answer system first
+            (s.correctAnswersCount !== undefined && 
+             s.correctAnswersCount === exercise.correctAnswerValues.length) ||
+            // Fallback to legacy isCorrect field
+            s.isCorrect
+          )
         );
         if (userSolution) {
           try {

@@ -463,8 +463,9 @@ export const useSubmitPartialAnswer = () => {
       return result;
     },
     onSuccess: (data) => {
+      // Invalidate the exercise cache (note: useExercise uses "exercises" not "exercise")
       queryClient.invalidateQueries({
-        queryKey: ["exercise", data.exerciseId],
+        queryKey: ["exercises", data.exerciseId],
       });
       queryClient.invalidateQueries({
         queryKey: ["my-solution", data.exerciseId],
