@@ -262,8 +262,9 @@ export default function AdminExerciseDetailPage() {
   const [selectedSolution, setSelectedSolution] = useState<{
     id: string;
     user: { name: string; email: string };
-    finalAnswer?: string;
+    finalAnswerValue?: string;
     isCorrect: boolean;
+    correctAnswersCount?: number;
     createdAt: string;
   } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -326,8 +327,22 @@ export default function AdminExerciseDetailPage() {
   }
 
   const solutions = exercise.solutions || [];
-  const correctCount = solutions.filter((s) => s.isCorrect).length;
-  const incorrectCount = solutions.filter((s) => !s.isCorrect).length;
+  
+  // Helper function to determine if a solution is actually correct
+  const isSolutionCorrect = (solution: { 
+    isCorrect: boolean; 
+    correctAnswersCount?: number; 
+  }) => {
+    // For the new partial answer system, check if all answers are correct
+    if (solution.correctAnswersCount !== undefined && exercise.correctAnswerValues) {
+      return solution.correctAnswersCount === exercise.correctAnswerValues.length;
+    }
+    // Fallback to the legacy isCorrect field
+    return solution.isCorrect;
+  };
+  
+  const correctCount = solutions.filter(isSolutionCorrect).length;
+  const incorrectCount = solutions.filter((s) => !isSolutionCorrect(s)).length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -495,7 +510,7 @@ export default function AdminExerciseDetailPage() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          {getCorrectnessBadge(solution.isCorrect)}
+                          {getCorrectnessBadge(isSolutionCorrect(solution))}
                         </TableCell>
                         <TableCell>
                           {new Date(solution.createdAt).toLocaleDateString(
@@ -537,13 +552,13 @@ export default function AdminExerciseDetailPage() {
                                     </h3>
                                     <div className="bg-gray-100 p-3 rounded">
                                       <span className="font-mono text-lg">
-                                        {selectedSolution.finalAnswer ||
+                                        {selectedSolution.finalAnswerValue ||
                                           "Պատասխան չկա"}
                                       </span>
                                     </div>
                                     <div className="mt-2">
                                       {getCorrectnessBadge(
-                                        selectedSolution.isCorrect
+                                        isSolutionCorrect(selectedSolution)
                                       )}
                                     </div>
                                   </div>

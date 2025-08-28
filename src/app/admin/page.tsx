@@ -21,6 +21,19 @@ export default function AdminDashboard() {
   const { data: session } = useSession();
   const { data: exercises = [], isLoading } = useExercises();
 
+  // Helper function to determine if a solution is actually correct
+  const isSolutionCorrect = (solution: { 
+    isCorrect: boolean; 
+    correctAnswersCount?: number; 
+  }, exercise: { correctAnswerValues?: string[] }) => {
+    // For the new partial answer system, check if all answers are correct
+    if (solution.correctAnswersCount !== undefined && exercise.correctAnswerValues) {
+      return solution.correctAnswersCount === exercise.correctAnswerValues.length;
+    }
+    // Fallback to the legacy isCorrect field
+    return solution.isCorrect;
+  };
+
   // Calculate statistics
   const totalExercises = exercises.length;
   const totalSolutions = exercises.reduce(
@@ -28,11 +41,11 @@ export default function AdminDashboard() {
     0
   );
   const correctSolutions = exercises.reduce(
-    (acc, ex) => acc + ex.solutions.filter((s) => s.isCorrect).length,
+    (acc, ex) => acc + ex.solutions.filter((s) => isSolutionCorrect(s, ex)).length,
     0
   );
   const incorrectSolutions = exercises.reduce(
-    (acc, ex) => acc + ex.solutions.filter((s) => !s.isCorrect).length,
+    (acc, ex) => acc + ex.solutions.filter((s) => !isSolutionCorrect(s, ex)).length,
     0
   );
 

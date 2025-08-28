@@ -21,9 +21,11 @@ export async function GET(
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
         solutions: {
-          where: {
-            userId: session.user.id, // Only get current user's solutions
-          },
+          // For admins, get all solutions; for students, only get their own
+          ...(["ADMIN", "SUPERADMIN"].includes(session.user.role) 
+            ? {} 
+            : { where: { userId: session.user.id } }
+          ),
           include: {
             user: { select: { id: true, name: true, email: true } },
           },
