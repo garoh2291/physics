@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if the answer index is valid
-    if (answerIndex >= exercise.correctAnswers.length) {
+    if (answerIndex >= exercise.correctAnswerValues.length) {
       return NextResponse.json(
         { error: "Invalid answer index" },
         { status: 400 }
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     // Check if answer is correct
     let isCorrect = false;
     try {
-      const correctAnswer = safeDecrypt(exercise.correctAnswers[answerIndex]);
+      const correctAnswer = safeDecrypt(exercise.correctAnswerValues[answerIndex]);
       const normalizedStudentAnswer = answer.trim().toLowerCase();
       const normalizedCorrectAnswer = correctAnswer.trim().toLowerCase();
       isCorrect = normalizedStudentAnswer === normalizedCorrectAnswer;
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
     ).length;
 
     // Check if all answers are correct
-    const allCorrect = correctAnswersCount === exercise.correctAnswers.length;
+    const allCorrect = correctAnswersCount === exercise.correctAnswerValues.length;
 
     // Update or create the solution
     let solution;
@@ -136,8 +136,8 @@ export async function POST(request: NextRequest) {
           correctAnswersCount,
           isCorrect: allCorrect,
           updatedAt: new Date(),
-          // Keep the finalAnswer as the concatenation of all submitted answers for backward compatibility
-          finalAnswer: submittedAnswers
+          // Keep the finalAnswerValue as the concatenation of all submitted answers for backward compatibility
+          finalAnswerValue: submittedAnswers
             .map((sa: SubmittedAnswer) => `${sa.index + 1}: ${sa.answer}`)
             .join("; "),
         },
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
           exercise: {
             select: {
               id: true,
-              correctAnswers: true,
+              correctAnswerValues: true,
             },
           },
         },
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
           submittedAnswers: submittedAnswers as any,
           correctAnswersCount,
           isCorrect: allCorrect,
-          finalAnswer: submittedAnswers
+          finalAnswerValue: submittedAnswers
             .map((sa: SubmittedAnswer) => `${sa.index + 1}: ${sa.answer}`)
             .join("; "),
         },
@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
           exercise: {
             select: {
               id: true,
-              correctAnswers: true,
+              correctAnswerValues: true,
             },
           },
         },
@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
         isCorrect,
         wasAlreadyCorrect,
         correctAnswersCount,
-        totalAnswers: exercise.correctAnswers.length,
+        totalAnswers: exercise.correctAnswerValues.length,
         allCorrect,
       },
     });

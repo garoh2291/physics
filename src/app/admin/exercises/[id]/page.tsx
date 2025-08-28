@@ -408,9 +408,9 @@ export default function AdminExerciseDetailPage() {
             <div>
               <h3 className="font-medium mb-2">Ճիշտ պատասխաններ</h3>
               <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                {exercise.correctAnswers && exercise.correctAnswers.length > 0 ? (
+                {exercise.correctAnswerValues && exercise.correctAnswerValues.length > 0 ? (
                   <div className="space-y-2">
-                    {exercise.correctAnswers.map((answer, index) => (
+                    {exercise.correctAnswerValues.map((answer, index) => (
                       <div key={index} className="flex items-center space-x-2">
                         <CheckCircle className="h-4 w-4 text-green-600" />
                         <span className="font-mono text-green-800">
@@ -491,7 +491,7 @@ export default function AdminExerciseDetailPage() {
                         </TableCell>
                         <TableCell>
                           <span className="font-mono">
-                            {solution.finalAnswer || "Պատասխան չկա"}
+                            {solution.finalAnswerValue || "Պատասխան չկա"}
                           </span>
                         </TableCell>
                         <TableCell>

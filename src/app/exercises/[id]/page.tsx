@@ -69,7 +69,7 @@ export default function StudentExercisePage() {
     exercise,
     correctAnswerValues: exercise?.correctAnswerValues,
     correctAnswersLength: exercise?.correctAnswerValues?.length,
-    answerUnit: exercise?.answerUnit,
+    answerUnits: exercise?.answerUnits,
     isLoading,
   });
 
@@ -743,9 +743,9 @@ export default function StudentExercisePage() {
                                     : ""
                                 }`}
                               />
-                              {exercise.answerUnit && (
+                              {exercise.answerUnits && exercise.answerUnits[index] && (
                                 <div className="flex items-center px-3 bg-gray-100 border border-l-0 rounded-r-md">
-                                  <span className="text-sm text-gray-600">{exercise.answerUnit}</span>
+                                  <span className="text-sm text-gray-600">{exercise.answerUnits[index]}</span>
                                 </div>
                               )}
                             </div>

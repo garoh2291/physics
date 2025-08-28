@@ -272,7 +272,7 @@ export default function AdminSolutionsPage() {
                   <div className="text-sm">
                     <span className="font-medium">Պատասխան:</span>
                     <div className="mt-1 font-mono">
-                      {solution.finalAnswer || (
+                      {solution.finalAnswerValue || (
                         <span className="text-gray-400 italic">
                           Պատասխան չկա
                         </span>

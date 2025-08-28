@@ -44,7 +44,7 @@ export default function StudentDashboard() {
         }
         if (userSolution.submittedAnswers && Array.isArray(userSolution.submittedAnswers)) {
           const correctCount = userSolution.correctAnswersCount || 0;
-          const isCompleted = correctCount === ex.correctAnswers.length;
+          const isCompleted = correctCount === ex.correctAnswerValues.length;
           return isCompleted;
         }
         return false;
@@ -61,7 +61,7 @@ export default function StudentDashboard() {
 
   const getExerciseStatus = (exercise: {
     id: string;
-    correctAnswers: string[];
+    correctAnswerValues: string[];
     solutions: Array<{ 
       isCorrect: boolean; 
       userId: string; 
@@ -77,7 +77,7 @@ export default function StudentDashboard() {
     if (userSolution) {
       // Check for partial completion using submittedAnswers and correctAnswersCount
       if (userSolution.submittedAnswers && Array.isArray(userSolution.submittedAnswers)) {
-        const totalAnswers = exercise.correctAnswers.length;
+        const totalAnswers = exercise.correctAnswerValues.length;
         const correctCount = userSolution.correctAnswersCount || 0;
         
         if (correctCount === 0) {
