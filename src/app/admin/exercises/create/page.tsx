@@ -59,7 +59,8 @@ export default function CreateExercisePage() {
   const [givenImage, setGivenImage] = useState("");
   const [solutionSteps, setSolutionSteps] = useState("");
   const [solutionImage, setSolutionImage] = useState("");
-  const [correctAnswers, setCorrectAnswers] = useState<string[]>([]);
+  const [correctAnswerValues, setCorrectAnswerValues] = useState<string[]>([]);
+  const [answerUnits, setAnswerUnits] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<
     Array<{ id: string; name: string; url?: string | null }>
   >([]);
@@ -105,8 +106,8 @@ export default function CreateExercisePage() {
       setError("Լուծման քայլերը պետք է պարունակեն տեքստ կամ նկար");
       return;
     }
-    if (correctAnswers.length === 0) {
-      setError("Առնվազն մեկ ճիշտ պատասխան պարտադիր է");
+    if (correctAnswerValues.length === 0) {
+      setError("Առնվազն մեկ ճիշտ պատասխանի արժեք պարտադիր է");
       return;
     }
 
@@ -121,7 +122,8 @@ export default function CreateExercisePage() {
         givenImage,
         solutionSteps,
         solutionImage,
-        correctAnswers,
+        correctAnswerValues,
+        answerUnits,
         tagIds: selectedTags.map((tag) => tag.id),
         sourceIds: selectedSources.map((source) => source.id),
         sectionIds: selectedSections.map((section) => section.id),
@@ -349,8 +351,10 @@ export default function CreateExercisePage() {
             </CardHeader>
             <CardContent>
               <MultipleAnswersInput
-                answers={correctAnswers}
-                onAnswersChange={setCorrectAnswers}
+                answerValues={correctAnswerValues}
+                onAnswerValuesChange={setCorrectAnswerValues}
+                answerUnits={answerUnits}
+                onAnswerUnitsChange={setAnswerUnits}
                 placeholder="Օրինակ՝ 42 կամ 42.0 կամ 42,00"
               />
             </CardContent>

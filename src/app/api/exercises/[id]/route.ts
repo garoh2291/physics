@@ -51,13 +51,13 @@ export async function GET(
       );
     }
 
-    // Transform field names and decrypt answers for admins or students with correct solutions
-    let decryptedAnswers: string[] = [];
-    if (exercise.correctAnswers && exercise.correctAnswers.length > 0) {
+    // Transform field names and decrypt answer values for admins or students with correct solutions
+    let decryptedAnswerValues: string[] = [];
+    if (exercise.correctAnswerValues && exercise.correctAnswerValues.length > 0) {
       // Decrypt for admins
       if (["ADMIN", "SUPERADMIN"].includes(session.user.role)) {
         try {
-          decryptedAnswers = exercise.correctAnswers.map((answer: string) =>
+          decryptedAnswerValues = exercise.correctAnswerValues.map((answer: string) =>
             safeDecrypt(answer)
           );
         } catch (error) {
@@ -72,7 +72,7 @@ export async function GET(
         );
         if (userSolution) {
           try {
-            decryptedAnswers = exercise.correctAnswers.map((answer: string) =>
+            decryptedAnswerValues = exercise.correctAnswerValues.map((answer: string) =>
               safeDecrypt(answer)
             );
           } catch (error) {
@@ -80,7 +80,7 @@ export async function GET(
           }
         } else {
           // For unsolved exercises, show placeholders to indicate number of answers
-          decryptedAnswers = exercise.correctAnswers.map(
+          decryptedAnswerValues = exercise.correctAnswerValues.map(
             (_, index) => `Պատասխան ${index + 1}`
           );
         }
@@ -89,7 +89,7 @@ export async function GET(
 
     const transformedExercise = {
       ...exercise,
-      correctAnswers: decryptedAnswers,
+      correctAnswerValues: decryptedAnswerValues,
     };
 
     return NextResponse.json(transformedExercise);
@@ -126,7 +126,8 @@ export async function PUT(
       givenImage,
       solutionSteps,
       solutionImage,
-      correctAnswers,
+      correctAnswerValues,
+      answerUnits,
       tagIds,
       sourceIds,
       sectionIds,
@@ -162,7 +163,7 @@ export async function PUT(
       );
     }
 
-    if (!correctAnswers || correctAnswers.length === 0) {
+    if (!correctAnswerValues || correctAnswerValues.length === 0) {
       return NextResponse.json(
         { error: "Առնվազն մեկ ճիշտ պատասխան պարտադիր է" },
         { status: 400 }
@@ -215,8 +216,8 @@ export async function PUT(
       }
     }
 
-    // Encrypt correct answers
-    const encryptedAnswers = correctAnswers.map((answer: string) =>
+    // Encrypt correct answer values
+    const encryptedAnswerValues = correctAnswerValues.map((answer: string) =>
       encrypt(answer)
     );
 
@@ -232,7 +233,8 @@ export async function PUT(
         givenImage: givenImage || null,
         solutionSteps: solutionSteps || null,
         solutionImage: solutionImage || null,
-        correctAnswers: encryptedAnswers,
+        correctAnswerValues: encryptedAnswerValues,
+        answerUnits: answerUnits || [],
         hintText1: hintText1 || null,
         hintImage1: hintImage1 || null,
         hintText2: hintText2 || null,

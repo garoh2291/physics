@@ -8,54 +8,72 @@ import { Badge } from "@/components/ui/badge";
 import { X, Plus } from "lucide-react";
 
 interface MultipleAnswersInputProps {
-  answers: string[];
-  onAnswersChange: (answers: string[]) => void;
+  answerValues: string[];
+  onAnswerValuesChange: (values: string[]) => void;
+  answerUnits: string[];
+  onAnswerUnitsChange: (units: string[]) => void;
   placeholder?: string;
 }
 
 export function MultipleAnswersInput({
-  answers,
-  onAnswersChange,
+  answerValues,
+  onAnswerValuesChange,
+  answerUnits,
+  onAnswerUnitsChange,
   placeholder = "Օրինակ՝ 42",
 }: MultipleAnswersInputProps) {
-  const [newAnswer, setNewAnswer] = useState("");
+  const [newValue, setNewValue] = useState("");
+  const [newUnit, setNewUnit] = useState("");
 
-  const handleAddAnswer = () => {
-    if (newAnswer.trim() && !answers.includes(newAnswer.trim())) {
-      onAnswersChange([...answers, newAnswer.trim()]);
-      setNewAnswer("");
+  const handleAddValue = () => {
+    if (newValue.trim()) {
+      const trimmedValue = newValue.trim();
+      const trimmedUnit = newUnit.trim();
+      
+      // Check if this combination of value+unit already exists
+      const existingIndex = answerValues.findIndex((val, idx) => 
+        val === trimmedValue && (answerUnits[idx] || '') === trimmedUnit
+      );
+      
+      if (existingIndex === -1) {
+        onAnswerValuesChange([...answerValues, trimmedValue]);
+        onAnswerUnitsChange([...answerUnits, trimmedUnit]);
+        setNewValue("");
+        setNewUnit("");
+      }
     }
   };
 
-  const handleRemoveAnswer = (index: number) => {
-    onAnswersChange(answers.filter((_, i) => i !== index));
+  const handleRemoveValue = (index: number) => {
+    onAnswerValuesChange(answerValues.filter((_, i) => i !== index));
+    onAnswerUnitsChange(answerUnits.filter((_, i) => i !== index));
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      handleAddAnswer();
+      handleAddValue();
     }
   };
 
   return (
     <div className="space-y-4">
-      {/* Selected Answers */}
-      {answers.length > 0 && (
+      {/* Selected Answer Values with Units */}
+      {answerValues.length > 0 && (
         <div>
           <Label className="text-sm font-medium">
-            Ճիշտ պատասխաններ ({answers.length})
+            Ճիշտ պատասխաններ ({answerValues.length})
           </Label>
           <div className="flex flex-wrap gap-2 mt-2">
-            {answers.map((answer, index) => (
+            {answerValues.map((value, index) => (
               <Badge
                 key={index}
                 variant="secondary"
                 className="flex items-center gap-1"
               >
-                {answer}
+                {value}{answerUnits[index] ? ` ${answerUnits[index]}` : ''}
                 <button
-                  onClick={() => handleRemoveAnswer(index)}
+                  onClick={() => handleRemoveValue(index)}
                   className="ml-1 hover:text-red-500"
                 >
                   <X className="h-3 w-3" />
@@ -66,42 +84,59 @@ export function MultipleAnswersInput({
         </div>
       )}
 
-      {/* Add New Answer */}
-      <div className="flex gap-2">
-        <div className="flex-1">
-          <Input
-            placeholder={placeholder}
-            value={newAnswer}
-            onChange={(e) => setNewAnswer(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="text-sm"
-          />
+      {/* Add New Answer Value and Unit */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">
+          Ավելացնել նոր պատասխան
+        </Label>
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <Input
+              placeholder={placeholder}
+              value={newValue}
+              onChange={(e) => setNewValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="text-sm"
+            />
+          </div>
+          <div className="w-32">
+            <Input
+              placeholder="Միավոր (մ², կգ...)"
+              value={newUnit}
+              onChange={(e) => setNewUnit(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="text-sm"
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAddValue}
+            disabled={!newValue.trim()}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Ավելացնել
+          </Button>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleAddAnswer}
-          disabled={!newAnswer.trim() || answers.includes(newAnswer.trim())}
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Ավելացնել
-        </Button>
+        <p className="text-xs text-gray-500">
+          Անխապաղ արժեք և դրա միավորը լրացրեք: Քայլը տարբեր պատասխանների համար տարբեր միավորներ կարող են լինել:
+        </p>
       </div>
 
       {/* Instructions */}
       <div className="bg-blue-50 p-3 rounded-lg">
         <p className="text-sm text-blue-800">
-          <strong>Հուշում:</strong> Ավելացրեք բոլոր հնարավոր ճիշտ պատասխանները:
+          <strong>Հուշում:</strong> Ավելացրեք բոլոր հնարավոր ճիշտ պատասխանները և դրանց միավորները:
           Ուսանողի պատասխանը կհամեմատվի այս ցուցակի հետ:
         </p>
       </div>
 
       {/* Validation */}
-      {answers.length === 0 && (
+      {answerValues.length === 0 && (
         <div className="bg-yellow-50 p-3 rounded-lg">
           <p className="text-sm text-yellow-800">
-            <strong>Նշում:</strong> Ավելացրեք առնվազն մեկ ճիշտ պատասխան:
+            <strong>Նշում:</strong> Ավելացրեք առնվազն մեկ ճիշտ պատասխանի արժեք:
           </p>
         </div>
       )}

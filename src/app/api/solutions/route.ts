@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { exerciseId, finalAnswer } = await request.json();
+    const { exerciseId, finalAnswerValue } = await request.json();
 
     if (!exerciseId) {
       return NextResponse.json(
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    if (!finalAnswer || !finalAnswer.trim()) {
+    if (!finalAnswerValue || !finalAnswerValue.trim()) {
       return NextResponse.json(
         { error: "Պատասխանը պարտադիր է" },
         { status: 400 }
@@ -43,21 +43,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if answer is correct (if exercise has answers and student provided an answer)
+    // Check if answer is correct (if exercise has answer values and student provided an answer)
     let isCorrect = false;
     if (
-      exercise.correctAnswers &&
-      exercise.correctAnswers.length > 0 &&
-      finalAnswer?.trim()
+      exercise.correctAnswerValues &&
+      exercise.correctAnswerValues.length > 0 &&
+      finalAnswerValue?.trim()
     ) {
       try {
-        // Decrypt all correct answers and check if student's answer matches any of them
-        const correctAnswers = exercise.correctAnswers.map((answer) =>
+        // Decrypt all correct answer values and check if student's answer matches any of them
+        const correctAnswerValues = exercise.correctAnswerValues.map((answer) =>
           safeDecrypt(answer)
         );
-        const normalizedStudentAnswer = finalAnswer.trim().toLowerCase();
+        const normalizedStudentAnswer = finalAnswerValue.trim().toLowerCase();
 
-        isCorrect = correctAnswers.some((correctAnswer) => {
+        isCorrect = correctAnswerValues.some((correctAnswer) => {
           const normalizedCorrectAnswer = correctAnswer.trim().toLowerCase();
           return normalizedStudentAnswer === normalizedCorrectAnswer;
         });
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       solution = await db.solution.update({
         where: { id: existingSolution.id },
         data: {
-          finalAnswer: finalAnswer.trim(),
+          finalAnswerValue: finalAnswerValue.trim(),
           isCorrect,
           updatedAt: new Date(),
         },
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
         data: {
           exerciseId,
           userId: session.user.id,
-          finalAnswer: finalAnswer.trim(),
+          finalAnswerValue: finalAnswerValue.trim(),
           isCorrect,
         },
         include: {

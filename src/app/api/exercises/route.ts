@@ -45,14 +45,14 @@ export async function GET(request: NextRequest) {
 
     // Transform field names and decrypt answers for admins
     const transformedExercises = exercises.map((exercise) => {
-      let decryptedAnswers: string[] = [];
-      const originalAnswersCount = exercise.correctAnswers?.length || 0;
+      let decryptedAnswerValues: string[] = [];
+      const originalAnswersCount = exercise.correctAnswerValues?.length || 0;
 
-      if (exercise.correctAnswers && exercise.correctAnswers.length > 0) {
+      if (exercise.correctAnswerValues && exercise.correctAnswerValues.length > 0) {
         // Decrypt for admins
         if (["ADMIN", "SUPERADMIN"].includes(session.user.role)) {
           try {
-            decryptedAnswers = exercise.correctAnswers.map((answer: string) => {
+            decryptedAnswerValues = exercise.correctAnswerValues.map((answer: string) => {
               try {
                 return safeDecrypt(answer);
               } catch (error) {
@@ -65,13 +65,13 @@ export async function GET(request: NextRequest) {
           }
         } else {
           // For students, provide placeholder array with correct length for status calculation
-          decryptedAnswers = new Array(originalAnswersCount).fill("HIDDEN");
+          decryptedAnswerValues = new Array(originalAnswersCount).fill("HIDDEN");
         }
       }
 
       return {
         ...exercise,
-        correctAnswers: decryptedAnswers,
+        correctAnswerValues: decryptedAnswerValues,
       };
     });
 
@@ -108,7 +108,8 @@ export async function POST(request: NextRequest) {
       givenImage,
       solutionSteps,
       solutionImage,
-      correctAnswers,
+      correctAnswerValues,
+      answerUnits,
       tagIds,
       sourceIds,
       sectionIds,
@@ -144,7 +145,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!correctAnswers || correctAnswers.length === 0) {
+    if (!correctAnswerValues || correctAnswerValues.length === 0) {
       return NextResponse.json(
         { error: "Առնվազն մեկ ճիշտ պատասխան պարտադիր է" },
         { status: 400 }
@@ -197,8 +198,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Encrypt correct answers
-    const encryptedAnswers = correctAnswers.map((answer: string) =>
+    // Encrypt correct answer values
+    const encryptedAnswerValues = correctAnswerValues.map((answer: string) =>
       encrypt(answer)
     );
 
@@ -213,7 +214,8 @@ export async function POST(request: NextRequest) {
         givenImage: givenImage || null,
         solutionSteps: solutionSteps || null,
         solutionImage: solutionImage || null,
-        correctAnswers: encryptedAnswers,
+        correctAnswerValues: encryptedAnswerValues,
+        answerUnits: answerUnits || [],
         hintText1: hintText1 || null,
         hintImage1: hintImage1 || null,
         hintText2: hintText2 || null,

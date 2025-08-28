@@ -67,17 +67,18 @@ export default function StudentExercisePage() {
 
   console.log("Exercise data:", {
     exercise,
-    correctAnswers: exercise?.correctAnswers,
-    correctAnswersLength: exercise?.correctAnswers?.length,
+    correctAnswerValues: exercise?.correctAnswerValues,
+    correctAnswersLength: exercise?.correctAnswerValues?.length,
+    answerUnit: exercise?.answerUnit,
     isLoading,
   });
 
-  // Initialize partial answers array based on exercise correct answers
+  // Initialize partial answers array based on exercise correct answer values
   useEffect(() => {
-    if (exercise?.correctAnswers) {
-      setPartialAnswers(new Array(exercise.correctAnswers.length).fill(""));
+    if (exercise?.correctAnswerValues) {
+      setPartialAnswers(new Array(exercise.correctAnswerValues.length).fill(""));
     }
-  }, [exercise?.correctAnswers]);
+  }, [exercise?.correctAnswerValues]);
 
   useEffect(() => {
     if (exercise?.solutions && exercise.solutions.length > 0) {
@@ -115,7 +116,7 @@ export default function StudentExercisePage() {
         // Check if ALL answers are correct for completion
         const allAnswersCorrect =
           solution.submittedAnswers.length ===
-            exercise.correctAnswers?.length &&
+            exercise.correctAnswerValues?.length &&
           solution.submittedAnswers.every(
             (sa: { isCorrect: boolean }) => sa.isCorrect
           );
@@ -251,7 +252,7 @@ export default function StudentExercisePage() {
       // Check if exercise is complete - only when ALL answers are correct
       const allAnswersCorrect =
         exercise &&
-        result.submittedAnswers?.length === exercise.correctAnswers?.length &&
+        result.submittedAnswers?.length === exercise.correctAnswerValues?.length &&
         result.submittedAnswers?.every(
           (sa: { isCorrect: boolean }) => sa.isCorrect
         );
@@ -394,7 +395,7 @@ export default function StudentExercisePage() {
                             (answer) => answer.isCorrect
                           ).length
                         }
-                        /{exercise?.correctAnswers?.length || 0}
+                        /{exercise?.correctAnswerValues?.length || 0}
                       </span>
                     </div>
                   )}
@@ -652,8 +653,8 @@ export default function StudentExercisePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {exercise?.correctAnswers?.length > 0 ? (
-                  exercise.correctAnswers.map(
+                {exercise?.correctAnswerValues?.length > 0 ? (
+                  exercise.correctAnswerValues.map(
                     (correctAnswer: string, index: number) => {
                       const submittedAnswer = submittedAnswers[index];
                       const isSubmitted = !!submittedAnswer;
@@ -696,51 +697,58 @@ export default function StudentExercisePage() {
                           </div>
 
                           <div className="flex gap-2">
-                            <Input
-                              id={`answer-${index}`}
-                              value={(() => {
-                                const displayValue = isCorrect
-                                  ? submittedAnswer.answer
-                                  : partialAnswers[index] || "";
-                                console.log(
-                                  `Input ${index} value calculation:`,
-                                  {
-                                    isCorrect,
-                                    submittedAnswerValue:
-                                      submittedAnswer?.answer,
-                                    partialAnswerValue: partialAnswers[index],
-                                    displayValue,
-                                  }
-                                );
-                                return displayValue;
-                              })()}
-                              onChange={(e) => {
-                                if (!isCorrect) {
-                                  // Allow editing if not correct
-                                  const newAnswers = [...partialAnswers];
-                                  newAnswers[index] = e.target.value;
-                                  setPartialAnswers(newAnswers);
+                            <div className="flex gap-2">
+                              <Input
+                                id={`answer-${index}`}
+                                value={(() => {
+                                  const displayValue = isCorrect
+                                    ? submittedAnswer.answer
+                                    : partialAnswers[index] || "";
+                                  console.log(
+                                    `Input ${index} value calculation:`,
+                                    {
+                                      isCorrect,
+                                      submittedAnswerValue:
+                                        submittedAnswer?.answer,
+                                      partialAnswerValue: partialAnswers[index],
+                                      displayValue,
+                                    }
+                                  );
+                                  return displayValue;
+                                })()}
+                                onChange={(e) => {
+                                  if (!isCorrect) {
+                                    // Allow editing if not correct
+                                    const newAnswers = [...partialAnswers];
+                                    newAnswers[index] = e.target.value;
+                                    setPartialAnswers(newAnswers);
 
-                                  // Clear error for this answer when user starts typing
-                                  if (answerErrors[index]) {
-                                    setAnswerErrors((prev) => {
-                                      const newErrors = { ...prev };
-                                      delete newErrors[index];
-                                      return newErrors;
-                                    });
+                                    // Clear error for this answer when user starts typing
+                                    if (answerErrors[index]) {
+                                      setAnswerErrors((prev) => {
+                                        const newErrors = { ...prev };
+                                        delete newErrors[index];
+                                        return newErrors;
+                                      });
+                                    }
                                   }
-                                }
-                              }}
-                              placeholder={`Մուտքագրեք պատասխան ${index + 1}-ը`}
-                              disabled={isCorrect || submittingIndex === index} // Only disable if correct
-                              className={`${
-                                isSubmitted
-                                  ? isCorrect
-                                    ? "bg-green-50 border-green-300"
-                                    : "bg-yellow-50 border-yellow-300" // Changed to yellow for retry state
-                                  : ""
-                              }`}
-                            />
+                                }}
+                                placeholder={`Մուտքագրեք պատասխան ${index + 1}-ը`}
+                                disabled={isCorrect || submittingIndex === index}
+                                className={`${
+                                  isSubmitted
+                                    ? isCorrect
+                                      ? "bg-green-50 border-green-300"
+                                      : "bg-yellow-50 border-yellow-300"
+                                    : ""
+                                }`}
+                              />
+                              {exercise.answerUnit && (
+                                <div className="flex items-center px-3 bg-gray-100 border border-l-0 rounded-r-md">
+                                  <span className="text-sm text-gray-600">{exercise.answerUnit}</span>
+                                </div>
+                              )}
+                            </div>
                             <Button
                               onClick={() =>
                                 handlePartialAnswerSubmit(
@@ -805,7 +813,7 @@ export default function StudentExercisePage() {
                             (answer) => answer.isCorrect
                           ).length
                         }{" "}
-                        / {exercise?.correctAnswers?.length || 0} ճիշտ
+                        / {exercise?.correctAnswerValues?.length || 0} ճիշտ
                         պատասխաններ
                       </div>
                       <div className="flex-1 bg-blue-200 rounded-full h-2">
@@ -816,7 +824,7 @@ export default function StudentExercisePage() {
                               (Object.values(submittedAnswers).filter(
                                 (answer) => answer.isCorrect
                               ).length /
-                                (exercise?.correctAnswers?.length || 1)) *
+                                (exercise?.correctAnswerValues?.length || 1)) *
                               100
                             }%`,
                           }}
@@ -864,15 +872,15 @@ export default function StudentExercisePage() {
                       Ճիշտ պատասխան:
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {exercise.correctAnswers &&
-                      exercise.correctAnswers.length > 0 ? (
-                        exercise.correctAnswers.map(
-                          (ans: string, idx: number) => (
+                      {exercise.correctAnswerValues &&
+                      exercise.correctAnswerValues.length > 0 ? (
+                        exercise.correctAnswerValues.map(
+                          (ansValue: string, idx: number) => (
                             <span
                               key={idx}
                               className="text-lg font-mono text-green-700 bg-white p-2 rounded border"
                             >
-                              {ans}
+                              {ansValue}{exercise.answerUnits && exercise.answerUnits[idx] ? ` ${exercise.answerUnits[idx]}` : ''}
                             </span>
                           )
                         )

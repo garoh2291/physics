@@ -61,7 +61,8 @@ model Exercise {
   solutionImage String? // Solution steps image (optional, Cloudinary URL)
 
   // Multiple correct answers support
-  correctAnswers String[] // Array of correct answers (encrypted)
+  correctAnswerValues String[] // Array of correct answer values (encrypted)
+  answerUnits         String[] // Array of units for each answer (e.g., ["m²", "kg", "m/s"])
 
   // Hints
   hintText1  String? // First hint text (optional)
@@ -88,9 +89,9 @@ model Solution {
   id                  String   @id @default(cuid())
   userId              String
   exerciseId          String
-  finalAnswer         String // Student's final answer (required)
+  finalAnswerValue    String // Student's final answer value (required)
   isCorrect           Boolean  @default(false)
-  submittedAnswers    Json[] // Array of partial answer submissions
+  submittedAnswers    Json[] // Array of partial answer value submissions
   correctAnswersCount Int      @default(0) // Number of correct answers submitted
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt

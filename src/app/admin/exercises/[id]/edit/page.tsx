@@ -39,7 +39,8 @@ export default function EditExercisePage() {
   const [givenImage, setGivenImage] = useState("");
   const [solutionSteps, setSolutionSteps] = useState("");
   const [solutionImage, setSolutionImage] = useState("");
-  const [correctAnswers, setCorrectAnswers] = useState<string[]>([""]);
+  const [correctAnswerValues, setCorrectAnswerValues] = useState<string[]>([]);
+  const [answerUnits, setAnswerUnits] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<
     Array<{ id: string; name: string; url?: string | null }>
   >([]);
@@ -102,7 +103,8 @@ export default function EditExercisePage() {
       setGivenImage(exercise.givenImage || "");
       setSolutionSteps(exercise.solutionSteps || "");
       setSolutionImage(exercise.solutionImage || "");
-      setCorrectAnswers(exercise.correctAnswers || [""]);
+      setCorrectAnswerValues(exercise.correctAnswerValues || []);
+      setAnswerUnits(exercise.answerUnits || []);
       setSelectedTags(exercise.tags || []);
       setSelectedSources(exercise.sources || []);
       setSelectedSections(exercise.sections || []);
@@ -132,8 +134,8 @@ export default function EditExercisePage() {
       setError("Լուծման քայլերը պետք է պարունակի տեքստ կամ նկար");
       return;
     }
-    if (!correctAnswers[0]?.trim()) {
-      setError("Ճիշտ պատասխանը պարտադիր է");
+    if (correctAnswerValues.length === 0) {
+      setError("Առնվազն մեկ ճիշտ պատասխանի արժեք պարտադիր է");
       return;
     }
 
@@ -150,7 +152,8 @@ export default function EditExercisePage() {
           givenImage,
           solutionSteps,
           solutionImage,
-          correctAnswers,
+          correctAnswerValues,
+          answerUnits,
           tagIds: selectedTags.map((tag) => tag.id),
           sourceIds: selectedSources.map((source) => source.id),
           sectionIds: selectedSections.map((section) => section.id),
@@ -395,8 +398,10 @@ export default function EditExercisePage() {
             </CardHeader>
             <CardContent>
               <MultipleAnswersInput
-                answers={correctAnswers}
-                onAnswersChange={setCorrectAnswers}
+                answerValues={correctAnswerValues}
+                onAnswerValuesChange={setCorrectAnswerValues}
+                answerUnits={answerUnits}
+                onAnswerUnitsChange={setAnswerUnits}
                 placeholder="Օրինակ՝ 42"
               />
             </CardContent>

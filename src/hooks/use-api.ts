@@ -13,7 +13,7 @@ interface Solution {
   id: string;
   userId: string;
   exerciseId: string;
-  finalAnswer?: string;
+  finalAnswerValue?: string;
   isCorrect: boolean;
   submittedAnswers?: SubmittedAnswer[];
   correctAnswersCount?: number;
@@ -51,7 +51,8 @@ interface Exercise {
   givenImage?: string;
   solutionSteps?: string;
   solutionImage?: string;
-  correctAnswers: string[];
+  correctAnswerValues: string[];
+  answerUnits: string[];
   hintText1?: string;
   hintImage1?: string;
   hintText2?: string;
@@ -146,7 +147,7 @@ interface LoginData {
 
 interface SubmitSolutionData {
   exerciseId: string;
-  finalAnswer: string;
+  finalAnswerValue: string;
 }
 
 interface CreateExerciseData {
@@ -159,7 +160,8 @@ interface CreateExerciseData {
   givenImage?: string;
   solutionSteps?: string;
   solutionImage?: string;
-  correctAnswers: string[];
+  correctAnswerValues: string[];
+  answerUnits: string[];
   tagIds?: string[];
   sourceIds?: string[];
   sectionIds?: string[];
@@ -182,7 +184,8 @@ interface UpdateExerciseData {
   givenImage?: string;
   solutionSteps?: string;
   solutionImage?: string;
-  correctAnswers: string[];
+  correctAnswerValues: string[];
+  answerUnits: string[];
   tagIds?: string[];
   sourceIds?: string[];
   sectionIds?: string[];
