@@ -20,10 +20,9 @@ export async function GET(request: NextRequest) {
         createdBy: { select: { id: true, name: true, email: true } },
         solutions: {
           // For admins, get all solutions; for students, only get their own
-          ...(["ADMIN", "SUPERADMIN"].includes(session.user.role) 
-            ? {} 
-            : { where: { userId: session.user.id } }
-          ),
+          ...(["ADMIN", "SUPERADMIN"].includes(session.user.role)
+            ? {}
+            : { where: { userId: session.user.id } }),
           include: {
             user: { select: { id: true, name: true, email: true } },
           },
@@ -50,24 +49,31 @@ export async function GET(request: NextRequest) {
       let decryptedAnswerValues: string[] = [];
       const originalAnswersCount = exercise.correctAnswerValues?.length || 0;
 
-      if (exercise.correctAnswerValues && exercise.correctAnswerValues.length > 0) {
+      if (
+        exercise.correctAnswerValues &&
+        exercise.correctAnswerValues.length > 0
+      ) {
         // Decrypt for admins
         if (["ADMIN", "SUPERADMIN"].includes(session.user.role)) {
           try {
-            decryptedAnswerValues = exercise.correctAnswerValues.map((answer: string) => {
-              try {
-                return safeDecrypt(answer);
-              } catch (error) {
-                console.error("Error decrypting answer:", error);
-                return answer;
+            decryptedAnswerValues = exercise.correctAnswerValues.map(
+              (answer: string) => {
+                try {
+                  return safeDecrypt(answer);
+                } catch (error) {
+                  console.error("Error decrypting answer:", error);
+                  return answer;
+                }
               }
-            });
+            );
           } catch (error) {
             console.error("Error processing answers:", error);
           }
         } else {
           // For students, provide placeholder array with correct length for status calculation
-          decryptedAnswerValues = new Array(originalAnswersCount).fill("HIDDEN");
+          decryptedAnswerValues = new Array(originalAnswersCount).fill(
+            "HIDDEN"
+          );
         }
       }
 
@@ -106,8 +112,6 @@ export async function POST(request: NextRequest) {
       class: classGrade,
       problemText,
       problemImage,
-      givenText,
-      givenImage,
       solutionSteps,
       solutionImage,
       correctAnswerValues,
@@ -212,8 +216,6 @@ export async function POST(request: NextRequest) {
         class: classGrade || null,
         problemText: problemText || null,
         problemImage: problemImage || null,
-        givenText: givenText || null,
-        givenImage: givenImage || null,
         solutionSteps: solutionSteps || null,
         solutionImage: solutionImage || null,
         correctAnswerValues: encryptedAnswerValues,

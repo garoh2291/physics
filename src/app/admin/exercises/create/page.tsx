@@ -49,14 +49,11 @@ interface Theme {
 }
 
 export default function CreateExercisePage() {
-
   const [exerciseNumber, setExerciseNumber] = useState("");
   const [level, setLevel] = useState(1);
   const [classGrade, setClassGrade] = useState<number | undefined>(undefined);
   const [problemText, setProblemText] = useState("");
   const [problemImage, setProblemImage] = useState("");
-  const [givenText, setGivenText] = useState("");
-  const [givenImage, setGivenImage] = useState("");
   const [solutionSteps, setSolutionSteps] = useState("");
   const [solutionImage, setSolutionImage] = useState("");
   const [correctAnswerValues, setCorrectAnswerValues] = useState<string[]>([]);
@@ -82,8 +79,8 @@ export default function CreateExercisePage() {
   const handleSectionsChange = (sections: Section[]) => {
     setSelectedSections(sections);
     // Clear themes that are not in the selected sections
-    const validThemes = selectedThemes.filter(theme =>
-      sections.some(section => section.id === theme.section.id)
+    const validThemes = selectedThemes.filter((theme) =>
+      sections.some((section) => section.id === theme.section.id)
     );
     if (validThemes.length !== selectedThemes.length) {
       setSelectedThemes(validThemes);
@@ -118,8 +115,6 @@ export default function CreateExercisePage() {
         class: classGrade,
         problemText,
         problemImage,
-        givenText,
-        givenImage,
         solutionSteps,
         solutionImage,
         correctAnswerValues,
@@ -163,7 +158,6 @@ export default function CreateExercisePage() {
                 Նոր վարժություն
               </h1>
             </div>
-
           </div>
         </div>
       </header>
@@ -266,42 +260,6 @@ export default function CreateExercisePage() {
                 <FileViewer
                   url={problemImage}
                   title="Խնդրի նկար"
-                  className="mt-4"
-                />
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Additional Given Data Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Տրված տվյալներ</CardTitle>
-              <p className="text-sm text-gray-600">
-                Տրված տվյալներ (ոչ պարտադիր)
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="givenText">Տրված տվյալների տեքստ</Label>
-                <MathEditor
-                  value={givenText}
-                  onChange={setGivenText}
-                  height={200}
-                  placeholder="Մուտքագրեք տրված տվյալների տեքստը..."
-                />
-              </div>
-              <div>
-                <Label>Տրված տվյալների նկար</Label>
-                <FileUpload
-                  value={givenImage}
-                  onChange={setGivenImage}
-                  label="Վերբեռնել տրված տվյալների նկար (առավելագույնը 5MB)"
-                />
-              </div>
-              {givenImage && (
-                <FileViewer
-                  url={givenImage}
-                  title="Տրված տվյալների նկար"
                   className="mt-4"
                 />
               )}
@@ -531,9 +489,7 @@ export default function CreateExercisePage() {
               className="text-sm"
             >
               <Save className="h-4 w-4 mr-2" />
-              {createExerciseMutation.isPending
-                ? "Պահպանվում..."
-                : "Պահպանել"}
+              {createExerciseMutation.isPending ? "Պահպանվում..." : "Պահպանել"}
             </Button>
           </div>
         </form>

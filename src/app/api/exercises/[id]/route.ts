@@ -22,10 +22,9 @@ export async function GET(
         createdBy: { select: { id: true, name: true, email: true } },
         solutions: {
           // For admins, get all solutions; for students, only get their own
-          ...(["ADMIN", "SUPERADMIN"].includes(session.user.role) 
-            ? {} 
-            : { where: { userId: session.user.id } }
-          ),
+          ...(["ADMIN", "SUPERADMIN"].includes(session.user.role)
+            ? {}
+            : { where: { userId: session.user.id } }),
           include: {
             user: { select: { id: true, name: true, email: true } },
           },
@@ -55,12 +54,15 @@ export async function GET(
 
     // Transform field names and decrypt answer values for admins or students with correct solutions
     let decryptedAnswerValues: string[] = [];
-    if (exercise.correctAnswerValues && exercise.correctAnswerValues.length > 0) {
+    if (
+      exercise.correctAnswerValues &&
+      exercise.correctAnswerValues.length > 0
+    ) {
       // Decrypt for admins
       if (["ADMIN", "SUPERADMIN"].includes(session.user.role)) {
         try {
-          decryptedAnswerValues = exercise.correctAnswerValues.map((answer: string) =>
-            safeDecrypt(answer)
+          decryptedAnswerValues = exercise.correctAnswerValues.map(
+            (answer: string) => safeDecrypt(answer)
           );
         } catch (error) {
           console.error("Error decrypting answers:", error);
@@ -71,18 +73,18 @@ export async function GET(
       else if (session.user.role === "STUDENT") {
         // Check if student has completed the exercise using the new partial answer logic
         const userSolution = exercise.solutions.find(
-          (s) => s.userId === session.user.id && (
+          (s) =>
+            s.userId === session.user.id &&
             // Check new partial answer system first
-            (s.correctAnswersCount !== undefined && 
-             s.correctAnswersCount === exercise.correctAnswerValues.length) ||
-            // Fallback to legacy isCorrect field
-            s.isCorrect
-          )
+            ((s.correctAnswersCount !== undefined &&
+              s.correctAnswersCount === exercise.correctAnswerValues.length) ||
+              // Fallback to legacy isCorrect field
+              s.isCorrect)
         );
         if (userSolution) {
           try {
-            decryptedAnswerValues = exercise.correctAnswerValues.map((answer: string) =>
-              safeDecrypt(answer)
+            decryptedAnswerValues = exercise.correctAnswerValues.map(
+              (answer: string) => safeDecrypt(answer)
             );
           } catch (error) {
             console.error("Error decrypting answers:", error);
@@ -131,8 +133,6 @@ export async function PUT(
       class: classGrade,
       problemText,
       problemImage,
-      givenText,
-      givenImage,
       solutionSteps,
       solutionImage,
       correctAnswerValues,
@@ -238,8 +238,6 @@ export async function PUT(
         class: classGrade || null,
         problemText: problemText || null,
         problemImage: problemImage || null,
-        givenText: givenText || null,
-        givenImage: givenImage || null,
         solutionSteps: solutionSteps || null,
         solutionImage: solutionImage || null,
         correctAnswerValues: encryptedAnswerValues,

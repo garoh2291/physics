@@ -35,8 +35,6 @@ export default function EditExercisePage() {
   const [classGrade, setClassGrade] = useState<number | undefined>(undefined);
   const [problemText, setProblemText] = useState("");
   const [problemImage, setProblemImage] = useState("");
-  const [givenText, setGivenText] = useState("");
-  const [givenImage, setGivenImage] = useState("");
   const [solutionSteps, setSolutionSteps] = useState("");
   const [solutionImage, setSolutionImage] = useState("");
   const [correctAnswerValues, setCorrectAnswerValues] = useState<string[]>([]);
@@ -99,8 +97,6 @@ export default function EditExercisePage() {
       );
       setProblemText(exercise.problemText || "");
       setProblemImage(exercise.problemImage || "");
-      setGivenText(exercise.givenText || "");
-      setGivenImage(exercise.givenImage || "");
       setSolutionSteps(exercise.solutionSteps || "");
       setSolutionImage(exercise.solutionImage || "");
       setCorrectAnswerValues(exercise.correctAnswerValues || []);
@@ -148,8 +144,6 @@ export default function EditExercisePage() {
           class: classGrade,
           problemText,
           problemImage,
-          givenText,
-          givenImage,
           solutionSteps,
           solutionImage,
           correctAnswerValues,
@@ -313,42 +307,6 @@ export default function EditExercisePage() {
                 <FileViewer
                   url={problemImage}
                   title="Խնդրի նկար"
-                  className="mt-4"
-                />
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Additional Given Data Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Տրված տվյալներ</CardTitle>
-              <p className="text-sm text-gray-600">
-                Տրված տվյալներ (ոչ պարտադիր)
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="givenText">Տրված տվյալների տեքստ</Label>
-                <MathEditor
-                  value={givenText}
-                  onChange={setGivenText}
-                  height={200}
-                  placeholder="Մուտքագրեք տրված տվյալների տեքստը..."
-                />
-              </div>
-              <div>
-                <Label>Տրված տվյալների նկար</Label>
-                <FileUpload
-                  value={givenImage}
-                  onChange={setGivenImage}
-                  label="Վերբեռնել տրված տվյալների նկար (առավելագույնը 5MB)"
-                />
-              </div>
-              {givenImage && (
-                <FileViewer
-                  url={givenImage}
-                  title="Տրված տվյալների նկար"
                   className="mt-4"
                 />
               )}

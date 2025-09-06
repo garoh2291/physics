@@ -47,8 +47,6 @@ interface Exercise {
   class?: number;
   problemText?: string;
   problemImage?: string;
-  givenText?: string;
-  givenImage?: string;
   solutionSteps?: string;
   solutionImage?: string;
   correctAnswerValues: string[];
@@ -156,8 +154,6 @@ interface CreateExerciseData {
   class?: number;
   problemText?: string;
   problemImage?: string;
-  givenText?: string;
-  givenImage?: string;
   solutionSteps?: string;
   solutionImage?: string;
   correctAnswerValues: string[];
@@ -180,8 +176,6 @@ interface UpdateExerciseData {
   class?: number;
   problemText?: string;
   problemImage?: string;
-  givenText?: string;
-  givenImage?: string;
   solutionSteps?: string;
   solutionImage?: string;
   correctAnswerValues: string[];

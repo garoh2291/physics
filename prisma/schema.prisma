@@ -55,8 +55,6 @@ model Exercise {
 
   problemText   String? // Text for given data (optional)
   problemImage  String? // Image for given data (optional, Cloudinary URL)
-  givenText     String? // Text for given data (optional)
-  givenImage    String? // Image for given data (optional, Cloudinary URL)
   solutionSteps String? // Solution steps text (optional)
   solutionImage String? // Solution steps image (optional, Cloudinary URL)
 

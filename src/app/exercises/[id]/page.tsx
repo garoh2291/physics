@@ -76,7 +76,9 @@ export default function StudentExercisePage() {
   // Initialize partial answers array based on exercise correct answer values
   useEffect(() => {
     if (exercise?.correctAnswerValues) {
-      setPartialAnswers(new Array(exercise.correctAnswerValues.length).fill(""));
+      setPartialAnswers(
+        new Array(exercise.correctAnswerValues.length).fill("")
+      );
     }
   }, [exercise?.correctAnswerValues]);
 
@@ -252,7 +254,8 @@ export default function StudentExercisePage() {
       // Check if exercise is complete - only when ALL answers are correct
       const allAnswersCorrect =
         exercise &&
-        result.submittedAnswers?.length === exercise.correctAnswerValues?.length &&
+        result.submittedAnswers?.length ===
+          exercise.correctAnswerValues?.length &&
         result.submittedAnswers?.every(
           (sa: { isCorrect: boolean }) => sa.isCorrect
         );
@@ -733,8 +736,12 @@ export default function StudentExercisePage() {
                                     }
                                   }
                                 }}
-                                placeholder={`Մուտքագրեք պատասխան ${index + 1}-ը`}
-                                disabled={isCorrect || submittingIndex === index}
+                                placeholder={`Մուտքագրեք պատասխան ${
+                                  index + 1
+                                }-ը`}
+                                disabled={
+                                  isCorrect || submittingIndex === index
+                                }
                                 className={`${
                                   isSubmitted
                                     ? isCorrect
@@ -743,11 +750,14 @@ export default function StudentExercisePage() {
                                     : ""
                                 }`}
                               />
-                              {exercise.answerUnits && exercise.answerUnits[index] && (
-                                <div className="flex items-center px-3 bg-gray-100 border border-l-0 rounded-r-md">
-                                  <span className="text-sm text-gray-600">{exercise.answerUnits[index]}</span>
-                                </div>
-                              )}
+                              {exercise.answerUnits &&
+                                exercise.answerUnits[index] && (
+                                  <div className="flex items-center px-3 bg-gray-100 border border-l-0 rounded-r-md">
+                                    <span className="text-sm text-gray-600">
+                                      {exercise.answerUnits[index]}
+                                    </span>
+                                  </div>
+                                )}
                             </div>
                             <Button
                               onClick={() =>
@@ -880,7 +890,10 @@ export default function StudentExercisePage() {
                               key={idx}
                               className="text-lg font-mono text-green-700 bg-white p-2 rounded border"
                             >
-                              {ansValue}{exercise.answerUnits && exercise.answerUnits[idx] ? ` ${exercise.answerUnits[idx]}` : ''}
+                              {ansValue}
+                              {exercise.answerUnits && exercise.answerUnits[idx]
+                                ? ` ${exercise.answerUnits[idx]}`
+                                : ""}
                             </span>
                           )
                         )
@@ -892,19 +905,6 @@ export default function StudentExercisePage() {
                     </div>
                   </div>
 
-                  {exercise.givenImage && (
-                    <FileViewer
-                      url={exercise.givenImage}
-                      title="Տրված տվյալների նկար"
-                      className="mb-4"
-                    />
-                  )}
-                  {exercise.givenText && (
-                    <MathPreview
-                      value={exercise.givenText}
-                      className="prose prose-lg max-w-none bg-white p-6 rounded-lg border"
-                    />
-                  )}
                   {exercise.solutionImage && (
                     <FileViewer
                       url={exercise.solutionImage}
