@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -76,6 +76,43 @@ export default function CreateExercisePage() {
 
   const router = useRouter();
   const createExerciseMutation = useCreateExercise();
+
+  // Load duplicate data from sessionStorage on component mount
+  useEffect(() => {
+    const duplicateData = sessionStorage.getItem("duplicateExerciseData");
+    if (duplicateData) {
+      try {
+        const data = JSON.parse(duplicateData);
+
+        // Prefill form fields
+        setExerciseNumber(data.exerciseNumber || "");
+        setLevel(data.level || 1);
+        setClassGrade(data.class);
+        setProblemText(data.problemText || "");
+        setProblemImage(data.problemImage || "");
+        setSolutionSteps(data.solutionSteps || "");
+        setSolutionImage(data.solutionImage || "");
+        setCorrectAnswerValues(data.correctAnswerValues || []);
+        setAnswerUnits(data.answerUnits || []);
+        setSelectedTags(data.tags || []);
+        setSelectedSources(data.sources || []);
+        setSelectedSections(data.sections || []);
+        setSelectedThemes(data.themes || []);
+        setHintText1(data.hintText1 || "");
+        setHintImage1(data.hintImage1 || "");
+        setHintText2(data.hintText2 || "");
+        setHintImage2(data.hintImage2 || "");
+        setHintText3(data.hintText3 || "");
+        setHintImage3(data.hintImage3 || "");
+
+        // Clear the data from sessionStorage after loading
+        sessionStorage.removeItem("duplicateExerciseData");
+      } catch (error) {
+        console.error("Error parsing duplicate exercise data:", error);
+        sessionStorage.removeItem("duplicateExerciseData");
+      }
+    }
+  }, []);
 
   // Handle section changes and clear themes when sections change
   const handleSectionsChange = (sections: Section[]) => {

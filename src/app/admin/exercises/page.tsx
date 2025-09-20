@@ -32,11 +32,14 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
+  Copy,
 } from "lucide-react";
 import { useExercises } from "@/hooks/use-api";
 import { DeleteExerciseDialog } from "@/components/delete-exercise-dialog";
+import { useRouter } from "next/navigation";
 
 export default function AdminExercisesPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [exerciseToDelete, setExerciseToDelete] = useState<{
     id: string;
@@ -45,6 +48,43 @@ export default function AdminExercisesPage() {
   } | null>(null);
 
   const { data: exercises = [], isLoading, error } = useExercises();
+
+  // Handle duplicate exercise
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleDuplicateExercise = (exercise: any) => {
+    // Store exercise data in sessionStorage
+    const duplicateData = {
+      exerciseNumber: exercise.exerciseNumber
+        ? `${exercise.exerciseNumber} (Copy)`
+        : "",
+      level: exercise.level || 1,
+      class: exercise.class,
+      problemText: exercise.problemText || "",
+      problemImage: exercise.problemImage || "",
+      solutionSteps: exercise.solutionSteps || "",
+      solutionImage: exercise.solutionImage || "",
+      correctAnswerValues: exercise.correctAnswerValues || [],
+      answerUnits: exercise.answerUnits || [],
+      tags: exercise.tags || [],
+      sources: exercise.sources || [],
+      sections: exercise.sections || [],
+      themes: exercise.themes || [],
+      hintText1: exercise.hintText1 || "",
+      hintImage1: exercise.hintImage1 || "",
+      hintText2: exercise.hintText2 || "",
+      hintImage2: exercise.hintImage2 || "",
+      hintText3: exercise.hintText3 || "",
+      hintImage3: exercise.hintImage3 || "",
+    };
+
+    sessionStorage.setItem(
+      "duplicateExerciseData",
+      JSON.stringify(duplicateData)
+    );
+
+    // Navigate to create page
+    router.push("/admin/exercises/create");
+  };
 
   // Filter exercises based on search
   const filteredExercises = exercises.filter((exercise) => {
@@ -210,6 +250,14 @@ export default function AdminExercisesPage() {
                                     <Edit className="h-4 w-4 mr-2" />
                                     Խմբագրել
                                   </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleDuplicateExercise(exercise)
+                                  }
+                                >
+                                  <Copy className="h-4 w-4 mr-2" />
+                                  Պատճենել
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-red-600"
@@ -415,6 +463,14 @@ export default function AdminExercisesPage() {
                                       <Edit className="h-4 w-4 mr-2" />
                                       Խմբագրել
                                     </Link>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleDuplicateExercise(exercise)
+                                    }
+                                  >
+                                    <Copy className="h-4 w-4 mr-2" />
+                                    Պատճենել
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     className="text-red-600"
