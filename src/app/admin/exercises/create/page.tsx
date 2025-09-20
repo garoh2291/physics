@@ -58,6 +58,8 @@ export default function CreateExercisePage() {
   const [solutionImage, setSolutionImage] = useState("");
   const [correctAnswerValues, setCorrectAnswerValues] = useState<string[]>([]);
   const [answerUnits, setAnswerUnits] = useState<string[]>([]);
+  const [currentAnswerInput, setCurrentAnswerInput] = useState("");
+  const [currentUnitInput, setCurrentUnitInput] = useState("");
   const [selectedTags, setSelectedTags] = useState<
     Array<{ id: string; name: string; url?: string | null }>
   >([]);
@@ -87,6 +89,12 @@ export default function CreateExercisePage() {
     }
   };
 
+  // Handle current input changes in MultipleAnswersInput
+  const handleCurrentInputChange = (value: string, unit: string) => {
+    setCurrentAnswerInput(value);
+    setCurrentUnitInput(unit);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -103,10 +111,20 @@ export default function CreateExercisePage() {
       setError("Լուծման քայլերը պետք է պարունակեն տեքստ կամ նկար");
       return;
     }
-    if (correctAnswerValues.length === 0) {
+    console.log("Current input:", { currentAnswerInput, currentUnitInput });
+    // Check if there are added correct answers OR current input has a value
+    if (correctAnswerValues.length === 0 && !currentAnswerInput.trim()) {
       setError("Առնվազն մեկ ճիշտ պատասխանի արժեք պարտադիր է");
       return;
     }
+
+    // Prepare final answer arrays - include current input if present
+    const finalAnswerValues = currentAnswerInput.trim()
+      ? [...correctAnswerValues, currentAnswerInput.trim()]
+      : correctAnswerValues;
+    const finalAnswerUnits = currentAnswerInput.trim()
+      ? [...answerUnits, currentUnitInput.trim()]
+      : answerUnits;
 
     createExerciseMutation.mutate(
       {
@@ -117,8 +135,8 @@ export default function CreateExercisePage() {
         problemImage,
         solutionSteps,
         solutionImage,
-        correctAnswerValues,
-        answerUnits,
+        correctAnswerValues: finalAnswerValues,
+        answerUnits: finalAnswerUnits,
         tagIds: selectedTags.map((tag) => tag.id),
         sourceIds: selectedSources.map((source) => source.id),
         sectionIds: selectedSections.map((section) => section.id),
@@ -314,6 +332,7 @@ export default function CreateExercisePage() {
                 answerUnits={answerUnits}
                 onAnswerUnitsChange={setAnswerUnits}
                 placeholder="Օրինակ՝ 42 կամ 42.0 կամ 42,00"
+                onCurrentInputChange={handleCurrentInputChange}
               />
             </CardContent>
           </Card>

@@ -13,6 +13,7 @@ interface MultipleAnswersInputProps {
   answerUnits: string[];
   onAnswerUnitsChange: (units: string[]) => void;
   placeholder?: string;
+  onCurrentInputChange?: (value: string, unit: string) => void;
 }
 
 export function MultipleAnswersInput({
@@ -21,6 +22,7 @@ export function MultipleAnswersInput({
   answerUnits,
   onAnswerUnitsChange,
   placeholder = "Օրինակ՝ 42",
+  onCurrentInputChange,
 }: MultipleAnswersInputProps) {
   const [newValue, setNewValue] = useState("");
   const [newUnit, setNewUnit] = useState("");
@@ -29,12 +31,13 @@ export function MultipleAnswersInput({
     if (newValue.trim()) {
       const trimmedValue = newValue.trim();
       const trimmedUnit = newUnit.trim();
-      
+
       // Check if this combination of value+unit already exists
-      const existingIndex = answerValues.findIndex((val, idx) => 
-        val === trimmedValue && (answerUnits[idx] || '') === trimmedUnit
+      const existingIndex = answerValues.findIndex(
+        (val, idx) =>
+          val === trimmedValue && (answerUnits[idx] || "") === trimmedUnit
       );
-      
+
       if (existingIndex === -1) {
         onAnswerValuesChange([...answerValues, trimmedValue]);
         onAnswerUnitsChange([...answerUnits, trimmedUnit]);
@@ -71,7 +74,8 @@ export function MultipleAnswersInput({
                 variant="secondary"
                 className="flex items-center gap-1"
               >
-                {value}{answerUnits[index] ? ` ${answerUnits[index]}` : ''}
+                {value}
+                {answerUnits[index] ? ` ${answerUnits[index]}` : ""}
                 <button
                   onClick={() => handleRemoveValue(index)}
                   className="ml-1 hover:text-red-500"
@@ -86,15 +90,16 @@ export function MultipleAnswersInput({
 
       {/* Add New Answer Value and Unit */}
       <div className="space-y-2">
-        <Label className="text-sm font-medium">
-          Ավելացնել նոր պատասխան
-        </Label>
+        <Label className="text-sm font-medium">Ավելացնել նոր պատասխան</Label>
         <div className="flex gap-2">
           <div className="flex-1">
             <Input
               placeholder={placeholder}
               value={newValue}
-              onChange={(e) => setNewValue(e.target.value)}
+              onChange={(e) => {
+                setNewValue(e.target.value);
+                onCurrentInputChange?.(e.target.value, newUnit);
+              }}
               onKeyPress={handleKeyPress}
               className="text-sm"
             />
@@ -103,7 +108,10 @@ export function MultipleAnswersInput({
             <Input
               placeholder="Միավոր (մ², կգ...)"
               value={newUnit}
-              onChange={(e) => setNewUnit(e.target.value)}
+              onChange={(e) => {
+                setNewUnit(e.target.value);
+                onCurrentInputChange?.(newValue, e.target.value);
+              }}
               onKeyPress={handleKeyPress}
               className="text-sm"
             />
@@ -120,15 +128,16 @@ export function MultipleAnswersInput({
           </Button>
         </div>
         <p className="text-xs text-gray-500">
-          Անխապաղ արժեք և դրա միավորը լրացրեք: Քայլը տարբեր պատասխանների համար տարբեր միավորներ կարող են լինել:
+          Անխապաղ արժեք և դրա միավորը լրացրեք: Քայլը տարբեր պատասխանների համար
+          տարբեր միավորներ կարող են լինել:
         </p>
       </div>
 
       {/* Instructions */}
       <div className="bg-blue-50 p-3 rounded-lg">
         <p className="text-sm text-blue-800">
-          <strong>Հուշում:</strong> Ավելացրեք բոլոր հնարավոր ճիշտ պատասխանները և դրանց միավորները:
-          Ուսանողի պատասխանը կհամեմատվի այս ցուցակի հետ:
+          <strong>Հուշում:</strong> Ավելացրեք բոլոր հնարավոր ճիշտ պատասխանները և
+          դրանց միավորները: Ուսանողի պատասխանը կհամեմատվի այս ցուցակի հետ:
         </p>
       </div>
 
