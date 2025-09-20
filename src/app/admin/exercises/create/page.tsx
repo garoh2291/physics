@@ -428,56 +428,59 @@ export default function CreateExercisePage() {
             </CardContent>
           </Card>
 
-          {/* Tags Section */}
+          {/* Selectors Section - All in one card with full width dropdowns */}
           <Card>
             <CardHeader>
-              <CardTitle>Պիտակներ (ոչ պարտադիր)</CardTitle>
+              <CardTitle>Կատեգորիաներ (ոչ պարտադիր)</CardTitle>
+              <p className="text-sm text-gray-600">
+                Ընտրեք պիտակներ, աղբյուրներ, բաժիններ և թեմաներ
+              </p>
             </CardHeader>
-            <CardContent>
-              <TagSelector
-                selectedTags={selectedTags}
-                onTagsChange={setSelectedTags}
-              />
-            </CardContent>
-          </Card>
+            <CardContent className="space-y-6">
+              {/* Tags */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Պիտակներ
+                </label>
+                <TagSelector
+                  selectedTags={selectedTags}
+                  onTagsChange={setSelectedTags}
+                />
+              </div>
 
-          {/* Sources Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Աղբյուրներ (ոչ պարտադիր)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SourceSelector
-                selectedSources={selectedSources}
-                onSourcesChange={setSelectedSources}
-              />
-            </CardContent>
-          </Card>
+              {/* Sources */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Աղբյուրներ
+                </label>
+                <SourceSelector
+                  selectedSources={selectedSources}
+                  onSourcesChange={setSelectedSources}
+                />
+              </div>
 
-          {/* Sections Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Բաժիններ (ոչ պարտադիր)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SectionSelector
-                selectedSections={selectedSections}
-                onSectionsChange={handleSectionsChange}
-              />
-            </CardContent>
-          </Card>
+              {/* Sections */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Բաժիններ
+                </label>
+                <SectionSelector
+                  selectedSections={selectedSections}
+                  onSectionsChange={handleSectionsChange}
+                />
+              </div>
 
-          {/* Themes Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Թեմաներ (ոչ պարտադիր)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ThemeSelector
-                selectedThemes={selectedThemes}
-                onThemesChange={setSelectedThemes}
-                selectedSections={selectedSections}
-              />
+              {/* Themes */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Թեմաներ
+                </label>
+                <ThemeSelector
+                  selectedThemes={selectedThemes}
+                  onThemesChange={setSelectedThemes}
+                  selectedSections={selectedSections}
+                />
+              </div>
             </CardContent>
           </Card>
 

@@ -1,13 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import * as React from "react";
+import { Check, ChevronsUpDown, Plus, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Search } from "lucide-react";
 import { useSections } from "@/hooks/use-api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface Section {
   id: string;
@@ -24,207 +35,139 @@ export function SectionSelector({
   selectedSections,
   onSectionsChange,
 }: SectionSelectorProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newSectionName, setNewSectionName] = useState("");
-  const [newSectionUrl, setNewSectionUrl] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
+  const [open, setOpen] = React.useState(false);
+  const [searchValue, setSearchValue] = React.useState("");
+  const { data: sections = [], isLoading, refetch } = useSections();
 
-  const { data: sections = [], isLoading, error } = useSections();
-  const queryClient = useQueryClient();
-
-  const createSectionMutation = useMutation({
-    mutationFn: async (data: { name: string; url?: string }) => {
-      const response = await fetch("/api/sections", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Բաժնի ստեղծման սխալ");
-      }
-      return response.json();
-    },
-    onSuccess: (newSection) => {
-      queryClient.invalidateQueries({ queryKey: ["sections"] });
-      onSectionsChange([...selectedSections, newSection]);
-      setNewSectionName("");
-      setNewSectionUrl("");
-      setShowCreateForm(false);
-      setIsCreating(false);
-    },
-    onError: (error: Error) => {
-      console.error("Error creating section:", error);
-      setIsCreating(false);
-    },
+  // Filter sections based on search and exclude already selected ones
+  const availableSections = sections.filter((section) => {
+    const isNotSelected = !selectedSections.some((s) => s.id === section.id);
+    const matchesSearch = section.name
+      .toLowerCase()
+      .includes(searchValue.toLowerCase());
+    return isNotSelected && matchesSearch;
   });
 
-  const filteredSections = sections.filter(
-    (section) =>
-      !selectedSections.some((selected) => selected.id === section.id) &&
-      section.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleAddSection = (section: Section) => {
-    if (!selectedSections.some((selected) => selected.id === section.id)) {
-      onSectionsChange([...selectedSections, section]);
-    }
-    setSearchTerm("");
-  };
-
-  const handleRemoveSection = (sectionId: string) => {
-    onSectionsChange(
-      selectedSections.filter((section) => section.id !== sectionId)
+  // Check if search value could be a new section
+  const canCreateNew =
+    searchValue.trim() &&
+    !sections.some(
+      (section) => section.name.toLowerCase() === searchValue.toLowerCase()
     );
+
+  const handleSelect = (section: Section) => {
+    onSectionsChange([...selectedSections, section]);
+    setOpen(false);
+    setSearchValue("");
   };
 
-  const handleCreateSection = async () => {
-    if (!newSectionName.trim()) return;
-
-    setIsCreating(true);
-    createSectionMutation.mutate({
-      name: newSectionName.trim(),
-      url: newSectionUrl.trim() || undefined,
-    });
+  const handleRemove = (sectionId: string) => {
+    onSectionsChange(selectedSections.filter((s) => s.id !== sectionId));
   };
 
-  if (isLoading) {
-    return <div className="text-sm text-gray-500">Բեռնվում է...</div>;
-  }
+  const handleCreateNew = async () => {
+    if (!searchValue.trim()) return;
 
-  if (error) {
-    return <div className="text-sm text-red-500">Սխալ՝ {error.message}</div>;
-  }
+    try {
+      const response = await fetch("/api/sections", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: searchValue.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        const newSection = await response.json();
+        onSectionsChange([...selectedSections, newSection]);
+        setOpen(false);
+        setSearchValue("");
+        // Refetch sections to update the list
+        refetch();
+      }
+    } catch (error) {
+      console.error("Error creating section:", error);
+    }
+  };
 
   return (
     <div className="space-y-4">
       {/* Selected Sections */}
       {selectedSections.length > 0 && (
-        <div>
-          <Label className="text-sm font-medium">
-            Ընտրված բաժիններ ({selectedSections.length})
-          </Label>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {selectedSections.map((section) => (
-              <Badge
-                key={section.id}
-                variant="secondary"
-                className="flex items-center gap-1"
-              >
-                {section.name}
-                <button
-                  onClick={() => handleRemoveSection(section.id)}
-                  className="ml-1 hover:text-red-500"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
+        <div className="flex flex-wrap gap-2">
+          {selectedSections.map((section) => (
+            <Badge key={section.id} variant="secondary" className="text-sm">
+              {section.name}
+              <X
+                className="ml-1 h-3 w-3 cursor-pointer hover:text-red-500"
+                onClick={() => handleRemove(section.id)}
+              />
+            </Badge>
+          ))}
         </div>
       )}
 
-      {/* Search and Add */}
-      <div className="space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Որոնել բաժիններ..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
-        {/* Search Results */}
-        {searchTerm && filteredSections.length > 0 && (
-          <div className="border rounded-lg max-h-40 overflow-y-auto">
-            {filteredSections.map((section) => (
-              <button
-                key={section.id}
-                onClick={() => handleAddSection(section)}
-                className="w-full text-left px-3 py-2 hover:bg-gray-50 border-b last:border-b-0 text-sm"
-              >
-                {section.name}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Create New Section */}
-        {!showCreateForm ? (
+      {/* Section Selector */}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
           <Button
-            type="button"
             variant="outline"
-            size="sm"
-            onClick={() => setShowCreateForm(true)}
-            className="w-full"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Ավելացնել նոր բաժին
+            Ընտրեք բաժիններ...
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
-        ) : (
-          <div className="border rounded-lg p-4 space-y-3">
-            <div>
-              <Label htmlFor="newSectionName" className="text-sm">
-                Բաժնի անվանում *
-              </Label>
-              <Input
-                id="newSectionName"
-                value={newSectionName}
-                onChange={(e) => setNewSectionName(e.target.value)}
-                placeholder="Օրինակ՝ Մեխանիկա"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="newSectionUrl" className="text-sm">
-                URL (ոչ պարտադիր)
-              </Label>
-              <Input
-                id="newSectionUrl"
-                value={newSectionUrl}
-                onChange={(e) => setNewSectionUrl(e.target.value)}
-                placeholder="https://example.com"
-                className="mt-1"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleCreateSection}
-                disabled={!newSectionName.trim() || isCreating}
-                className="flex-1"
-              >
-                {isCreating ? "Ստեղծվում է..." : "Ստեղծել"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setShowCreateForm(false);
-                  setNewSectionName("");
-                  setNewSectionUrl("");
-                }}
-                disabled={isCreating}
-              >
-                Չեղարկել
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
+        </PopoverTrigger>
+        <PopoverContent className="p-0" align="start">
+          <Command>
+            <CommandInput
+              placeholder="Փնտրել բաժին..."
+              value={searchValue}
+              onValueChange={setSearchValue}
+            />
+            <CommandList className="max-h-[300px]">
+              <CommandEmpty>
+                {isLoading ? "Բեռնվում..." : "Բաժին չի գտնվել"}
+              </CommandEmpty>
 
-      {/* Instructions */}
-      <div className="bg-blue-50 p-3 rounded-lg">
-        <p className="text-sm text-blue-800">
-          <strong>Հուշում:</strong> Ընտրեք բաժիններ կամ ստեղծեք նորերը
-          վարժությունները կազմակերպելու համար:
-        </p>
-      </div>
+              {availableSections.length > 0 && (
+                <CommandGroup>
+                  {availableSections.map((section) => (
+                    <CommandItem
+                      key={section.id}
+                      value={section.name}
+                      onSelect={() => handleSelect(section)}
+                    >
+                      <Check className={cn("mr-2 h-4 w-4", "opacity-0")} />
+                      <div>
+                        <div className="font-medium">{section.name}</div>
+                        {section.url && (
+                          <div className="text-xs text-gray-500 truncate">
+                            {section.url}
+                          </div>
+                        )}
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+
+              {canCreateNew && (
+                <CommandGroup>
+                  <CommandItem onSelect={handleCreateNew}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Ստեղծել &quot;{searchValue}&quot;
+                  </CommandItem>
+                </CommandGroup>
+              )}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
