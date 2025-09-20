@@ -21,14 +21,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   ArrowLeft,
   Plus,
   Search,
@@ -41,18 +33,18 @@ import {
   XCircle,
   AlertTriangle,
 } from "lucide-react";
-import { useExercises, useDeleteExercise } from "@/hooks/use-api";
+import { useExercises } from "@/hooks/use-api";
+import { DeleteExerciseDialog } from "@/components/delete-exercise-dialog";
 
 export default function AdminExercisesPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [deleteDialog, setDeleteDialog] = useState<{
-    isOpen: boolean;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    exercise: any;
-  }>({ isOpen: false, exercise: null });
+  const [exerciseToDelete, setExerciseToDelete] = useState<{
+    id: string;
+    title?: string;
+    exerciseNumber?: string;
+  } | null>(null);
 
   const { data: exercises = [], isLoading, error } = useExercises();
-  const deleteExerciseMutation = useDeleteExercise();
 
   // Filter exercises based on search
   const filteredExercises = exercises.filter((exercise) => {
@@ -61,16 +53,6 @@ export default function AdminExercisesPage() {
       exercise.exerciseNumber?.toLowerCase().includes(searchLower) || false
     );
   });
-
-  const handleDeleteConfirm = () => {
-    if (deleteDialog.exercise) {
-      deleteExerciseMutation.mutate(deleteDialog.exercise.id, {
-        onSuccess: () => {
-          setDeleteDialog({ isOpen: false, exercise: null });
-        },
-      });
-    }
-  };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getStatusCounts = (solutions: any[]) => {
@@ -231,9 +213,7 @@ export default function AdminExercisesPage() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-red-600"
-                                  onClick={() =>
-                                    setDeleteDialog({ isOpen: true, exercise })
-                                  }
+                                  onClick={() => setExerciseToDelete(exercise)}
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   Ջնջել
@@ -439,10 +419,7 @@ export default function AdminExercisesPage() {
                                   <DropdownMenuItem
                                     className="text-red-600"
                                     onClick={() =>
-                                      setDeleteDialog({
-                                        isOpen: true,
-                                        exercise,
-                                      })
+                                      setExerciseToDelete(exercise)
                                     }
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" />
@@ -464,39 +441,13 @@ export default function AdminExercisesPage() {
       </main>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialog.isOpen}
-        onOpenChange={(open) =>
-          !open && setDeleteDialog({ isOpen: false, exercise: null })
-        }
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Ջնջել վարժությունը</DialogTitle>
-            <DialogDescription>
-              Դուք վստա՞հ եք, որ ցանկանում եք ջնջել &quot;
-              {deleteDialog.exercise?.title}&quot; վարժությունը: Այս
-              գործողությունը հետադարձելի չէ և ջնջելու է նաև բոլոր հարակից
-              լուծումները:
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialog({ isOpen: false, exercise: null })}
-            >
-              Փակել
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteConfirm}
-              disabled={deleteExerciseMutation.isPending}
-            >
-              {deleteExerciseMutation.isPending ? "Ջնջվում..." : "Ջնջել"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {exerciseToDelete?.id ? (
+        <DeleteExerciseDialog
+          exercise={exerciseToDelete}
+          open={!!exerciseToDelete}
+          onClose={() => setExerciseToDelete(null)}
+        />
+      ) : null}
     </div>
   );
 }
