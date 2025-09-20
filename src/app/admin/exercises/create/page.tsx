@@ -487,7 +487,7 @@ export default function CreateExercisePage() {
           {/* Save Button */}
           <div className="flex justify-end pt-6">
             <Button
-              onClick={handleSubmit}
+              type="submit"
               disabled={createExerciseMutation.isPending}
               className="text-sm"
             >
