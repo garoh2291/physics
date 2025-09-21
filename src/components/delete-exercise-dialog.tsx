@@ -61,7 +61,16 @@ export function DeleteExerciseDialog({
     `Վարժություն ${exercise.id.slice(-6)}`;
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          // Restore body pointer events when dialog closes
+          document.body.style.pointerEvents = "";
+          handleClose();
+        }
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Ջնջել վարժությունը</DialogTitle>
