@@ -454,6 +454,82 @@ export default function AdminExerciseDetailPage() {
               </div>
             </div>
 
+            {/* Hints Section */}
+            {(exercise.hintText1 ||
+              exercise.hintImage1 ||
+              exercise.hintText2 ||
+              exercise.hintImage2 ||
+              exercise.hintText3 ||
+              exercise.hintImage3) && (
+              <div>
+                <h3 className="font-medium mb-2">Հուշումներ</h3>
+                <div className="space-y-4">
+                  {/* Hint 1 */}
+                  {(exercise.hintText1 || exercise.hintImage1) && (
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <h4 className="font-medium text-blue-800 mb-2">
+                        Հուշում 1
+                      </h4>
+                      {exercise.hintText1 && (
+                        <div className="mb-3">
+                          <MathContent content={exercise.hintText1} />
+                        </div>
+                      )}
+                      {exercise.hintImage1 && (
+                        <FileViewer
+                          url={exercise.hintImage1}
+                          title="Հուշում 1 նկար"
+                          className="mt-2"
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Hint 2 */}
+                  {(exercise.hintText2 || exercise.hintImage2) && (
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <h4 className="font-medium text-blue-800 mb-2">
+                        Հուշում 2
+                      </h4>
+                      {exercise.hintText2 && (
+                        <div className="mb-3">
+                          <MathContent content={exercise.hintText2} />
+                        </div>
+                      )}
+                      {exercise.hintImage2 && (
+                        <FileViewer
+                          url={exercise.hintImage2}
+                          title="Հուշում 2 նկար"
+                          className="mt-2"
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Hint 3 */}
+                  {(exercise.hintText3 || exercise.hintImage3) && (
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <h4 className="font-medium text-blue-800 mb-2">
+                        Հուշում 3
+                      </h4>
+                      {exercise.hintText3 && (
+                        <div className="mb-3">
+                          <MathContent content={exercise.hintText3} />
+                        </div>
+                      )}
+                      {exercise.hintImage3 && (
+                        <FileViewer
+                          url={exercise.hintImage3}
+                          title="Հուշում 3 նկար"
+                          className="mt-2"
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Solution Statistics */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-green-50 p-4 rounded-lg border border-green-200">

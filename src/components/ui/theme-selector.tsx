@@ -73,11 +73,12 @@ export function ThemeSelector({
 
   const handleSelect = (theme: Theme) => {
     onThemesChange([...selectedThemes, theme]);
-    setOpen(false);
     setSearchValue("");
   };
 
-  const handleRemove = (themeId: string) => {
+  const handleRemove = (e: React.MouseEvent, themeId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
     onThemesChange(selectedThemes.filter((t) => t.id !== themeId));
   };
 
@@ -102,7 +103,6 @@ export function ThemeSelector({
       if (response.ok) {
         const newTheme = await response.json();
         onThemesChange([...selectedThemes, newTheme]);
-        setOpen(false);
         setSearchValue("");
         // Refetch themes to update the list
         refetch();
@@ -120,12 +120,16 @@ export function ThemeSelector({
       {selectedThemes.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {selectedThemes.map((theme) => (
-            <Badge key={theme.id} variant="secondary" className="text-sm">
+            <Badge key={theme.id} variant="secondary" className="text-sm pr-1">
               {theme.name}
-              <X
-                className="ml-1 h-3 w-3 cursor-pointer hover:text-red-500"
-                onClick={() => handleRemove(theme.id)}
-              />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-1 h-4 w-4 p-0 hover:bg-red-100 hover:text-red-600"
+                onClick={(e) => handleRemove(e, theme.id)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
             </Badge>
           ))}
         </div>

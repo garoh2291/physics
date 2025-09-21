@@ -57,11 +57,12 @@ export function SectionSelector({
 
   const handleSelect = (section: Section) => {
     onSectionsChange([...selectedSections, section]);
-    setOpen(false);
     setSearchValue("");
   };
 
-  const handleRemove = (sectionId: string) => {
+  const handleRemove = (e: React.MouseEvent, sectionId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
     onSectionsChange(selectedSections.filter((s) => s.id !== sectionId));
   };
 
@@ -82,7 +83,6 @@ export function SectionSelector({
       if (response.ok) {
         const newSection = await response.json();
         onSectionsChange([...selectedSections, newSection]);
-        setOpen(false);
         setSearchValue("");
         // Refetch sections to update the list
         refetch();
@@ -98,12 +98,20 @@ export function SectionSelector({
       {selectedSections.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {selectedSections.map((section) => (
-            <Badge key={section.id} variant="secondary" className="text-sm">
+            <Badge
+              key={section.id}
+              variant="secondary"
+              className="text-sm pr-1"
+            >
               {section.name}
-              <X
-                className="ml-1 h-3 w-3 cursor-pointer hover:text-red-500"
-                onClick={() => handleRemove(section.id)}
-              />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-1 h-4 w-4 p-0 hover:bg-red-100 hover:text-red-600"
+                onClick={(e) => handleRemove(e, section.id)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
             </Badge>
           ))}
         </div>

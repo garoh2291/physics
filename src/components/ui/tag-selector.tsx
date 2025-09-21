@@ -52,11 +52,13 @@ export function TagSelector({ selectedTags, onTagsChange }: TagSelectorProps) {
 
   const handleSelect = (tag: Tag) => {
     onTagsChange([...selectedTags, tag]);
-    setOpen(false);
     setSearchValue("");
   };
 
-  const handleRemove = (tagId: string) => {
+  const handleRemove = (e: React.MouseEvent, tagId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("Removing tag with id:", tagId);
     onTagsChange(selectedTags.filter((t) => t.id !== tagId));
   };
 
@@ -77,7 +79,6 @@ export function TagSelector({ selectedTags, onTagsChange }: TagSelectorProps) {
       if (response.ok) {
         const newTag = await response.json();
         onTagsChange([...selectedTags, newTag]);
-        setOpen(false);
         setSearchValue("");
         // Refetch tags to update the list
         refetch();
@@ -93,12 +94,16 @@ export function TagSelector({ selectedTags, onTagsChange }: TagSelectorProps) {
       {selectedTags.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {selectedTags.map((tag) => (
-            <Badge key={tag.id} variant="secondary" className="text-sm">
+            <Badge key={tag.id} variant="secondary" className="text-sm pr-1">
               {tag.name}
-              <X
-                className="ml-1 h-3 w-3 cursor-pointer hover:text-red-500"
-                onClick={() => handleRemove(tag.id)}
-              />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-1 h-4 w-4 p-0 hover:bg-red-100 hover:text-red-600"
+                onClick={(e) => handleRemove(e, tag.id)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
             </Badge>
           ))}
         </div>

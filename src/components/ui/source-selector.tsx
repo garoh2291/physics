@@ -57,11 +57,12 @@ export function SourceSelector({
 
   const handleSelect = (source: Source) => {
     onSourcesChange([...selectedSources, source]);
-    setOpen(false);
     setSearchValue("");
   };
 
-  const handleRemove = (sourceId: string) => {
+  const handleRemove = (e: React.MouseEvent, sourceId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
     onSourcesChange(selectedSources.filter((s) => s.id !== sourceId));
   };
 
@@ -82,7 +83,6 @@ export function SourceSelector({
       if (response.ok) {
         const newSource = await response.json();
         onSourcesChange([...selectedSources, newSource]);
-        setOpen(false);
         setSearchValue("");
         // Refetch sources to update the list
         refetch();
@@ -98,12 +98,16 @@ export function SourceSelector({
       {selectedSources.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {selectedSources.map((source) => (
-            <Badge key={source.id} variant="secondary" className="text-sm">
+            <Badge key={source.id} variant="secondary" className="text-sm pr-1">
               {source.name}
-              <X
-                className="ml-1 h-3 w-3 cursor-pointer hover:text-red-500"
-                onClick={() => handleRemove(source.id)}
-              />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-1 h-4 w-4 p-0 hover:bg-red-100 hover:text-red-600"
+                onClick={(e) => handleRemove(e, source.id)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
             </Badge>
           ))}
         </div>
