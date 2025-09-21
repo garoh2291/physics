@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus } from "lucide-react";
+import { UnitSelector } from "@/components/ui/unit-selector";
 
 interface MultipleAnswersInputProps {
   answerValues: string[];
@@ -105,15 +106,14 @@ export function MultipleAnswersInput({
             />
           </div>
           <div className="w-32">
-            <Input
-              placeholder="Միավոր (մ², կգ...)"
+            <UnitSelector
               value={newUnit}
-              onChange={(e) => {
-                setNewUnit(e.target.value);
-                onCurrentInputChange?.(newValue, e.target.value);
+              onValueChange={(value) => {
+                setNewUnit(value);
+                onCurrentInputChange?.(newValue, value);
               }}
-              onKeyPress={handleKeyPress}
-              className="text-sm"
+              placeholder="Միավոր"
+              className="w-full text-sm"
             />
           </div>
           <Button
@@ -128,8 +128,7 @@ export function MultipleAnswersInput({
           </Button>
         </div>
         <p className="text-xs text-gray-500">
-          Անխապաղ արժեք և դրա միավորը լրացրեք: Քայլը տարբեր պատասխանների համար
-          տարբեր միավորներ կարող են լինել:
+          Արժեք և դրա միավորը լրացրեք: Ընտրեք միավորը ցուցակից կամ ստեղծեք նորը:
         </p>
       </div>
 
