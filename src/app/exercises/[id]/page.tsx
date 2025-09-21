@@ -752,7 +752,7 @@ export default function StudentExercisePage() {
                               />
                               {exercise.answerUnits &&
                                 exercise.answerUnits[index] && (
-                                  <div className="flex items-center px-3 bg-gray-100 border border-l-0 rounded-r-md">
+                                  <div className="flex items-center px-3 bg-gray-100 border min-w-fit rounded-md">
                                     <span className="text-sm text-gray-600">
                                       {exercise.answerUnits[index]}
                                     </span>
