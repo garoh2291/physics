@@ -91,8 +91,7 @@ export function DashboardHeader({
                       align="center"
                     >
                       <p className="text-sm text-gray-700">
-                        Կրեդիտները ավելացվում են ամեն 30 րոպեում, քանի դեռ չեք
-                        հասել 20-ի:
+                        Կրեդիտները վերականգնվում են 20-ի ամեն օր:
                       </p>
                     </PopoverContent>
                   </Popover>

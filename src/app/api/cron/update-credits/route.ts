@@ -30,37 +30,36 @@ export async function POST() {
 
     if (studentsToUpdate.length === 0) {
       return NextResponse.json({
-        message: "No students found who need credit updates",
+        message: "No students found who need credit reset",
         updatedCount: 0,
       });
     }
 
-    // Update credits for each student (add 1 credit, but cap at 20)
+    // Update credits for each student (set to 20 for those with less than 20)
     const updatePromises = studentsToUpdate.map((student) => {
-      const newCredits = Math.min(student.credits + 1, 20);
       return db.user.update({
         where: { id: student.id },
-        data: { credits: newCredits },
+        data: { credits: 20 },
       });
     });
 
     await Promise.all(updatePromises);
 
-    console.log(`Updated credits for ${studentsToUpdate.length} students`);
+    console.log(`Reset credits to 20 for ${studentsToUpdate.length} students`);
 
     return NextResponse.json({
-      message: `Successfully updated credits for ${studentsToUpdate.length} students`,
+      message: `Successfully reset credits to 20 for ${studentsToUpdate.length} students`,
       updatedCount: studentsToUpdate.length,
       updatedStudents: studentsToUpdate.map((student) => ({
         id: student.id,
         name: student.name,
         email: student.email,
         previousCredits: student.credits,
-        newCredits: Math.min(student.credits + 1, 20),
+        newCredits: 20,
       })),
     });
   } catch (error) {
-    console.error("Error updating student credits:", error);
+    console.error("Error resetting student credits:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -71,7 +70,8 @@ export async function POST() {
 // Allow GET method for testing purposes
 export async function GET() {
   return NextResponse.json({
-    message: "Credit update cron job endpoint",
-    description: "Use POST method to trigger credit updates for students",
+    message: "Credit reset cron job endpoint",
+    description:
+      "Use POST method to reset credits to 20 for students with less than 20 credits",
   });
 }
