@@ -1,8 +1,13 @@
 "use client";
 
-import { LogOut, Coins } from "lucide-react";
+import { LogOut, Coins, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface ViewState {
   type: "main" | "themes" | "exercises";
@@ -64,10 +69,35 @@ export function DashboardHeader({
             </div>
             {/* Credits */}
             {userProfile && (
-              <span className="flex items-center px-3 py-1 rounded-full bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm font-semibold">
-                <Coins className="h-4 w-4 mr-1 text-yellow-500" />
-                {userProfile.credits} կրեդիտ
-              </span>
+              <div className="flex items-center">
+                <span className="flex items-center px-3 py-1 rounded-full bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm font-semibold">
+                  <Coins className="h-4 w-4 mr-1 text-yellow-500" />
+                  {userProfile.credits} կրեդիտ
+                </span>
+                {userProfile.credits < 20 && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="ml-1 h-6 w-6 p-0 hover:bg-yellow-100"
+                      >
+                        <Info className="h-3 w-3 text-yellow-600" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-60 p-3"
+                      side="bottom"
+                      align="center"
+                    >
+                      <p className="text-sm text-gray-700">
+                        Կրեդիտները ավելացվում են ամեն 30 րոպեում, քանի դեռ չեք
+                        հասել 20-ի:
+                      </p>
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </div>
             )}
             <Button
               variant="outline"
