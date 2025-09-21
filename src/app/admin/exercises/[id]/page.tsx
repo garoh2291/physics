@@ -327,20 +327,25 @@ export default function AdminExerciseDetailPage() {
   }
 
   const solutions = exercise.solutions || [];
-  
+
   // Helper function to determine if a solution is actually correct
-  const isSolutionCorrect = (solution: { 
-    isCorrect: boolean; 
-    correctAnswersCount?: number; 
+  const isSolutionCorrect = (solution: {
+    isCorrect: boolean;
+    correctAnswersCount?: number;
   }) => {
     // For the new partial answer system, check if all answers are correct
-    if (solution.correctAnswersCount !== undefined && exercise.correctAnswerValues) {
-      return solution.correctAnswersCount === exercise.correctAnswerValues.length;
+    if (
+      solution.correctAnswersCount !== undefined &&
+      exercise.correctAnswerValues
+    ) {
+      return (
+        solution.correctAnswersCount === exercise.correctAnswerValues.length
+      );
     }
     // Fallback to the legacy isCorrect field
     return solution.isCorrect;
   };
-  
+
   const correctCount = solutions.filter(isSolutionCorrect).length;
   const incorrectCount = solutions.filter((s) => !isSolutionCorrect(s)).length;
 
@@ -359,7 +364,8 @@ export default function AdminExerciseDetailPage() {
               </Button>
               <div className="flex-1 min-w-0">
                 <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 truncate">
-                  {exercise.exerciseNumber || `Վարժություն ${exercise.id.slice(-6)}`}
+                  {exercise.exerciseNumber ||
+                    `Վարժություն ${exercise.id.slice(-6)}`}
                 </h1>
                 <p className="text-sm md:text-base text-gray-600">
                   {solutions.length} ուսանող է լուծել
@@ -423,13 +429,21 @@ export default function AdminExerciseDetailPage() {
             <div>
               <h3 className="font-medium mb-2">Ճիշտ պատասխաններ</h3>
               <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                {exercise.correctAnswerValues && exercise.correctAnswerValues.length > 0 ? (
+                {exercise.correctAnswerValues &&
+                exercise.correctAnswerValues.length > 0 ? (
                   <div className="space-y-2">
                     {exercise.correctAnswerValues.map((answer, index) => (
                       <div key={index} className="flex items-center space-x-2">
                         <CheckCircle className="h-4 w-4 text-green-600" />
                         <span className="font-mono text-green-800">
                           Պատասխան {index + 1}: {answer}
+                          {exercise.answerUnits &&
+                            exercise.answerUnits[index] &&
+                            exercise.answerUnits[index].trim() && (
+                              <span className="pl-1 text-sm font-normal">
+                                {exercise.answerUnits[index]}
+                              </span>
+                            )}
                         </span>
                       </div>
                     ))}
