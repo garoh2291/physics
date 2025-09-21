@@ -7,7 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LogOut, BookOpen, CheckCircle, Coins, XCircle } from "lucide-react";
+import {
+  LogOut,
+  BookOpen,
+  CheckCircle,
+  Coins,
+  XCircle,
+  TrendingUp,
+  Target,
+  Award,
+  BarChart3,
+} from "lucide-react";
 import {
   useExercises,
   useUserProfile,
@@ -15,6 +25,15 @@ import {
   useThemes,
 } from "@/hooks/use-api";
 import Link from "next/link";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 // Types for our components
 interface Exercise {
@@ -252,6 +271,150 @@ export default function StudentDashboard() {
     }
   };
 
+  // Analytics calculation functions
+  const calculateUserAnalytics = () => {
+    if (!userProfile)
+      return {
+        totalExercises: 0,
+        solvedExercises: 0,
+        partiallyCompleted: 0,
+        accuracy: 0,
+        difficultyBreakdown: [],
+        progressOverTime: [],
+        sectionProgress: [],
+      };
+
+    let totalExercises = 0;
+    let solvedExercises = 0;
+    let partiallyCompleted = 0;
+    let totalAttempts = 0;
+    let correctAttempts = 0;
+
+    // Difficulty breakdown
+    const difficultyStats = {
+      1: { total: 0, solved: 0, name: "Հեշտ" },
+      2: { total: 0, solved: 0, name: "Միջին" },
+      3: { total: 0, solved: 0, name: "Բարդ" },
+      4: { total: 0, solved: 0, name: "Շատ բարդ" },
+      5: { total: 0, solved: 0, name: "Փորձագետ" },
+    };
+
+    // Section progress
+    const sectionStats: Record<
+      string,
+      { total: number; solved: number; partial: number }
+    > = {};
+
+    exercises.forEach((exercise) => {
+      const userSolution = exercise.solutions.find(
+        (s) => s.userId === userProfile.id
+      );
+      totalExercises++;
+
+      // Count for difficulty breakdown
+      if (difficultyStats[exercise.level as keyof typeof difficultyStats]) {
+        difficultyStats[exercise.level as keyof typeof difficultyStats].total++;
+      }
+
+      // Count for section breakdown
+      exercise.sections.forEach((section) => {
+        if (!sectionStats[section.name]) {
+          sectionStats[section.name] = { total: 0, solved: 0, partial: 0 };
+        }
+        sectionStats[section.name].total++;
+      });
+
+      if (userSolution) {
+        totalAttempts++;
+
+        if (
+          userSolution.submittedAnswers &&
+          Array.isArray(userSolution.submittedAnswers)
+        ) {
+          const correctCount = userSolution.correctAnswersCount || 0;
+          const totalAnswers = exercise.correctAnswerValues.length;
+
+          if (correctCount === totalAnswers) {
+            solvedExercises++;
+            correctAttempts++;
+            if (
+              difficultyStats[exercise.level as keyof typeof difficultyStats]
+            ) {
+              difficultyStats[exercise.level as keyof typeof difficultyStats]
+                .solved++;
+            }
+            exercise.sections.forEach((section) => {
+              if (sectionStats[section.name]) {
+                sectionStats[section.name].solved++;
+              }
+            });
+          } else if (correctCount > 0) {
+            partiallyCompleted++;
+            correctAttempts += correctCount / totalAnswers;
+            exercise.sections.forEach((section) => {
+              if (sectionStats[section.name]) {
+                sectionStats[section.name].partial++;
+              }
+            });
+          }
+        } else if (userSolution.isCorrect) {
+          solvedExercises++;
+          correctAttempts++;
+          if (difficultyStats[exercise.level as keyof typeof difficultyStats]) {
+            difficultyStats[exercise.level as keyof typeof difficultyStats]
+              .solved++;
+          }
+          exercise.sections.forEach((section) => {
+            if (sectionStats[section.name]) {
+              sectionStats[section.name].solved++;
+            }
+          });
+        }
+      }
+    });
+
+    const accuracy =
+      totalAttempts > 0 ? (correctAttempts / totalAttempts) * 100 : 0;
+
+    // Convert to arrays for charts
+    const difficultyBreakdown = Object.entries(difficultyStats).map(
+      ([, stats]) => ({
+        level: stats.name,
+        total: stats.total,
+        solved: stats.solved,
+        accuracy: stats.total > 0 ? (stats.solved / stats.total) * 100 : 0,
+      })
+    );
+
+    const sectionProgress = Object.entries(sectionStats).map(
+      ([name, stats]) => ({
+        section: name,
+        total: stats.total,
+        solved: stats.solved,
+        partial: stats.partial,
+        percentage:
+          stats.total > 0
+            ? ((stats.solved + stats.partial * 0.5) / stats.total) * 100
+            : 0,
+      })
+    );
+
+    return {
+      totalExercises,
+      solvedExercises,
+      partiallyCompleted,
+      accuracy: Math.round(accuracy * 100) / 100,
+      difficultyBreakdown,
+      sectionProgress,
+      completionRate:
+        totalExercises > 0
+          ? Math.round((solvedExercises / totalExercises) * 100)
+          : 0,
+    };
+  };
+
+  const analytics = calculateUserAnalytics();
+
   // Navigation functions
   const navigateToThemes = (sectionId: string, sectionName: string) =>
     setViewState({
@@ -304,6 +467,132 @@ export default function StudentDashboard() {
   }
 
   // Render different views based on current state
+  const renderAnalytics = () => (
+    <div className="mb-8 space-y-6">
+      {/* Key Metrics Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Ընդամենը վարժություններ
+            </CardTitle>
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics.totalExercises}</div>
+            <p className="text-xs text-muted-foreground">
+              Բոլոր վարժությունները համակարգում
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Ավարտված</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {analytics.solvedExercises}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              +{analytics.partiallyCompleted} մասնակի ավարտված
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Ավարտման տոկոս
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">
+              {analytics.completionRate}%
+            </div>
+            <p className="text-xs text-muted-foreground">Ընդհանուր առաջընթաց</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Ճշգրտություն</CardTitle>
+            <Target className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">
+              {analytics.accuracy}%
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Ճիշտ լուծումների տոկոս
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Difficulty Breakdown Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Բարդության մակարդակով առաջընթաց
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={analytics.difficultyBreakdown}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="level" />
+                <YAxis />
+                <Tooltip
+                  formatter={(value: number, name: string) => [
+                    name === "solved" ? "Ավարտված" : "Ընդամենը",
+                    value,
+                  ]}
+                />
+                <Bar dataKey="total" fill="#e5e7eb" name="total" />
+                <Bar dataKey="solved" fill="#10b981" name="solved" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Section Progress Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5" />
+              Բաժինների առաջընթաց
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart
+                data={analytics.sectionProgress.slice(0, 5)}
+                layout="horizontal"
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" domain={[0, 100]} />
+                <YAxis dataKey="section" type="category" width={80} />
+                <Tooltip
+                  formatter={(value: number) => [
+                    `${Math.round(value)}%`,
+                    "Առաջընթաց",
+                  ]}
+                />
+                <Bar dataKey="percentage" fill="#3b82f6" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
   const renderMainView = () => {
     // Filter sections that have exercises
     const sectionsWithExercises = sections.filter((section: Section) =>
@@ -590,6 +879,9 @@ export default function StudentDashboard() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6 md:py-8">
+        {/* Analytics Section - Only show on main page */}
+        {viewState.type === "main" && renderAnalytics()}
+
         {viewState.type === "main" && renderMainView()}
         {viewState.type === "themes" && renderThemesView()}
         {viewState.type === "exercises" && renderExercisesView()}
