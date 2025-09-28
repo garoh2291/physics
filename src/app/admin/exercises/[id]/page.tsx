@@ -389,7 +389,7 @@ export default function AdminExerciseDetailPage() {
             <CardTitle>Վարժության մանրամասներ</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="flex items-center space-x-2">
                 <Hash className="h-4 w-4 text-gray-400" />
                 <span className="text-sm text-gray-600">ID:</span>
@@ -409,7 +409,33 @@ export default function AdminExerciseDetailPage() {
                   {exercise.createdBy?.name || "Անհայտ"}
                 </span>
               </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">Մակարդակ:</span>
+                <Badge variant="outline" className="text-blue-600">
+                  {exercise.level} -{" "}
+                  {exercise.level === 1
+                    ? "Հեշտ"
+                    : exercise.level === 2
+                    ? "Միջին"
+                    : exercise.level === 3
+                    ? "Բարդ"
+                    : exercise.level === 4
+                    ? "Շատ բարդ"
+                    : exercise.level === 5
+                    ? "Էքսպերտ"
+                    : "Անհայտ"}
+                </Badge>
+              </div>
             </div>
+
+            {exercise.class && (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">Դասարան:</span>
+                <Badge variant="outline" className="text-green-600">
+                  {exercise.class}
+                </Badge>
+              </div>
+            )}
 
             <div>
               <h3 className="font-medium mb-2">Խնդիրի նկարագրություն</h3>
