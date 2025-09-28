@@ -87,7 +87,11 @@ export default function CreateExercisePage() {
         // Prefill form fields
         setExerciseNumber(data.exerciseNumber || "");
         setLevel(data.level || 1);
-        setClassGrade(data.class);
+        setClassGrade(
+          data.class !== null && data.class !== undefined
+            ? data.class
+            : undefined
+        );
         setProblemText(data.problemText || "");
         setProblemImage(data.problemImage || "");
         setSolutionSteps(data.solutionSteps || "");
@@ -245,6 +249,7 @@ export default function CreateExercisePage() {
                 <div>
                   <Label htmlFor="level">Մակարդակ *</Label>
                   <Select
+                    key={`level-${level}`}
                     value={level.toString()}
                     onValueChange={(value) => setLevel(parseInt(value))}
                   >
@@ -263,6 +268,7 @@ export default function CreateExercisePage() {
                 <div>
                   <Label htmlFor="class">Դասարան</Label>
                   <Select
+                    key={`class-${classGrade}`}
                     value={classGrade ? classGrade.toString() : ""}
                     onValueChange={(value) =>
                       setClassGrade(value ? parseInt(value) : undefined)

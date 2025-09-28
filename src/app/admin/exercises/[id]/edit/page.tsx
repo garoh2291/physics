@@ -253,6 +253,7 @@ export default function EditExercisePage() {
                 <div>
                   <Label htmlFor="level">Մակարդակ *</Label>
                   <Select
+                    key={`level-${level}`}
                     value={level.toString()}
                     onValueChange={(value) => setLevel(parseInt(value))}
                   >

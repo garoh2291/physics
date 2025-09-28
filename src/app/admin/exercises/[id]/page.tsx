@@ -425,6 +425,21 @@ export default function AdminExerciseDetailPage() {
               )}
             </div>
 
+            {/* Solution Section */}
+            <div>
+              <h3 className="font-medium mb-2">Լուծման քայլեր</h3>
+              {exercise.solutionImage && (
+                <FileViewer
+                  url={exercise.solutionImage}
+                  title="Լուծման նկար"
+                  className="mb-4"
+                />
+              )}
+              {exercise.solutionSteps && (
+                <MathContent content={exercise.solutionSteps} />
+              )}
+            </div>
+
             {/* Right Answer Section */}
             <div>
               <h3 className="font-medium mb-2">Ճիշտ պատասխաններ</h3>
