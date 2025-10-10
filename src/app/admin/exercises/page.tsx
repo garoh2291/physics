@@ -500,7 +500,7 @@ export default function AdminExercisesPage() {
       {exerciseToDelete?.id ? (
         <DeleteExerciseDialog
           exercise={exerciseToDelete}
-          open={!!exerciseToDelete}
+          open={!!exerciseToDelete?.id}
           onClose={() => setExerciseToDelete(null)}
         />
       ) : null}

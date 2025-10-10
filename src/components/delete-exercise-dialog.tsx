@@ -50,7 +50,6 @@ export function DeleteExerciseDialog({
   const handleDeleteConfirm = () => {
     deleteExerciseMutation.mutate(exercise.id, {
       onSuccess: () => {
-        document.body.style.pointerEvents = "";
         handleClose();
       },
     });
