@@ -2,15 +2,8 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useDeleteExercise } from "@/hooks/use-api";
+import { X } from "lucide-react";
 
 interface DeleteExerciseDialogProps {
   exercise: {
@@ -29,28 +22,28 @@ export function DeleteExerciseDialog({
 }: DeleteExerciseDialogProps) {
   const deleteExerciseMutation = useDeleteExercise();
 
-  // Cleanup effect to ensure body styles are restored on unmount
+  // Handle ESC key press
   useEffect(() => {
-    return () => {
-      // Force restore body pointer events when component unmounts
-      document.body.style.pointerEvents = "";
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
     };
-  }, []);
 
-  if (!exercise) {
+    if (open) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [open, onClose]);
+
+  if (!exercise || !open) {
     return null;
   }
-
-  const handleClose = () => {
-    // Ensure body pointer events are restored
-    document.body.style.pointerEvents = "";
-    onClose();
-  };
 
   const handleDeleteConfirm = () => {
     deleteExerciseMutation.mutate(exercise.id, {
       onSuccess: () => {
-        handleClose();
+        onClose();
       },
     });
   };
@@ -60,28 +53,46 @@ export function DeleteExerciseDialog({
     exercise.title ||
     `Վարժություն ${exercise.id.slice(-6)}`;
 
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(isOpen) => {
-        if (!isOpen) {
-          // Restore body pointer events when dialog closes
-          document.body.style.pointerEvents = "";
-          handleClose();
-        }
-      }}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      onClick={handleBackdropClick}
     >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Ջնջել վարժությունը</DialogTitle>
-          <DialogDescription>
+      <div className="relative bg-white rounded-lg shadow-lg max-w-md w-full max-h-[85vh] overflow-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b">
+          <h2 className="text-lg font-semibold">Ջնջել վարժությունը</h2>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+            disabled={deleteExerciseMutation.isPending}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6">
+          <p className="text-sm text-gray-600">
             Դուք վստա՞հ եք, որ ցանկանում եք ջնջել &quot;
             {exerciseDisplayName}&quot; վարժությունը: Այս գործողությունը
             հետադարձելի չէ և ջնջելու է նաև բոլոր հարակից լուծումները:
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-3 p-6 border-t bg-gray-50">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={deleteExerciseMutation.isPending}
+          >
             Փակել
           </Button>
           <Button
@@ -91,8 +102,8 @@ export function DeleteExerciseDialog({
           >
             {deleteExerciseMutation.isPending ? "Ջնջվում..." : "Ջնջել"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </div>
   );
 }
