@@ -44,6 +44,8 @@ export function MultipleAnswersInput({
         onAnswerUnitsChange([...answerUnits, trimmedUnit]);
         setNewValue("");
         setNewUnit("");
+        // Notify parent to clear current input values
+        onCurrentInputChange?.("", "");
       }
     }
   };
